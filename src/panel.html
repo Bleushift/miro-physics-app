@@ -754,34 +754,39 @@ document.querySelectorAll('.tab').forEach(tab => {
 // ══════════════════════════════════════════════════════════════
 
 async function placeSvgOnBoard(svgString, latex, colour, existingId = null, existingX = null, existingY = null) {
-  // Convert SVG to a blob URL Miro can use
-  const blob = new Blob([svgString], { type: 'image/svg+xml' });
-  const url  = URL.createObjectURL(blob);
+  // Convert SVG to base64 data URL (Miro doesn't accept blob: URLs)
+  const b64 = btoa(unescape(encodeURIComponent(svgString)));
+  const dataUrl = `data:image/svg+xml;base64,${b64}`;
 
   let x = 0, y = 0;
   if (existingX !== null) { x = existingX; y = existingY; }
+  else {
+    // Place in centre of current viewport
+    const viewport = await miro.board.viewport.get();
+    x = viewport.x + 0.5 * viewport.width;
+    y = viewport.y + 0.5 * viewport.height;
+  }
 
   // Delete existing if updating
   if (existingId) {
     try {
-      const old = await miro.board.getById(existingId);
-      await old.delete();
+      await miro.board.remove(await miro.board.getById(existingId));
     } catch(e) {}
   }
 
-  // Create image from SVG URL
+  // Create image from base64 data URL
   const img = await miro.board.createImage({
-    url,
+    url: dataUrl,
+    title: 'LaTeX equation',
     x, y,
     width: getFontSize() * 6,
   });
 
   // Attach LaTeX metadata so we can edit it later
-  await img.setMetadata({ latex, colour });
+  await img.setMetadata('pp-latex', { latex, colour });
 
   await miro.board.viewport.zoomTo(img);
   toast('Equation placed ✓');
-  URL.revokeObjectURL(url);
   return img;
 }
 
@@ -897,18 +902,18 @@ document.getElementById('btn-load-selection').addEventListener('click', async ()
     if (!sel || sel.length === 0) { toast('Select an equation on the board first'); return; }
 
     const item = sel[0];
-    const meta = await item.getMetadata();
+    const allMeta = await item.getMetadata('pp-latex');
 
-    if (!meta || !meta.latex) {
+    if (!allMeta || !allMeta.latex) {
       toast('Selected item has no stored LaTeX — it may not have been placed by this plugin');
       return;
     }
 
     // Load into editor
-    document.getElementById('latex-input').value = meta.latex;
-    if (meta.colour) {
-      selectedColour = meta.colour;
-      document.getElementById('custom-colour').value = meta.colour;
+    document.getElementById('latex-input').value = allMeta.latex;
+    if (allMeta.colour) {
+      selectedColour = allMeta.colour;
+      document.getElementById('custom-colour').value = allMeta.colour;
       document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
     }
     editingItemId = item.id;
