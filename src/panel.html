@@ -389,14 +389,13 @@
 
     <label style="margin-top:8px">Colour selected text <span style="color:var(--muted);font-size:10px">(select text above, then click)</span></label>
     <div class="colour-row" id="text-colour-row">
-      <div class="text-colour-btn" style="background:#f87171" data-tc="#f87171" title="Red"></div>
-      <div class="text-colour-btn" style="background:#93c5fd" data-tc="#3b82f6" title="Blue"></div>
-      <div class="text-colour-btn" style="background:#86efac" data-tc="#22c55e" title="Green"></div>
-      <div class="text-colour-btn" style="background:#a78bfa" data-tc="#a78bfa" title="Purple"></div>
+      <div class="text-colour-btn" style="background:#7C3AED" data-tc="#7C3AED" title="PP Purple"></div>
+      <div class="text-colour-btn" style="background:#A78BFA" data-tc="#A78BFA" title="PP Lavender"></div>
+      <div class="text-colour-btn" style="background:#5eead4" data-tc="#5eead4" title="PP Teal"></div>
+      <div class="text-colour-btn" style="background:#E11D48" data-tc="#E11D48" title="PP Red"></div>
       <div class="text-colour-btn" style="background:#fbbf24" data-tc="#fbbf24" title="Yellow"></div>
-      <div class="text-colour-btn" style="background:#5eead4" data-tc="#5eead4" title="Teal"></div>
-      <div class="text-colour-btn" style="background:#f9a8d4" data-tc="#ec4899" title="Pink"></div>
       <div class="text-colour-btn" style="background:#ffffff; border:1px solid var(--border)" data-tc="#ffffff" title="White"></div>
+      <div class="text-colour-btn" style="background:#343a40" data-tc="#343a40" title="Charcoal"></div>
       <button class="btn btn-ghost btn-sm" id="btn-remove-colour" title="Remove colour from selection" style="font-size:10px;padding:3px 6px;">✕</button>
     </div>
 
@@ -406,14 +405,14 @@
 
     <label style="margin-top:12px">Whole equation colour</label>
     <div class="colour-row">
-      <div class="colour-swatch selected" style="background:#ffffff" data-colour="#ffffff" title="White"></div>
-      <div class="colour-swatch" style="background:#a78bfa" data-colour="#a78bfa" title="Purple"></div>
-      <div class="colour-swatch" style="background:#5eead4" data-colour="#5eead4" title="Teal"></div>
-      <div class="colour-swatch" style="background:#fbbf24" data-colour="#fbbf24" title="Yellow"></div>
-      <div class="colour-swatch" style="background:#f87171" data-colour="#f87171" title="Red"></div>
-      <div class="colour-swatch" style="background:#86efac" data-colour="#86efac" title="Green"></div>
-      <div class="colour-swatch" style="background:#93c5fd" data-colour="#93c5fd" title="Blue"></div>
-      <input type="color" id="custom-colour" value="#ffffff" title="Custom colour" />
+      <div class="colour-swatch selected" style="background:#343a40" data-colour="#343a40" title="Charcoal"></div>
+      <div class="colour-swatch" style="background:#7C3AED" data-colour="#7C3AED" title="PP Purple"></div>
+      <div class="colour-swatch" style="background:#A78BFA" data-colour="#A78BFA" title="PP Lavender"></div>
+      <div class="colour-swatch" style="background:#5eead4" data-colour="#5eead4" title="PP Teal"></div>
+      <div class="colour-swatch" style="background:#E11D48" data-colour="#E11D48" title="PP Red"></div>
+      <div class="colour-swatch" style="background:#ffffff" data-colour="#ffffff" title="White"></div>
+      <div class="colour-swatch" style="background:#1e1e1e" data-colour="#1e1e1e" title="Dark Grey"></div>
+      <input type="color" id="custom-colour" value="#343a40" title="Custom colour" />
     </div>
 
     <label style="margin-top:10px">Size <span id="size-val" style="color:var(--text)">36px</span></label>
@@ -873,7 +872,7 @@ const PHET_SIMS = [
 // STATE
 // ══════════════════════════════════════════════════════════════
 
-let selectedColour = '#ffffff';
+let selectedColour = '#343a40';
 let editingItemId  = null;   // Miro item ID of equation being edited
 
 // ══════════════════════════════════════════════════════════════
