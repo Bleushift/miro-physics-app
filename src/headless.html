@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://miro.com/app/static/sdk/v2/api.js"></script>
+</head>
+<body>
+<script>
+  // This headless page loads when the board opens.
+  // It registers the toolbar icon — clicking it opens the panel.
+  miro.board.ui.on('icon:click', async () => {
+    await miro.board.ui.openPanel({
+      url: 'index.html',
+      height: 600,
+    });
+  });
+</script>
+</body>
+</html>
