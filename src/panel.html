@@ -354,9 +354,9 @@
 
     .geogebra-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px;
-      max-height: 200px;
+      grid-template-columns: 1fr;
+      gap: 3px;
+      max-height: 300px;
       overflow-y: auto;
     }
     .ggb-item {
@@ -365,7 +365,7 @@
       border-radius: 5px;
       padding: 6px 8px;
       cursor: pointer;
-      font-size: 11px;
+      font-size: 12px;
       transition: all 0.15s;
     }
     .ggb-item:hover { border-color: var(--yellow); color: var(--yellow); }
@@ -535,7 +535,8 @@
 
     <!-- GeoGebra -->
     <div class="embed-form" id="form-geogebra">
-      <label>Physics applets (click to embed)</label>
+      <label>Your GeoGebra applets (click to embed)</label>
+      <input type="text" id="ggb-search" placeholder="Search applets... (e.g. SHM, waves, capacitor)" style="margin-bottom:6px;" />
       <div class="geogebra-grid" id="ggb-list">
         <!-- Populated by JS -->
       </div>
@@ -892,14 +893,39 @@ const PHYSICS_LIBRARY = [
 ];
 
 const GEOGEBRA_APPLETS = [
-  { name: 'Projectile motion',      id: 'xyzvwxyz' },  // example IDs – user replaces with real ones
-  { name: 'Simple harmonic motion', id: 'uyxzmrms' },
-  { name: 'Electric field lines',   id: 'nfkbrwdy' },
-  { name: 'Refraction (Snell)',      id: 'sxzxmkyc' },
-  { name: 'Circular motion',        id: 'kpfpkqme' },
-  { name: 'Capacitor charge',       id: 'mxbkpvzj' },
-  { name: 'Wave superposition',     id: 'tdkwxwxd' },
-  { name: 'Magnetic field',         id: 'qknfmtqs' },
+  // ── Mechanics ──
+  { name: 'Motion in a Straight Line',         id: 'dpnjzsem',  tags: 'mechanics kinematics motion velocity' },
+  { name: 'Line of Best Fit',                  id: 'jmh3mgvw',  tags: 'practical skills data graphs' },
+  // ── Circular Motion & SHM ──
+  { name: 'Rotational Velocity (Ants)',         id: 'vdmhjyxp',  tags: 'circular motion angular velocity radius' },
+  { name: 'Energy in SHM',                     id: 'qfpse3sj',  tags: 'simple harmonic motion energy oscillations' },
+  { name: 'Damped Harmonic Motion',            id: 'uwwxeg5n',  tags: 'SHM damping oscillations resonance' },
+  // ── Waves ──
+  { name: 'Stationary Waves',                  id: 'bdtpzdub',  tags: 'waves standing stationary nodes antinodes' },
+  { name: 'Thin Film Interference',            id: 'aaxdnxeg',  tags: 'waves interference thin film optics' },
+  { name: 'Huygens Reflection',                id: 'tydwjzdf',  tags: 'waves huygens reflection wavefront' },
+  { name: 'Huygens Refraction',                id: 'jewvkkkq',  tags: 'waves huygens refraction wavefront snell' },
+  { name: 'Electron Diffraction',              id: 'qgtdjgs3',  tags: 'quantum waves diffraction electron de broglie' },
+  // ── Thermal Physics ──
+  { name: 'PV Diagram',                        id: 'zyfbgrtv',  tags: 'thermal gas pressure volume ideal gas' },
+  { name: 'Gas Transformations',               id: 'btttyrht',  tags: 'thermal gas laws isothermal adiabatic' },
+  { name: 'Isothermal Transformations',        id: 'fpzq6z7t',  tags: 'thermal isothermal gas ideal' },
+  // ── Fields ──
+  { name: 'Electric Potential F vs R',         id: 'dc5xv6pk',  tags: 'electric fields potential force coulomb' },
+  { name: 'Parallel Plate Capacitor',          id: 'uhmthduj',  tags: 'capacitance electric field parallel plate' },
+  // ── Magnetic Fields ──
+  { name: 'B Field Around a Wire',             id: 'n2yshqhn',  tags: 'magnetic field wire current electromagnetism' },
+  { name: 'Wire Moving in a B Field',          id: 'jm6smk2r',  tags: 'magnetic field EMF induction faraday' },
+  { name: 'Charge in Non-Uniform B Field',     id: 'fcrahsax',  tags: 'magnetic field charge particle circular' },
+  // ── Nuclear & Particles ──
+  { name: 'Interatomic Force',                 id: 'dgmmktja',  tags: 'nuclear interatomic force materials' },
+  { name: 'Strong Nuclear Force',              id: 'rppu4awe',  tags: 'nuclear strong force interatomic' },
+  { name: 'Mass Spectrometry',                 id: 'bv77n3nq',  tags: 'particles mass spectrometry ions charge' },
+  // ── Astrophysics ──
+  { name: 'Stellar Parallax',                  id: 'btucrhet',  tags: 'astrophysics parallax distance stars' },
+  { name: 'Parallax Angle (Space)',            id: 'zgq9hash',  tags: 'astrophysics parallax angle measurement' },
+  // ── Medical Physics ──
+  { name: 'A-Scan (Ultrasound)',               id: 'pwh7fecw',  tags: 'medical physics ultrasound A-scan imaging' },
 ];
 
 const PHET_SIMS = [
@@ -1499,11 +1525,26 @@ function buildGeogebraList() {
   GEOGEBRA_APPLETS.forEach(applet => {
     const item = document.createElement('div');
     item.className = 'ggb-item';
-    item.textContent = applet.name;
-    item.addEventListener('click', () => {
-      document.getElementById('ggb-id').value = applet.id;
+    item.dataset.search = (applet.name + ' ' + (applet.tags || '')).toLowerCase();
+    item.innerHTML = `<span>${applet.name}</span>`;
+    item.addEventListener('click', async () => {
+      const embedUrl = `https://www.geogebra.org/material/iframe/id/${applet.id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/false/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/false/ctl/false`;
+      try {
+        await miro.board.createEmbed({ url: embedUrl, width: 640, height: 480 });
+        toast('Embedded: ' + applet.name + ' ✓');
+      } catch(e) {
+        toast('Error: ' + e.message);
+      }
     });
     list.appendChild(item);
+  });
+
+  // Search
+  document.getElementById('ggb-search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    list.querySelectorAll('.ggb-item').forEach(item => {
+      item.style.display = (!q || item.dataset.search.includes(q)) ? '' : 'none';
+    });
   });
 }
 
