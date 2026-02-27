@@ -494,7 +494,7 @@
       transition: all 0.15s;
     }
     .circuit-item:hover { border-color: var(--teal); background: #1e2e32; }
-    .circuit-item svg { width: 52px; height: 28px; display: block; margin: 0 auto 4px; }
+    .circuit-item svg { width: 58px; height: 29px; display: block; margin: 0 auto 4px; }
     .circuit-item .cname { font-size: 9px; color: var(--muted); line-height: 1.2; }
 
     /* ── Reveal size presets ──────────────────── */
@@ -2326,49 +2326,55 @@ function getBoards(tags) {
 const CIRCUIT_COMPONENTS = [
   // ── Sources ──
   { name: 'Cell', id: 'cell', category: 'Sources',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="32" y2="20" stroke="#fff" stroke-width="2"/><line x1="32" y1="6" x2="32" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="40" y1="12" x2="40" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="40" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="50" y2="30" stroke-width="2.5"/><line x1="50" y1="8" x2="50" y2="52" stroke-width="3"/><line x1="58" y1="17" x2="58" y2="43" stroke-width="2"/><line x1="58" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
   { name: 'Battery', id: 'battery', category: 'Sources',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="20" y2="20" stroke="#fff" stroke-width="2"/><line x1="20" y1="6" x2="20" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="27" y1="12" x2="27" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="34" y1="6" x2="34" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="41" y1="12" x2="41" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="48" y1="6" x2="48" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="55" y1="12" x2="55" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="55" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
-  { name: 'AC Source', id: 'ac-source', category: 'Sources',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><path d="M33 20 Q36 12, 40 20 Q44 28, 47 20" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="34" y2="30" stroke-width="2.5"/><line x1="34" y1="8" x2="34" y2="52" stroke-width="3"/><line x1="42" y1="17" x2="42" y2="43" stroke-width="2"/><line x1="50" y1="8" x2="50" y2="52" stroke-width="3"/><line x1="58" y1="17" x2="58" y2="43" stroke-width="2"/><line x1="66" y1="8" x2="66" y2="52" stroke-width="3"/><line x1="74" y1="17" x2="74" y2="43" stroke-width="2"/><line x1="74" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+  { name: 'AC Supply', id: 'ac-source', category: 'Sources',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><path d="M49 30 Q54 18, 60 30 Q66 42, 71 30" stroke-width="1.8"/><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
 
   // ── Resistive ──
   { name: 'Resistor', id: 'resistor', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
   { name: 'Variable Resistor', id: 'variable-resistor', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="28" y1="34" x2="52" y2="6" stroke="#fff" stroke-width="1.5"/><polygon points="52,6 48,14 54,12" fill="#fff"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="42" y1="50" x2="76" y2="12" stroke-width="1.8"/><polygon points="80,8 72,12 76,18" fill="#fff" stroke="none"/></g></svg>' },
+  { name: 'Potentiometer', id: 'potentiometer', category: 'Resistive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="60" y1="3" x2="60" y2="13" stroke-width="2"/><polygon points="60,17 55,10 65,10" fill="#fff" stroke="none"/></g></svg>' },
   { name: 'LDR', id: 'ldr', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="18" y1="4" x2="26" y2="12" stroke="#fff" stroke-width="1.2"/><polygon points="26,12 22,8 24,14" fill="#fff"/><line x1="24" y1="4" x2="32" y2="12" stroke="#fff" stroke-width="1.2"/><polygon points="32,12 28,8 30,14" fill="#fff"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="39" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="21" stroke-width="2"/><rect x="47" y="23" width="26" height="14" stroke-width="1.8"/><line x1="81" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="10" y1="10" x2="30" y2="20" stroke-width="1.5"/><polygon points="32,21 26,15 26,23" fill="#fff" stroke="none"/><line x1="10" y1="20" x2="30" y2="30" stroke-width="1.5"/><polygon points="32,31 26,25 26,33" fill="#fff" stroke="none"/></g></svg>' },
   { name: 'Thermistor', id: 'thermistor', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="28" y1="30" x2="52" y2="10" stroke="#fff" stroke-width="1.5"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="42" y1="50" x2="78" y2="10" stroke-width="1.8"/></g></svg>' },
   { name: 'Fuse', id: 'fuse', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="14" width="36" height="12" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="22" y1="20" x2="58" y2="20" stroke="#fff" stroke-width="1"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="22" width="50" height="16" stroke-width="2"/><line x1="35" y1="30" x2="85" y2="30" stroke-width="1"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
 
   // ── Reactive ──
   { name: 'Capacitor', id: 'capacitor', category: 'Reactive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="35" y2="20" stroke="#fff" stroke-width="2"/><line x1="35" y1="6" x2="35" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="45" y1="6" x2="45" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="45" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="53" y2="30" stroke-width="2.5"/><line x1="53" y1="8" x2="53" y2="52" stroke-width="2.5"/><line x1="67" y1="8" x2="67" y2="52" stroke-width="2.5"/><line x1="67" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
 
   // ── Output ──
-  { name: 'Bulb / Lamp', id: 'bulb', category: 'Output',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><line x1="30" y1="10" x2="50" y2="30" stroke="#fff" stroke-width="1.5"/><line x1="50" y1="10" x2="30" y2="30" stroke="#fff" stroke-width="1.5"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'Lamp', id: 'bulb', category: 'Output',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><line x1="47" y1="17" x2="73" y2="43" stroke-width="1.8"/><line x1="73" y1="17" x2="47" y2="43" stroke-width="1.8"/><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
   { name: 'LED', id: 'led', category: 'Output',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="28" y2="20" stroke="#fff" stroke-width="2"/><polygon points="28,10 28,30 48,20" fill="none" stroke="#fff" stroke-width="2"/><line x1="48" y1="10" x2="48" y2="30" stroke="#fff" stroke-width="2.5"/><line x1="48" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="50" y1="8" x2="58" y2="2" stroke="#fff" stroke-width="1.2"/><polygon points="58,2 54,6 58,8" fill="#fff"/><line x1="54" y1="12" x2="62" y2="6" stroke="#fff" stroke-width="1.2"/><polygon points="62,6 58,10 62,12" fill="#fff"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><polygon points="40,14 40,46 64,30" fill="#fff" stroke="#fff" stroke-width="1.5"/><line x1="64" y1="14" x2="64" y2="46" stroke-width="2.5"/><line x1="64" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="68" y1="14" x2="80" y2="4" stroke-width="1.5"/><polygon points="82,2 76,4 79,10" fill="#fff" stroke="none"/><line x1="72" y1="22" x2="84" y2="12" stroke-width="1.5"/><polygon points="86,10 80,12 83,18" fill="#fff" stroke="none"/></g></svg>' },
+  { name: 'Motor', id: 'motor', category: 'Output',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><text x="60" y="37" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="22" font-weight="bold" stroke="none">M</text><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+  { name: 'Speaker', id: 'speaker', category: 'Output',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><line x1="35" y1="30" x2="35" y2="18" stroke-width="2"/><line x1="85" y1="30" x2="85" y2="18" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><rect x="35" y="18" width="22" height="24" stroke-width="2"/><polygon points="57,18 85,4 85,56 57,42" fill="none" stroke="#fff" stroke-width="2"/></g></svg>' },
 
   // ── Switching ──
   { name: 'Switch (open)', id: 'switch-open', category: 'Switching',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="26" y2="20" stroke="#fff" stroke-width="2"/><circle cx="28" cy="20" r="3" fill="#fff"/><line x1="28" y1="20" x2="52" y2="8" stroke="#fff" stroke-width="2"/><circle cx="54" cy="20" r="3" fill="#fff"/><line x1="56" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="38" x2="38" y2="38" stroke-width="2.5"/><circle cx="41" cy="38" r="3.5" fill="#fff" stroke="none"/><line x1="43" y1="36" x2="75" y2="16" stroke-width="2.5"/><circle cx="79" cy="38" r="3.5" fill="#fff" stroke="none"/><line x1="82" y1="38" x2="120" y2="38" stroke-width="2.5"/></g></svg>' },
   { name: 'Switch (closed)', id: 'switch-closed', category: 'Switching',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="26" y2="20" stroke="#fff" stroke-width="2"/><circle cx="28" cy="20" r="3" fill="#fff"/><line x1="28" y1="20" x2="54" y2="20" stroke="#fff" stroke-width="2"/><circle cx="54" cy="20" r="3" fill="#fff"/><line x1="56" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="38" x2="38" y2="38" stroke-width="2.5"/><circle cx="41" cy="38" r="3.5" fill="#fff" stroke="none"/><line x1="43" y1="38" x2="77" y2="38" stroke-width="2.5"/><circle cx="79" cy="38" r="3.5" fill="#fff" stroke="none"/><line x1="82" y1="38" x2="120" y2="38" stroke-width="2.5"/></g></svg>' },
 
   // ── Measurement ──
   { name: 'Ammeter', id: 'ammeter', category: 'Measurement',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><text x="40" y="25" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">A</text><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><text x="60" y="37" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="22" font-weight="bold" stroke="none">A</text><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
   { name: 'Voltmeter', id: 'voltmeter', category: 'Measurement',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><text x="40" y="25" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">V</text><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><text x="60" y="37" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="22" font-weight="bold" stroke="none">V</text><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
 
   // ── Semiconductor ──
   { name: 'Diode', id: 'diode', category: 'Semiconductor',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="28" y2="20" stroke="#fff" stroke-width="2"/><polygon points="28,10 28,30 48,20" fill="none" stroke="#fff" stroke-width="2"/><line x1="48" y1="10" x2="48" y2="30" stroke="#fff" stroke-width="2.5"/><line x1="48" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><polygon points="40,14 40,46 64,30" fill="#fff" stroke="#fff" stroke-width="1.5"/><line x1="64" y1="14" x2="64" y2="46" stroke-width="2.5"/><line x1="64" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -3252,7 +3258,7 @@ function buildCircuitGrid() {
 
 async function placeCircuitComponent(comp) {
   try {
-    const pngUrl = await renderSvgToPng(comp.svg, 80, 40);
+    const pngUrl = await renderSvgToPng(comp.svg, 120, 60);
     const viewport = await miro.board.viewport.get();
     const x = viewport.x + 0.5 * viewport.width;
     const y = viewport.y + 0.5 * viewport.height;
@@ -3475,35 +3481,45 @@ async function init() {
   // Auto-load equation into editor when selected on board
   try {
     miro.board.ui.on('selection:update', async (event) => {
-      const items = event.items;
-      if (!items || items.length !== 1) return;
-      const item = items[0];
+      // event may be { items: [...] } or the array directly
+      const items = Array.isArray(event) ? event : (event.items || []);
+      if (items.length !== 1) return;
+
+      // Fetch the full item object (event items may be lightweight stubs)
+      let fullItem;
       try {
-        const meta = await item.getMetadata('pp-latex');
-        if (!meta || !meta.latex) return;
+        fullItem = await miro.board.getById(items[0].id);
+      } catch(e) { return; }
+      if (!fullItem || fullItem.type !== 'image') return;
 
-        // Load into editor
-        document.getElementById('latex-input').value = meta.latex;
-        if (meta.colour) {
-          selectedColour = meta.colour;
-          document.getElementById('custom-colour').value = meta.colour;
-          document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
-        }
-        editingItemId = item.id;
+      let meta;
+      try {
+        meta = await fullItem.getMetadata('pp-latex');
+      } catch(e) { return; }
+      if (!meta || !meta.latex) return;
 
-        // Switch to LaTeX tab
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelector('[data-tab="latex"]').classList.add('active');
-        document.getElementById('page-latex').classList.add('active');
+      // Load into editor
+      document.getElementById('latex-input').value = meta.latex;
+      if (meta.colour) {
+        selectedColour = meta.colour;
+        document.getElementById('custom-colour').value = meta.colour;
+        document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+      }
+      editingItemId = fullItem.id;
 
-        // Show edit UI
-        document.getElementById('edit-banner').classList.add('visible');
-        document.getElementById('btn-place').style.display = 'none';
-        document.getElementById('btn-place-update').style.display = '';
+      // Switch to LaTeX tab
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelector('[data-tab="latex"]').classList.add('active');
+      document.getElementById('page-latex').classList.add('active');
 
-        updatePreview();
-      } catch(e) { /* item has no pp-latex metadata — ignore */ }
+      // Show edit UI
+      document.getElementById('edit-banner').classList.add('visible');
+      document.getElementById('btn-place').style.display = 'none';
+      document.getElementById('btn-place-update').style.display = '';
+
+      updatePreview();
+      toast('Loaded — edit and click Update');
     });
   } catch(e) { /* selection event not available outside Miro */ }
 
