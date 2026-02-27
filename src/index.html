@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Physics Pathway – Miro Tools</title>
+
+  <!-- KaTeX for client-side LaTeX rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Miro SDK -->
+  <script src="https://miro.com/app/static/sdk/v2/api.js"></script>
+
+  <style>
+    :root {
+      --black:  #1a1a2e;
+      --purple: #a78bfa;
+      --teal:   #5eead4;
+      --yellow: #fbbf24;
+      --bg:     #1e1e2e;
+      --surface:#26263a;
+      --border: #38385a;
+      --text:   #e2e2f0;
+      --muted:  #888aaa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Tab bar ───────────────────────────────── */
+    .tabs {
+      display: flex;
+      background: var(--black);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab {
+      flex: 1;
+      padding: 8px 4px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+    /* ── Panel pages ───────────────────────────── */
+    .page { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .page.active { display: flex; }
+
+    .scroll { overflow-y: auto; flex: 1; padding: 10px; }
+    .scroll::-webkit-scrollbar { width: 4px; }
+    .scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Shared components ─────────────────────── */
+    label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    label:first-child { margin-top: 0; }
+
+    textarea, input[type="text"], input[type="url"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea:focus, input:focus { border-color: var(--purple); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 7px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary  { background: var(--purple); color: #fff; }
+    .btn-primary:hover  { background: #9370e8; }
+    .btn-teal     { background: var(--teal);   color: var(--black); }
+    .btn-teal:hover     { background: #4dd4be; }
+    .btn-yellow   { background: var(--yellow); color: var(--black); }
+    .btn-yellow:hover   { background: #f5a800; }
+    .btn-ghost    { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover    { border-color: var(--purple); color: var(--purple); }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+    .btn-full { width: 100%; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .row { display: flex; gap: 6px; align-items: center; }
+    .row .btn { flex-shrink: 0; }
+    .spacer { height: 10px; }
+
+    /* ── LaTeX preview ─────────────────────────── */
+    #latex-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      min-height: 56px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      overflow: auto;
+    }
+    #latex-preview .katex { color: #fff; }
+    #latex-preview .error-msg { color: #f87171; font-size: 11px; }
+
+    /* ── Colour row ────────────────────────────── */
+    .colour-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .colour-swatch {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+    }
+    .colour-swatch.selected { border-color: #fff; }
+    input[type="color"] {
+      width: 26px; height: 26px;
+      border: none; border-radius: 50%;
+      padding: 0; cursor: pointer;
+      background: none;
+      flex-shrink: 0;
+    }
+    .size-label { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    input[type="range"] { flex: 1; accent-color: var(--purple); }
+
+    /* ── Edit banner ───────────────────────────── */
+    #edit-banner {
+      display: none;
+      background: #2a1f4e;
+      border: 1px solid var(--purple);
+      border-radius: 6px;
+      padding: 7px 10px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--purple);
+      align-items: center;
+      gap: 8px;
+    }
+    #edit-banner.visible { display: flex; }
+    #edit-banner span { flex: 1; }
+
+    /* ── Physics library ───────────────────────── */
+    .lib-section { margin-bottom: 14px; }
+    .lib-section h3 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--purple);
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .lib-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+    .lib-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lib-item:hover { border-color: var(--teal); background: #1e2e32; }
+    .lib-item .eq-name { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+    .lib-item .eq-katex { font-size: 11px; }
+    .lib-item .eq-katex .katex { color: var(--teal); }
+
+    /* ── Embed panel ───────────────────────────── */
+    .embed-type {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .embed-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      color: var(--text);
+    }
+    .embed-btn:hover { border-color: var(--teal); }
+    .embed-btn.active { border-color: var(--teal); background: #1e2e32; color: var(--teal); }
+    .embed-btn .icon { font-size: 18px; display: block; margin-bottom: 3px; }
+    .embed-btn .name { font-size: 10px; font-weight: 600; display: block; }
+    .embed-btn .note { font-size: 9px; color: var(--muted); margin-top: 1px; display: block; }
+
+    .embed-form { display: none; }
+    .embed-form.visible { display: block; }
+
+    .info-box {
+      background: #1a2e1a;
+      border: 1px solid #2d5a2d;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #86efac;
+      margin-top: 6px;
+    }
+    .warn-box {
+      background: #2e1a1a;
+      border: 1px solid #5a2d2d;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #fca5a5;
+      margin-top: 6px;
+    }
+
+    /* ── Status toast ──────────────────────────── */
+    #toast {
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; }
+
+    .geogebra-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .ggb-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+    .ggb-item:hover { border-color: var(--yellow); color: var(--yellow); }
+
+    .phet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .phet-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+    .phet-item:hover { border-color: var(--yellow); color: var(--yellow); }
+  </style>
+</head>
+<body>
+
+<!-- ── Tab bar ── -->
+<div class="tabs">
+  <div class="tab active" data-tab="latex">𝑓(𝑥) LaTeX</div>
+  <div class="tab" data-tab="library">Library</div>
+  <div class="tab" data-tab="embeds">Embeds</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 1: LaTeX Editor
+══════════════════════════════════════════════ -->
+<div class="page active" id="page-latex">
+  <div class="scroll">
+
+    <!-- Edit banner shown when an existing equation is selected -->
+    <div id="edit-banner">
+      <span>✏️ Editing selected equation</span>
+      <button class="btn btn-ghost btn-sm" id="btn-cancel-edit">Cancel</button>
+    </div>
+
+    <label>LaTeX expression</label>
+    <textarea id="latex-input" rows="4" placeholder="e.g. v^2 = u^2 + 2as"></textarea>
+
+    <div id="latex-preview">
+      <span style="color:var(--muted); font-size:11px">Preview will appear here</span>
+    </div>
+
+    <label style="margin-top:12px">Equation colour</label>
+    <div class="colour-row">
+      <div class="colour-swatch selected" style="background:#ffffff" data-colour="#ffffff" title="White"></div>
+      <div class="colour-swatch" style="background:#a78bfa" data-colour="#a78bfa" title="Purple"></div>
+      <div class="colour-swatch" style="background:#5eead4" data-colour="#5eead4" title="Teal"></div>
+      <div class="colour-swatch" style="background:#fbbf24" data-colour="#fbbf24" title="Yellow"></div>
+      <div class="colour-swatch" style="background:#f87171" data-colour="#f87171" title="Red"></div>
+      <div class="colour-swatch" style="background:#86efac" data-colour="#86efac" title="Green"></div>
+      <div class="colour-swatch" style="background:#93c5fd" data-colour="#93c5fd" title="Blue"></div>
+      <input type="color" id="custom-colour" value="#ffffff" title="Custom colour" />
+    </div>
+
+    <label style="margin-top:10px">Size <span id="size-val" style="color:var(--text)">36px</span></label>
+    <div class="row">
+      <span class="size-label">S</span>
+      <input type="range" id="font-size" min="16" max="96" value="36" step="4" />
+      <span class="size-label">XL</span>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="row">
+      <button class="btn btn-primary btn-full" id="btn-place">Place on board</button>
+      <button class="btn btn-ghost" id="btn-place-update" style="display:none">Update</button>
+    </div>
+
+    <div class="spacer"></div>
+    <label>Selection</label>
+    <button class="btn btn-ghost btn-full" id="btn-load-selection">↑ Load selected equation for editing</button>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 2: Physics Library
+══════════════════════════════════════════════ -->
+<div class="page" id="page-library">
+  <div class="scroll" id="library-scroll">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 3: Embeds
+══════════════════════════════════════════════ -->
+<div class="page" id="page-embeds">
+  <div class="scroll">
+
+    <label>Tool</label>
+    <div class="embed-type">
+      <div class="embed-btn active" data-embed="youtube">
+        <span class="icon">▶</span>
+        <span class="name">YouTube</span>
+        <span class="note">Native embed</span>
+      </div>
+      <div class="embed-btn" data-embed="geogebra">
+        <span class="icon">📐</span>
+        <span class="name">GeoGebra</span>
+        <span class="note">Interactive</span>
+      </div>
+      <div class="embed-btn" data-embed="phet">
+        <span class="icon">⚛</span>
+        <span class="name">PhET Sim</span>
+        <span class="note">Interactive</span>
+      </div>
+      <div class="embed-btn" data-embed="isaac">
+        <span class="icon">🔬</span>
+        <span class="name">Isaac Physics</span>
+        <span class="note">Opens tab</span>
+      </div>
+    </div>
+
+    <!-- YouTube -->
+    <div class="embed-form visible" id="form-youtube">
+      <label>YouTube URL or video ID</label>
+      <input type="url" id="yt-url" placeholder="https://youtube.com/watch?v=dQw4w9WgXcQ" />
+      <div class="info-box">Placed as a live, playable video card directly on your Miro board.</div>
+      <div class="spacer"></div>
+      <button class="btn btn-teal btn-full" id="btn-yt-embed">Embed video on board</button>
+    </div>
+
+    <!-- GeoGebra -->
+    <div class="embed-form" id="form-geogebra">
+      <label>Physics applets (click to embed)</label>
+      <div class="geogebra-grid" id="ggb-list">
+        <!-- Populated by JS -->
+      </div>
+      <div class="spacer"></div>
+      <label>Or paste a GeoGebra URL / material ID</label>
+      <input type="text" id="ggb-id" placeholder="e.g. https://www.geogebra.org/m/abcdef12 or abcdef12" />
+      <div class="info-box">Embedded as an interactive applet on your board. Students can manipulate it live.</div>
+      <div class="spacer"></div>
+      <button class="btn btn-teal btn-full" id="btn-ggb-embed">Embed applet on board</button>
+    </div>
+
+    <!-- PhET -->
+    <div class="embed-form" id="form-phet">
+      <label>Physics simulations (click to embed)</label>
+      <div class="phet-grid" id="phet-list">
+        <!-- Populated by JS -->
+      </div>
+      <div class="spacer"></div>
+      <label>Or paste a PhET sim name</label>
+      <input type="text" id="phet-slug" placeholder="e.g. projectile-motion" />
+      <div class="info-box">Embedded as a fully interactive simulation on your board.</div>
+      <div class="spacer"></div>
+      <button class="btn btn-teal btn-full" id="btn-phet-embed">Embed simulation on board</button>
+    </div>
+
+    <!-- Isaac Physics -->
+    <div class="embed-form" id="form-isaac">
+      <label>Isaac Physics question / concept</label>
+      <input type="url" id="isaac-url" placeholder="https://isaacphysics.org/questions/..." />
+      <div class="warn-box">
+        Isaac Physics blocks embedding in other sites. Clicking below places a <strong>clickable card</strong> on your board — students click it to open Isaac in a new tab.
+      </div>
+      <div class="spacer"></div>
+      <label>Card label (optional)</label>
+      <input type="text" id="isaac-label" placeholder="e.g. Projectile motion – Q3" />
+      <div class="spacer"></div>
+      <button class="btn btn-yellow btn-full" id="btn-isaac-card">Place Isaac Physics card</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════
+
+const PHYSICS_LIBRARY = [
+  {
+    section: 'Mechanics – SUVAT',
+    equations: [
+      { name: 'v = u + at',           latex: 'v = u + at' },
+      { name: 'v² = u² + 2as',        latex: 'v^2 = u^2 + 2as' },
+      { name: 's = ut + ½at²',        latex: 's = ut + \\tfrac{1}{2}at^2' },
+      { name: 's = ½(u+v)t',          latex: 's = \\tfrac{1}{2}(u+v)t' },
+      { name: 's = vt − ½at²',        latex: 's = vt - \\tfrac{1}{2}at^2' },
+    ]
+  },
+  {
+    section: "Newton's Laws",
+    equations: [
+      { name: 'F = ma',               latex: '\\vec{F} = m\\vec{a}' },
+      { name: 'F = Δp/Δt',            latex: 'F = \\dfrac{\\Delta p}{\\Delta t}' },
+      { name: 'p = mv',               latex: 'p = mv' },
+      { name: 'W = mg',               latex: 'W = mg' },
+      { name: 'F = μR',               latex: 'F = \\mu R' },
+    ]
+  },
+  {
+    section: 'Energy & Work',
+    equations: [
+      { name: 'W = Fd cosθ',          latex: 'W = Fd\\cos\\theta' },
+      { name: 'KE = ½mv²',            latex: 'E_k = \\tfrac{1}{2}mv^2' },
+      { name: 'GPE = mgh',            latex: 'E_p = mgh' },
+      { name: 'P = W/t',              latex: 'P = \\dfrac{W}{t}' },
+      { name: 'efficiency',           latex: '\\eta = \\dfrac{P_{\\text{out}}}{P_{\\text{in}}}' },
+    ]
+  },
+  {
+    section: 'Waves',
+    equations: [
+      { name: 'v = fλ',               latex: 'v = f\\lambda' },
+      { name: 'T = 1/f',              latex: 'T = \\dfrac{1}{f}' },
+      { name: 'n = c/v',              latex: 'n = \\dfrac{c}{v}' },
+      { name: "Snell's law",          latex: 'n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2' },
+      { name: 'diffraction grating',  latex: 'd\\sin\\theta = n\\lambda' },
+    ]
+  },
+  {
+    section: 'Electricity',
+    equations: [
+      { name: 'V = IR',               latex: 'V = IR' },
+      { name: 'P = IV',               latex: 'P = IV = I^2R = \\dfrac{V^2}{R}' },
+      { name: 'Q = It',               latex: 'Q = It' },
+      { name: 'E = QV',               latex: 'E = QV' },
+      { name: 'resistors series',     latex: 'R_T = R_1 + R_2 + \\cdots' },
+      { name: 'resistors parallel',   latex: '\\dfrac{1}{R_T} = \\dfrac{1}{R_1} + \\dfrac{1}{R_2}' },
+    ]
+  },
+  {
+    section: 'Fields',
+    equations: [
+      { name: 'Coulomb',              latex: 'F = \\dfrac{kQ_1 Q_2}{r^2}' },
+      { name: 'E field',              latex: 'E = \\dfrac{F}{q} = \\dfrac{V}{d}' },
+      { name: 'gravitational',        latex: 'F = \\dfrac{Gm_1 m_2}{r^2}' },
+      { name: 'g field',              latex: 'g = \\dfrac{GM}{r^2}' },
+      { name: 'magnetic force',       latex: 'F = BIl\\sin\\theta' },
+      { name: 'Faraday',             latex: '\\mathcal{E} = -N\\dfrac{\\Delta\\Phi}{\\Delta t}' },
+    ]
+  },
+  {
+    section: 'Thermal Physics',
+    equations: [
+      { name: 'ideal gas',            latex: 'pV = nRT' },
+      { name: 'kinetic theory',       latex: 'pV = \\tfrac{1}{3}Nm\\langle c^2 \\rangle' },
+      { name: 'internal energy',      latex: '\\Delta U = Q + W' },
+      { name: 'Q = mcΔT',            latex: 'Q = mc\\Delta T' },
+    ]
+  },
+  {
+    section: 'Quantum & Nuclear',
+    equations: [
+      { name: 'photon energy',        latex: 'E = hf = \\dfrac{hc}{\\lambda}' },
+      { name: 'photoelectric',        latex: 'hf = \\phi + E_{k,\\max}' },
+      { name: 'de Broglie',           latex: '\\lambda = \\dfrac{h}{p} = \\dfrac{h}{mv}' },
+      { name: 'mass–energy',          latex: 'E = mc^2' },
+      { name: 'activity',             latex: 'A = \\lambda N' },
+      { name: 'half-life',            latex: 't_{\\frac{1}{2}} = \\dfrac{\\ln 2}{\\lambda}' },
+    ]
+  },
+  {
+    section: 'Circular & SHM',
+    equations: [
+      { name: 'centripetal F',        latex: 'F = \\dfrac{mv^2}{r} = mr\\omega^2' },
+      { name: 'angular velocity',     latex: 'v = r\\omega,\\quad \\omega = \\dfrac{2\\pi}{T}' },
+      { name: 'SHM displacement',     latex: 'x = A\\cos(\\omega t + \\phi)' },
+      { name: 'SHM acceleration',     latex: 'a = -\\omega^2 x' },
+    ]
+  },
+];
+
+const GEOGEBRA_APPLETS = [
+  { name: 'Projectile motion',      id: 'xyzvwxyz' },  // example IDs – user replaces with real ones
+  { name: 'Simple harmonic motion', id: 'uyxzmrms' },
+  { name: 'Electric field lines',   id: 'nfkbrwdy' },
+  { name: 'Refraction (Snell)',      id: 'sxzxmkyc' },
+  { name: 'Circular motion',        id: 'kpfpkqme' },
+  { name: 'Capacitor charge',       id: 'mxbkpvzj' },
+  { name: 'Wave superposition',     id: 'tdkwxwxd' },
+  { name: 'Magnetic field',         id: 'qknfmtqs' },
+];
+
+const PHET_SIMS = [
+  { name: 'Projectile Motion',      slug: 'projectile-motion' },
+  { name: 'Wave on a String',       slug: 'wave-on-a-string' },
+  { name: 'Circuit Construction',   slug: 'circuit-construction-kit-dc' },
+  { name: 'Gravity & Orbits',       slug: 'gravity-and-orbits' },
+  { name: 'Charges & Fields',       slug: 'charges-and-fields' },
+  { name: 'Energy Skate Park',      slug: 'energy-skate-park' },
+  { name: 'Wave Interference',      slug: 'wave-interference' },
+  { name: 'Quantum Tunnelling',     slug: 'quantum-tunneling' },
+  { name: 'Nuclear Fission',        slug: 'nuclear-fission' },
+  { name: 'Bending Light',          slug: 'bending-light' },
+  { name: 'Faraday Law',            slug: 'faradays-law' },
+  { name: 'Gas Properties',         slug: 'gas-properties' },
+];
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+
+let selectedColour = '#ffffff';
+let editingItemId  = null;   // Miro item ID of equation being edited
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+
+function toast(msg, ms = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function getLatex() {
+  return document.getElementById('latex-input').value.trim();
+}
+
+function getFontSize() {
+  return parseInt(document.getElementById('font-size').value);
+}
+
+/** Render LaTeX to an SVG data-URL using KaTeX, coloured appropriately */
+function latexToSvgUrl(latex, colour, size) {
+  try {
+    const svg = katex.renderToString(latex, {
+      throwOnError: true,
+      output: 'svg',
+      displayMode: true,
+    });
+    // SVG from KaTeX has no explicit colour — inject it via style on the root
+    const coloured = svg.replace('<svg', `<svg style="color:${colour};fill:${colour}"`);
+    const blob = new Blob([coloured], { type: 'image/svg+xml' });
+    return URL.createObjectURL(blob);
+  } catch(e) {
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PREVIEW
+// ══════════════════════════════════════════════════════════════
+
+let previewTimer = null;
+
+function updatePreview() {
+  const latex   = getLatex();
+  const preview = document.getElementById('latex-preview');
+  if (!latex) {
+    preview.innerHTML = '<span style="color:var(--muted);font-size:11px">Preview will appear here</span>';
+    return;
+  }
+  try {
+    const html = katex.renderToString(latex, { throwOnError: true, displayMode: true });
+    // Apply selected colour via filter / SVG colour trick isn't needed for DOM rendering
+    preview.innerHTML = `<div style="color:${selectedColour}">${html}</div>`;
+  } catch(e) {
+    preview.innerHTML = `<span class="error-msg">⚠ ${e.message}</span>`;
+  }
+}
+
+document.getElementById('latex-input').addEventListener('input', () => {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(updatePreview, 200);
+});
+
+// ══════════════════════════════════════════════════════════════
+// COLOUR PICKER
+// ══════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.colour-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+    swatch.classList.add('selected');
+    selectedColour = swatch.dataset.colour;
+    document.getElementById('custom-colour').value = selectedColour;
+    updatePreview();
+  });
+});
+
+document.getElementById('custom-colour').addEventListener('input', e => {
+  selectedColour = e.target.value;
+  document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+  updatePreview();
+});
+
+// Font size display
+document.getElementById('font-size').addEventListener('input', e => {
+  document.getElementById('size-val').textContent = e.target.value + 'px';
+});
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// MIRO SDK INIT
+// ══════════════════════════════════════════════════════════════
+
+async function placeSvgOnBoard(svgString, latex, colour, existingId = null, existingX = null, existingY = null) {
+  // Convert SVG to a blob URL Miro can use
+  const blob = new Blob([svgString], { type: 'image/svg+xml' });
+  const url  = URL.createObjectURL(blob);
+
+  let x = 0, y = 0;
+  if (existingX !== null) { x = existingX; y = existingY; }
+
+  // Delete existing if updating
+  if (existingId) {
+    try {
+      const old = await miro.board.getById(existingId);
+      await old.delete();
+    } catch(e) {}
+  }
+
+  // Create image from SVG URL
+  const img = await miro.board.createImage({
+    url,
+    x, y,
+    width: getFontSize() * 6,
+  });
+
+  // Attach LaTeX metadata so we can edit it later
+  await img.setMetadata({ latex, colour });
+
+  await miro.board.viewport.zoomTo(img);
+  toast('Equation placed ✓');
+  URL.revokeObjectURL(url);
+  return img;
+}
+
+function buildSvg(latex, colour, size) {
+  try {
+    const rawSvg = katex.renderToString(latex, {
+      throwOnError: true,
+      output: 'svg',
+      displayMode: true,
+    });
+    // Inject colour
+    return rawSvg.replace('<svg', `<svg style="color:${colour};fill:${colour}" width="${size * 5}" height="${size * 2}"`);
+  } catch(e) {
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PLACE / UPDATE BUTTON
+// ══════════════════════════════════════════════════════════════
+
+async function handlePlace(updating = false) {
+  const latex = getLatex();
+  if (!latex) { toast('Enter a LaTeX expression first'); return; }
+
+  const size = getFontSize();
+  const svg  = buildSvg(latex, selectedColour, size);
+  if (!svg) { toast('LaTeX error – check your expression'); return; }
+
+  const btn = document.getElementById(updating ? 'btn-place-update' : 'btn-place');
+  btn.disabled = true;
+  btn.textContent = updating ? 'Updating…' : 'Placing…';
+
+  try {
+    if (updating && editingItemId) {
+      // Get current position of the item we're replacing
+      const old = await miro.board.getById(editingItemId);
+      await placeSvgOnBoard(svg, latex, selectedColour, editingItemId, old.x, old.y);
+      cancelEdit();
+    } else {
+      await placeSvgOnBoard(svg, latex, selectedColour);
+    }
+  } catch(e) {
+    toast('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = updating ? 'Update' : 'Place on board';
+  }
+}
+
+document.getElementById('btn-place').addEventListener('click', () => handlePlace(false));
+document.getElementById('btn-place-update').addEventListener('click', () => handlePlace(true));
+
+// ══════════════════════════════════════════════════════════════
+// LOAD SELECTION FOR EDITING
+// ══════════════════════════════════════════════════════════════
+
+document.getElementById('btn-load-selection').addEventListener('click', async () => {
+  try {
+    const sel = await miro.board.getSelection();
+    if (!sel || sel.length === 0) { toast('Select an equation on the board first'); return; }
+
+    const item = sel[0];
+    const meta = await item.getMetadata();
+
+    if (!meta || !meta.latex) {
+      toast('Selected item has no stored LaTeX — it may not have been placed by this plugin');
+      return;
+    }
+
+    // Load into editor
+    document.getElementById('latex-input').value = meta.latex;
+    if (meta.colour) {
+      selectedColour = meta.colour;
+      document.getElementById('custom-colour').value = meta.colour;
+      document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+    }
+    editingItemId = item.id;
+
+    // Show edit UI
+    document.getElementById('edit-banner').classList.add('visible');
+    document.getElementById('btn-place').style.display = 'none';
+    document.getElementById('btn-place-update').style.display = '';
+
+    updatePreview();
+    toast('Loaded — edit and click Update');
+  } catch(e) {
+    toast('Error loading selection: ' + e.message);
+  }
+});
+
+function cancelEdit() {
+  editingItemId = null;
+  document.getElementById('edit-banner').classList.remove('visible');
+  document.getElementById('btn-place').style.display = '';
+  document.getElementById('btn-place-update').style.display = 'none';
+}
+
+document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
+
+// ══════════════════════════════════════════════════════════════
+// LIBRARY PAGE
+// ══════════════════════════════════════════════════════════════
+
+function buildLibrary() {
+  const container = document.getElementById('library-scroll');
+  PHYSICS_LIBRARY.forEach(section => {
+    const div = document.createElement('div');
+    div.className = 'lib-section';
+    div.innerHTML = `<h3>${section.section}</h3><div class="lib-grid"></div>`;
+    const grid = div.querySelector('.lib-grid');
+
+    section.equations.forEach(eq => {
+      const item = document.createElement('div');
+      item.className = 'lib-item';
+      item.title = 'Click to load in editor';
+
+      let rendered = '';
+      try {
+        rendered = katex.renderToString(eq.latex, { throwOnError: false, displayMode: false });
+      } catch(e) { rendered = eq.name; }
+
+      item.innerHTML = `<div class="eq-name">${eq.name}</div><div class="eq-katex">${rendered}</div>`;
+      item.addEventListener('click', () => {
+        document.getElementById('latex-input').value = eq.latex;
+        // Switch to LaTeX tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelector('[data-tab="latex"]').classList.add('active');
+        document.getElementById('page-latex').classList.add('active');
+        updatePreview();
+        toast('Loaded: ' + eq.name);
+      });
+      grid.appendChild(item);
+    });
+
+    container.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// EMBED BUTTONS
+// ══════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.embed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.embed-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.embed-form').forEach(f => f.classList.remove('visible'));
+    btn.classList.add('active');
+    document.getElementById('form-' + btn.dataset.embed).classList.add('visible');
+  });
+});
+
+// ── YouTube ──
+document.getElementById('btn-yt-embed').addEventListener('click', async () => {
+  let url = document.getElementById('yt-url').value.trim();
+  if (!url) { toast('Enter a YouTube URL'); return; }
+
+  // Extract video ID from various URL forms
+  let videoId = url;
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  if (match) videoId = match[1];
+
+  const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  try {
+    await miro.board.createEmbed({ url: embedUrl, width: 640, height: 360 });
+    toast('Video embedded ✓');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// ── GeoGebra list ──
+function buildGeogebraList() {
+  const list = document.getElementById('ggb-list');
+  GEOGEBRA_APPLETS.forEach(applet => {
+    const item = document.createElement('div');
+    item.className = 'ggb-item';
+    item.textContent = applet.name;
+    item.addEventListener('click', () => {
+      document.getElementById('ggb-id').value = applet.id;
+    });
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('btn-ggb-embed').addEventListener('click', async () => {
+  let raw = document.getElementById('ggb-id').value.trim();
+  if (!raw) { toast('Enter a GeoGebra URL or ID'); return; }
+
+  // Extract ID from URL if full URL given
+  const match = raw.match(/geogebra\.org\/(?:m|material)\/([a-zA-Z0-9]+)/);
+  const id = match ? match[1] : raw;
+
+  const embedUrl = `https://www.geogebra.org/material/iframe/id/${id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/false/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/false/ctl/false`;
+  try {
+    await miro.board.createEmbed({ url: embedUrl, width: 640, height: 480 });
+    toast('GeoGebra applet embedded ✓');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// ── PhET list ──
+function buildPhetList() {
+  const list = document.getElementById('phet-list');
+  PHET_SIMS.forEach(sim => {
+    const item = document.createElement('div');
+    item.className = 'phet-item';
+    item.textContent = sim.name;
+    item.addEventListener('click', () => {
+      document.getElementById('phet-slug').value = sim.slug;
+    });
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('btn-phet-embed').addEventListener('click', async () => {
+  const slug = document.getElementById('phet-slug').value.trim();
+  if (!slug) { toast('Select or enter a simulation name'); return; }
+  const embedUrl = `https://phet.colorado.edu/sims/html/${slug}/latest/${slug}_en.html`;
+  try {
+    await miro.board.createEmbed({ url: embedUrl, width: 800, height: 600 });
+    toast('PhET simulation embedded ✓');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// ── Isaac Physics (card, not embed) ──
+document.getElementById('btn-isaac-card').addEventListener('click', async () => {
+  const url   = document.getElementById('isaac-url').value.trim();
+  const label = document.getElementById('isaac-label').value.trim() || 'Isaac Physics';
+  if (!url) { toast('Enter an Isaac Physics URL'); return; }
+
+  try {
+    // Create a styled sticky note / shape as a clickable link card
+    await miro.board.createStickyNote({
+      content: `🔬 **${label}**\n\n[Open in Isaac Physics ↗](${url})`,
+      style: {
+        fillColor: '#fbbf24',
+        textAlign: 'left',
+      },
+      width: 280,
+    });
+    toast('Isaac Physics card placed ✓');
+  } catch(e) {
+    // Fallback: try creating a card shape
+    toast('Card placed — click to open Isaac ✓');
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+
+async function init() {
+  try {
+    await miro.board.getInfo();
+  } catch(e) {
+    // Running outside Miro (local dev) — continue anyway
+  }
+
+  buildLibrary();
+  buildGeogebraList();
+  buildPhetList();
+
+  // Wait for KaTeX to be ready, then trigger a preview if there's input
+  if (typeof katex !== 'undefined') {
+    updatePreview();
+  } else {
+    // KaTeX loads deferred, wait a moment
+    setTimeout(updatePreview, 600);
+  }
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

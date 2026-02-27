@@ -1,0 +1,17 @@
+{
+  "name": "Physics Pathway Tools",
+  "description": "LaTeX equations with editing, colour control, physics library, and interactive embeds for GeoGebra, PhET, YouTube and Isaac Physics.",
+  "icon": "https://physics-pathway-miro.pages.dev/icon.png",
+  "sdkVersion": "SDK_2",
+  "appType": "panel",
+  "panelDimensions": {
+    "width": 280,
+    "height": 600
+  },
+  "scopes": [
+    "boards:read",
+    "boards:write"
+  ],
+  "redirectUris": [],
+  "webClientOrigins": []
+}

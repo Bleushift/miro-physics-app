@@ -1,0 +1,12 @@
+{
+  "name": "physics-pathway-miro",
+  "version": "1.0.0",
+  "description": "Physics Pathway Miro plugin – LaTeX, embeds, equation library",
+  "scripts": {
+    "dev": "npx serve src -l 3000",
+    "build": "echo 'No build step – pure static HTML. Deploy the src/ folder.'"
+  },
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}
