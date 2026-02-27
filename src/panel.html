@@ -1162,18 +1162,134 @@ async function handlePlace(updating = false) {
 document.getElementById('btn-place').addEventListener('click', () => handlePlace(false));
 document.getElementById('btn-place-update').addEventListener('click', () => handlePlace(true));
 
-// Cmd+Enter (Mac) or Ctrl+Enter (Windows) to place/update
-// Cmd+Shift+A — toggle aligned environment (align by =)
+// ══════════════════════════════════════════════════════════════
+// QUICK LATEX ENGINE (Obsidian-style auto-complete)
+// ══════════════════════════════════════════════════════════════
+
+const BRACKET_PAIRS = { '{': '}', '(': ')', '[': ']' };
+const CLOSE_BRACKETS = new Set(['}', ')', ']']);
+
 document.getElementById('latex-input').addEventListener('keydown', (e) => {
+  const input = e.target;
+  const pos = input.selectionStart;
+  const end = input.selectionEnd;
+  const val = input.value;
+  const before = val.substring(0, pos);
+  const after = val.substring(pos);
+
+  // ── Cmd+Enter → place on board ──
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
     e.preventDefault();
     handlePlace(!!editingItemId);
     return;
   }
 
+  // ── Cmd+Shift+A → toggle aligned ──
   if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
     e.preventDefault();
     toggleAligned();
+    return;
+  }
+
+  // ── Tab → jump to next closing bracket ──
+  if (e.key === 'Tab' && !e.shiftKey) {
+    const nextClose = after.search(/[}\])]/) ;
+    if (nextClose !== -1) {
+      e.preventDefault();
+      const jumpTo = pos + nextClose + 1;
+      input.setSelectionRange(jumpTo, jumpTo);
+      updatePreview();
+      return;
+    }
+  }
+
+  // ── Backspace → delete empty bracket pair ──
+  if (e.key === 'Backspace' && pos > 0 && pos === end) {
+    const charBefore = val[pos - 1];
+    const charAfter = val[pos];
+    if (BRACKET_PAIRS[charBefore] === charAfter) {
+      e.preventDefault();
+      input.value = val.substring(0, pos - 1) + val.substring(pos + 1);
+      input.setSelectionRange(pos - 1, pos - 1);
+      updatePreview();
+      return;
+    }
+  }
+
+  // ── Auto-close brackets: { → {}, ( → (), [ → [] ──
+  if (BRACKET_PAIRS[e.key]) {
+    // Don't auto-close if text is selected (wrap instead handled by default)
+    if (pos !== end) return;
+    e.preventDefault();
+    const open = e.key;
+    const close = BRACKET_PAIRS[open];
+    input.value = before + open + close + after;
+    input.setSelectionRange(pos + 1, pos + 1);
+    updatePreview();
+    return;
+  }
+
+  // ── Smart close bracket: skip over if next char matches ──
+  if (CLOSE_BRACKETS.has(e.key) && val[pos] === e.key) {
+    e.preventDefault();
+    input.setSelectionRange(pos + 1, pos + 1);
+    updatePreview();
+    return;
+  }
+});
+
+// ── Space triggers: auto-fraction, auto-enclose ^/_ ──
+document.getElementById('latex-input').addEventListener('beforeinput', (e) => {
+  if (e.data !== ' ') return;
+
+  const input = document.getElementById('latex-input');
+  const pos = input.selectionStart;
+  const val = input.value;
+  const before = val.substring(0, pos);
+
+  // ── Auto-fraction: a/b → \frac{a}{b} ──
+  const fracMatch = before.match(/([^\s=<>,+\-$\\]+)\/([^\s=<>,+\-$\\]+)$/);
+  if (fracMatch) {
+    e.preventDefault();
+    let num = fracMatch[1];
+    let den = fracMatch[2];
+    // Strip outer parens: (x+1)/(y+2) → \frac{x+1}{y+2}
+    if (num.startsWith('(') && num.endsWith(')')) num = num.slice(1, -1);
+    if (den.startsWith('(') && den.endsWith(')')) den = den.slice(1, -1);
+    const replacement = `\\frac{${num}}{${den}}`;
+    const start = pos - fracMatch[0].length;
+    input.value = val.substring(0, start) + replacement + val.substring(pos);
+    const newPos = start + replacement.length;
+    input.setSelectionRange(newPos, newPos);
+    updatePreview();
+    return;
+  }
+
+  // ── Auto-enclose superscript: x^2 → x^{2} ──
+  const supMatch = before.match(/\^([^\s{}\^_+\-=]+)$/);
+  if (supMatch && supMatch[1].length <= 10) {
+    e.preventDefault();
+    const expr = supMatch[1];
+    const start = pos - expr.length;
+    const wrapped = `{${expr}} `;
+    input.value = val.substring(0, start) + wrapped + val.substring(pos);
+    const newPos = start + wrapped.length;
+    input.setSelectionRange(newPos, newPos);
+    updatePreview();
+    return;
+  }
+
+  // ── Auto-enclose subscript: x_i → x_{i} ──
+  const subMatch = before.match(/_([^\s{}\^_+\-=]+)$/);
+  if (subMatch && subMatch[1].length <= 10) {
+    e.preventDefault();
+    const expr = subMatch[1];
+    const start = pos - expr.length;
+    const wrapped = `{${expr}} `;
+    input.value = val.substring(0, start) + wrapped + val.substring(pos);
+    const newPos = start + wrapped.length;
+    input.setSelectionRange(newPos, newPos);
+    updatePreview();
     return;
   }
 });
