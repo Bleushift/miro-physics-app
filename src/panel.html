@@ -84,7 +84,7 @@
       color: var(--text);
       padding: 8px;
       font-family: 'Courier New', monospace;
-      font-size: 12px;
+      font-size: 16px;
       resize: vertical;
       outline: none;
       transition: border-color 0.15s;
@@ -119,6 +119,32 @@
     .row { display: flex; gap: 6px; align-items: center; }
     .row .btn { flex-shrink: 0; }
     .spacer { height: 10px; }
+
+    /* ── Quick LaTeX toolbar ─────────────────────── */
+    .quick-latex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+    .quick-latex button {
+      background: var(--black);
+      border: 1px solid var(--border);
+      color: var(--teal);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      transition: all 0.12s;
+      line-height: 1.2;
+    }
+    .quick-latex button:hover {
+      border-color: var(--purple);
+      background: var(--surface);
+      color: var(--purple);
+    }
 
     /* ── LaTeX preview ─────────────────────────── */
     #latex-preview {
@@ -386,6 +412,29 @@
 
     <label>LaTeX expression</label>
     <textarea id="latex-input" rows="4" placeholder="e.g. v^2 = u^2 + 2as"></textarea>
+
+    <div class="quick-latex" id="quick-latex">
+      <button data-ins="\frac{▢}{▢}" title="Fraction">½</button>
+      <button data-ins="^{▢}" title="Superscript">x²</button>
+      <button data-ins="_{▢}" title="Subscript">x₂</button>
+      <button data-ins="\sqrt{▢}" title="Square root">√</button>
+      <button data-ins="\vec{▢}" title="Vector">v⃗</button>
+      <button data-ins="\Delta " title="Delta">Δ</button>
+      <button data-ins="\theta" title="Theta">θ</button>
+      <button data-ins="\lambda" title="Lambda">λ</button>
+      <button data-ins="\omega" title="Omega">ω</button>
+      <button data-ins="\pi" title="Pi">π</button>
+      <button data-ins="\mu" title="Mu">μ</button>
+      <button data-ins="\varepsilon" title="Epsilon">ε</button>
+      <button data-ins="\sum" title="Summation">Σ</button>
+      <button data-ins="\int" title="Integral">∫</button>
+      <button data-ins="\infty" title="Infinity">∞</button>
+      <button data-ins="\times " title="Times">×</button>
+      <button data-ins="\cdot " title="Dot">·</button>
+      <button data-ins="\rightarrow " title="Arrow">→</button>
+      <button data-ins="\text{▢}" title="Plain text">Aa</button>
+      <button data-ins="\dfrac{▢}{▢}" title="Display fraction">▢/▢</button>
+    </div>
 
     <label style="margin-top:8px">Colour selected text <span style="color:var(--muted);font-size:10px">(select text above, then click)</span></label>
     <div class="colour-row" id="text-colour-row">
@@ -919,6 +968,43 @@ function updatePreview() {
 document.getElementById('latex-input').addEventListener('input', () => {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(updatePreview, 200);
+});
+
+// ══════════════════════════════════════════════════════════════
+// QUICK LATEX TOOLBAR
+// ══════════════════════════════════════════════════════════════
+
+document.querySelectorAll('#quick-latex button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById('latex-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+    const snippet = btn.dataset.ins;
+
+    // If there's selected text, wrap it (replace ▢ with selection)
+    const selected = text.substring(start, end);
+    let insert, cursorPos;
+
+    if (selected && snippet.includes('▢')) {
+      // Replace first ▢ with the selection
+      insert = snippet.replace('▢', selected);
+      cursorPos = start + insert.length;
+    } else if (snippet.includes('▢')) {
+      // Place cursor where first ▢ is
+      const placeholderIdx = snippet.indexOf('▢');
+      insert = snippet.replace(/▢/g, '');
+      cursorPos = start + placeholderIdx;
+    } else {
+      insert = snippet;
+      cursorPos = start + insert.length;
+    }
+
+    input.value = text.substring(0, start) + insert + text.substring(end);
+    input.focus();
+    input.setSelectionRange(cursorPos, cursorPos);
+    updatePreview();
+  });
 });
 
 // ══════════════════════════════════════════════════════════════
