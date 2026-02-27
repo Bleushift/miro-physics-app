@@ -157,6 +157,16 @@
       background: none;
       flex-shrink: 0;
     }
+    .text-colour-btn {
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      border: 2px solid transparent;
+    }
+    .text-colour-btn:hover { border-color: #fff; transform: scale(1.15); }
+
     .size-label { color: var(--muted); font-size: 11px; white-space: nowrap; }
     input[type="range"] { flex: 1; accent-color: var(--purple); }
 
@@ -328,11 +338,24 @@
     <label>LaTeX expression</label>
     <textarea id="latex-input" rows="4" placeholder="e.g. v^2 = u^2 + 2as"></textarea>
 
+    <label style="margin-top:8px">Colour selected text <span style="color:var(--muted);font-size:10px">(select text above, then click)</span></label>
+    <div class="colour-row" id="text-colour-row">
+      <div class="text-colour-btn" style="background:#f87171" data-tc="#f87171" title="Red"></div>
+      <div class="text-colour-btn" style="background:#93c5fd" data-tc="#3b82f6" title="Blue"></div>
+      <div class="text-colour-btn" style="background:#86efac" data-tc="#22c55e" title="Green"></div>
+      <div class="text-colour-btn" style="background:#a78bfa" data-tc="#a78bfa" title="Purple"></div>
+      <div class="text-colour-btn" style="background:#fbbf24" data-tc="#fbbf24" title="Yellow"></div>
+      <div class="text-colour-btn" style="background:#5eead4" data-tc="#5eead4" title="Teal"></div>
+      <div class="text-colour-btn" style="background:#f9a8d4" data-tc="#ec4899" title="Pink"></div>
+      <div class="text-colour-btn" style="background:#ffffff; border:1px solid var(--border)" data-tc="#ffffff" title="White"></div>
+      <button class="btn btn-ghost btn-sm" id="btn-remove-colour" title="Remove colour from selection" style="font-size:10px;padding:3px 6px;">✕</button>
+    </div>
+
     <div id="latex-preview">
       <span style="color:var(--muted); font-size:11px">Preview will appear here</span>
     </div>
 
-    <label style="margin-top:12px">Equation colour</label>
+    <label style="margin-top:12px">Whole equation colour</label>
     <div class="colour-row">
       <div class="colour-swatch selected" style="background:#ffffff" data-colour="#ffffff" title="White"></div>
       <div class="colour-swatch" style="background:#a78bfa" data-colour="#a78bfa" title="Purple"></div>
@@ -678,6 +701,39 @@ document.getElementById('custom-colour').addEventListener('input', e => {
 // Font size display
 document.getElementById('font-size').addEventListener('input', e => {
   document.getElementById('size-val').textContent = e.target.value + 'px';
+});
+
+// ══════════════════════════════════════════════════════════════
+// TEXT COLOUR (wrap selected text in \textcolor)
+// ══════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.text-colour-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById('latex-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    if (start === end) { toast('Select some text first'); return; }
+
+    const before = input.value.substring(0, start);
+    const selected = input.value.substring(start, end);
+    const after = input.value.substring(end);
+    const colour = btn.dataset.tc;
+
+    input.value = before + `\\textcolor{${colour}}{${selected}}` + after;
+    // Place cursor after the inserted text
+    const newPos = before.length + `\\textcolor{${colour}}{${selected}}`.length;
+    input.setSelectionRange(newPos, newPos);
+    input.focus();
+    updatePreview();
+  });
+});
+
+document.getElementById('btn-remove-colour').addEventListener('click', () => {
+  const input = document.getElementById('latex-input');
+  // Remove \textcolor{...}{...} wrappers — unwrap to just the inner content
+  input.value = input.value.replace(/\\textcolor\{[^}]*\}\{([^}]*)\}/g, '$1');
+  input.focus();
+  updatePreview();
 });
 
 // ══════════════════════════════════════════════════════════════
