@@ -10,6 +10,9 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
 
+  <!-- html2canvas for rasterising equations (Miro requires PNG/JPEG) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <!-- Miro SDK -->
   <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
 
@@ -892,23 +895,6 @@ function getFontSize() {
   return parseInt(document.getElementById('font-size').value);
 }
 
-/** Render LaTeX to an SVG data-URL using KaTeX, coloured appropriately */
-function latexToSvgUrl(latex, colour, size) {
-  try {
-    const svg = katex.renderToString(latex, {
-      throwOnError: true,
-      output: 'svg',
-      displayMode: true,
-    });
-    // SVG from KaTeX has no explicit colour — inject it via style on the root
-    const coloured = svg.replace('<svg', `<svg style="color:${colour};fill:${colour}"`);
-    const blob = new Blob([coloured], { type: 'image/svg+xml' });
-    return URL.createObjectURL(blob);
-  } catch(e) {
-    return null;
-  }
-}
-
 // ══════════════════════════════════════════════════════════════
 // PREVIEW
 // ══════════════════════════════════════════════════════════════
@@ -1011,55 +997,50 @@ document.querySelectorAll('.tab').forEach(tab => {
 // MIRO SDK INIT
 // ══════════════════════════════════════════════════════════════
 
-async function placeSvgOnBoard(svgString, latex, colour, existingId = null, existingX = null, existingY = null) {
-  // Convert SVG to base64 data URL (Miro doesn't accept blob: URLs)
-  const b64 = btoa(unescape(encodeURIComponent(svgString)));
-  const dataUrl = `data:image/svg+xml;base64,${b64}`;
+/** Render LaTeX to a PNG data-URL using KaTeX HTML + html2canvas */
+async function renderLatexToPng(latex, colour, size) {
+  const html = katex.renderToString(latex, {
+    throwOnError: true,
+    displayMode: true,
+  });
 
+  const container = document.createElement('div');
+  container.style.cssText = `position:absolute;left:-9999px;top:-9999px;font-size:${size}px;color:${colour};padding:8px 12px;display:inline-block;background:transparent;`;
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, { backgroundColor: null, scale: 3 });
+    return canvas.toDataURL('image/png');
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+async function placeOnBoard(pngDataUrl, latex, colour, existingId = null, existingX = null, existingY = null) {
   let x = 0, y = 0;
   if (existingX !== null) { x = existingX; y = existingY; }
   else {
-    // Place in centre of current viewport
     const viewport = await miro.board.viewport.get();
     x = viewport.x + 0.5 * viewport.width;
     y = viewport.y + 0.5 * viewport.height;
   }
 
-  // Delete existing if updating
   if (existingId) {
-    try {
-      await miro.board.remove(await miro.board.getById(existingId));
-    } catch(e) {}
+    try { await miro.board.remove(await miro.board.getById(existingId)); } catch(e) {}
   }
 
-  // Create image from base64 data URL
   const img = await miro.board.createImage({
-    url: dataUrl,
+    url: pngDataUrl,
     title: 'LaTeX equation',
     x, y,
     width: getFontSize() * 6,
   });
 
-  // Attach LaTeX metadata so we can edit it later
   await img.setMetadata('pp-latex', { latex, colour });
-
   await miro.board.viewport.zoomTo(img);
   toast('Equation placed ✓');
   return img;
-}
-
-function buildSvg(latex, colour, size) {
-  try {
-    const rawSvg = katex.renderToString(latex, {
-      throwOnError: true,
-      output: 'svg',
-      displayMode: true,
-    });
-    // Inject colour
-    return rawSvg.replace('<svg', `<svg style="color:${colour};fill:${colour}" width="${size * 5}" height="${size * 2}"`);
-  } catch(e) {
-    return null;
-  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1070,22 +1051,20 @@ async function handlePlace(updating = false) {
   const latex = getLatex();
   if (!latex) { toast('Enter a LaTeX expression first'); return; }
 
-  const size = getFontSize();
-  const svg  = buildSvg(latex, selectedColour, size);
-  if (!svg) { toast('LaTeX error – check your expression'); return; }
-
   const btn = document.getElementById(updating ? 'btn-place-update' : 'btn-place');
   btn.disabled = true;
   btn.textContent = updating ? 'Updating…' : 'Placing…';
 
   try {
+    const size = getFontSize();
+    const pngUrl = await renderLatexToPng(latex, selectedColour, size);
+
     if (updating && editingItemId) {
-      // Get current position of the item we're replacing
       const old = await miro.board.getById(editingItemId);
-      await placeSvgOnBoard(svg, latex, selectedColour, editingItemId, old.x, old.y);
+      await placeOnBoard(pngUrl, latex, selectedColour, editingItemId, old.x, old.y);
       cancelEdit();
     } else {
-      await placeSvgOnBoard(svg, latex, selectedColour);
+      await placeOnBoard(pngUrl, latex, selectedColour);
     }
   } catch(e) {
     toast('Error: ' + e.message);
