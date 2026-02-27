@@ -506,6 +506,50 @@
       border-color: var(--purple);
       color: var(--purple);
     }
+
+    /* ── Theme toggle ─────────────────────────── */
+    .theme-toggle {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 14px;
+      flex-shrink: 0; padding: 0;
+      transition: color 0.15s;
+      margin-right: 2px;
+    }
+    .theme-toggle:hover { color: var(--yellow); }
+
+    /* ── Light theme ──────────────────────────── */
+    [data-theme="light"] {
+      --black:  #f0f0f5;
+      --purple: #7C3AED;
+      --teal:   #0d9488;
+      --yellow: #d97706;
+      --bg:     #f5f5fa;
+      --surface:#ffffff;
+      --border: #d4d4e0;
+      --text:   #1e1e2e;
+      --muted:  #64748b;
+    }
+    [data-theme="light"] .btn-primary { color: #fff; }
+    [data-theme="light"] .colour-swatch.selected { border-color: var(--text); }
+    [data-theme="light"] .bg-swatch.selected { border-color: var(--text); }
+    [data-theme="light"] .text-colour-btn:hover { border-color: var(--text); }
+    [data-theme="light"] #latex-preview .katex { color: var(--text); }
+    [data-theme="light"] #edit-banner { background: #ede9fe; border-color: var(--purple); color: var(--purple); }
+    [data-theme="light"] .lib-tag { background: #ede9fe; color: var(--purple); }
+    [data-theme="light"] .lib-item:hover { background: #e0f7f5; border-color: var(--teal); }
+    [data-theme="light"] .embed-btn.active { background: #e0f7f5; color: var(--teal); border-color: var(--teal); }
+    [data-theme="light"] .circuit-item:hover { background: #e0f7f5; border-color: var(--teal); }
+    [data-theme="light"] .info-box { background: #ecfdf5; border-color: #86efac; color: #166534; }
+    [data-theme="light"] .warn-box { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+    [data-theme="light"] .circuit-item svg { filter: invert(1); }
+    [data-theme="light"] .quick-latex button { background: var(--surface); color: var(--teal); }
+    [data-theme="light"] .quick-latex button:hover { background: var(--black); color: var(--purple); }
+    [data-theme="light"] .eq-pill.aqa { background: rgba(124,58,237,0.12); color: #6d28d9; }
+    [data-theme="light"] .eq-pill.edexcel { background: rgba(59,130,246,0.12); color: #2563eb; }
+    [data-theme="light"] .eq-pill.ocr { background: rgba(16,185,129,0.12); color: #059669; }
+    [data-theme="light"] .lib-item .eq-katex .katex { color: var(--teal); }
   </style>
 </head>
 <body>
@@ -517,6 +561,7 @@
   <div class="tab" data-tab="embeds">Embeds</div>
   <div class="tab" data-tab="circuits">Circuits</div>
   <div class="tab" data-tab="tools">Tools</div>
+  <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark theme">🌙</button>
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -2515,6 +2560,34 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('page-' + tab.dataset.tab).classList.add('active');
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ══════════════════════════════════════════════════════════════
+
+(function initTheme() {
+  const btn = document.getElementById('theme-toggle');
+  const saved = localStorage.getItem('pp-miro-theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    btn.textContent = '☀️';
+    btn.title = 'Switch to dark theme';
+  }
+  btn.addEventListener('click', () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      document.documentElement.removeAttribute('data-theme');
+      btn.textContent = '🌙';
+      btn.title = 'Switch to light theme';
+      localStorage.setItem('pp-miro-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      btn.textContent = '☀️';
+      btn.title = 'Switch to dark theme';
+      localStorage.setItem('pp-miro-theme', 'light');
+    }
+  });
+})();
 
 // ══════════════════════════════════════════════════════════════
 // MIRO SDK INIT
