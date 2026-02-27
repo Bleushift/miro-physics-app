@@ -179,6 +179,16 @@
       transition: border-color 0.15s;
     }
     .colour-swatch.selected { border-color: #fff; }
+    .bg-swatch {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+      position: relative;
+    }
+    .bg-swatch.selected { border-color: #fff; }
     input[type="color"] {
       width: 26px; height: 26px;
       border: none; border-radius: 50%;
@@ -290,6 +300,18 @@
     .lib-item .eq-name { font-size: 11px; color: var(--muted); min-width: 80px; flex-shrink: 0; }
     .lib-item .eq-katex { font-size: 16px; flex: 1; }
     .lib-item .eq-katex .katex { color: var(--teal); }
+    .lib-item .eq-pills { display: flex; gap: 2px; flex-shrink: 0; flex-wrap: wrap; }
+    .lib-item .eq-pill {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 6px;
+      line-height: 1.4;
+    }
+    .eq-pill.aqa { background: rgba(124,58,237,0.2); color: #a78bfa; }
+    .eq-pill.edexcel { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .eq-pill.ocr { background: rgba(16,185,129,0.2); color: #34d399; }
+    .eq-pill.on-sheet { background: rgba(251,191,36,0.15); color: var(--yellow); font-size: 7px; }
 
     /* ── Embed panel ───────────────────────────── */
     .embed-type {
@@ -570,6 +592,24 @@
       <span class="size-label">XL</span>
     </div>
 
+    <label style="margin-top:10px">Background <span id="bg-label" style="color:var(--muted);font-size:10px">(none)</span></label>
+    <div class="colour-row">
+      <div class="bg-swatch selected" data-bg="none" title="No background" style="background:repeating-conic-gradient(#333 0% 25%, #555 0% 50%) 50%/8px 8px; position:relative"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:#fff">✕</span></div>
+      <div class="bg-swatch" data-bg="#ffffff" title="White" style="background:#ffffff"></div>
+      <div class="bg-swatch" data-bg="#1e1e1e" title="Dark" style="background:#1e1e1e"></div>
+      <div class="bg-swatch" data-bg="#F5F3FF" title="Lavender" style="background:#F5F3FF"></div>
+      <div class="bg-swatch" data-bg="#FEF9C3" title="Yellow" style="background:#FEF9C3"></div>
+      <div class="bg-swatch" data-bg="#ECFDF5" title="Mint" style="background:#ECFDF5"></div>
+      <input type="color" id="custom-bg" value="#ffffff" title="Custom background" />
+    </div>
+
+    <label style="margin-top:8px">Border radius <span id="radius-val" style="color:var(--text)">8px</span></label>
+    <div class="row">
+      <span class="size-label">□</span>
+      <input type="range" id="bg-radius" min="0" max="24" value="8" step="2" />
+      <span class="size-label">◯</span>
+    </div>
+
     <div class="spacer"></div>
     <div class="row">
       <button class="btn btn-primary btn-full" id="btn-place">Place on board</button>
@@ -588,6 +628,13 @@
 ══════════════════════════════════════════════ -->
 <div class="page" id="page-library">
   <div class="scroll" id="library-scroll">
+    <div class="board-filter" id="lib-board-filter">
+      <span class="board-chip active" data-board="all">All</span>
+      <span class="board-chip" data-board="AQA">AQA</span>
+      <span class="board-chip" data-board="Edexcel">Edexcel</span>
+      <span class="board-chip" data-board="OCR">OCR</span>
+      <span class="board-chip" data-board="sheet" style="margin-left:auto;border-color:var(--yellow);color:var(--yellow)">📋 Sheet</span>
+    </div>
     <input type="text" id="lib-search" placeholder="Search equations... (e.g. SUVAT, capacitor, Snell)" />
     <div id="lib-sections"></div>
   </div>
@@ -799,305 +846,565 @@
 
 const PHYSICS_LIBRARY = [
   // ═══════════════════════════════════════════════════
-  // FUNDAMENTAL CONSTANTS & VALUES
+  // 1. FUNDAMENTAL CONSTANTS
   // ═══════════════════════════════════════════════════
   {
     section: 'Fundamental Constants',
     equations: [
-      { name: 'speed of light',                latex: 'c = 3.00 \\times 10^8\\;\\text{m s}^{-1}' },
-      { name: 'permittivity of free space',    latex: '\\varepsilon_0 = 8.85 \\times 10^{-12}\\;\\text{F m}^{-1}' },
-      { name: 'Coulomb constant',              latex: '\\dfrac{1}{4\\pi\\varepsilon_0} = 8.99 \\times 10^9\\;\\text{N m}^2\\text{ C}^{-2}' },
-      { name: 'electron charge',               latex: 'e = 1.60 \\times 10^{-19}\\;\\text{C}' },
-      { name: 'Planck constant',               latex: 'h = 6.63 \\times 10^{-34}\\;\\text{J s}' },
-      { name: 'gravitational constant',        latex: 'G = 6.67 \\times 10^{-11}\\;\\text{N m}^2\\text{ kg}^{-2}' },
-      { name: 'Avogadro constant',             latex: 'N_A = 6.02 \\times 10^{23}\\;\\text{mol}^{-1}' },
-      { name: 'molar gas constant',            latex: 'R = 8.31\\;\\text{J mol}^{-1}\\text{ K}^{-1}' },
-      { name: 'Boltzmann constant',            latex: 'k = 1.38 \\times 10^{-23}\\;\\text{J K}^{-1}' },
-      { name: 'Stefan constant',               latex: '\\sigma = 5.67 \\times 10^{-8}\\;\\text{W m}^{-2}\\text{ K}^{-4}' },
-      { name: 'permeability of free space',    latex: '\\mu_0 = 4\\pi \\times 10^{-7}\\;\\text{H m}^{-1}' },
-      { name: 'electron mass',                 latex: 'm_e = 9.11 \\times 10^{-31}\\;\\text{kg}' },
-      { name: 'proton mass',                   latex: 'm_p = 1.67(3) \\times 10^{-27}\\;\\text{kg}' },
-      { name: 'neutron mass',                  latex: 'm_n = 1.67(5) \\times 10^{-27}\\;\\text{kg}' },
-      { name: 'atomic mass unit',              latex: 'u = 1.661 \\times 10^{-27}\\;\\text{kg} = 931.5\\;\\text{MeV}' },
-      { name: 'g on Earth',                    latex: 'g = 9.81\\;\\text{m s}^{-2}' },
+      { name: 'speed of light',                latex: 'c = 3.00 \\times 10^8\\;\\text{m s}^{-1}',                                       boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'permittivity of free space',    latex: '\\varepsilon_0 = 8.85 \\times 10^{-12}\\;\\text{F m}^{-1}',                      boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'Coulomb constant',              latex: '\\dfrac{1}{4\\pi\\varepsilon_0} = 8.99 \\times 10^9\\;\\text{N m}^2\\text{ C}^{-2}', boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'electron charge',               latex: 'e = 1.60 \\times 10^{-19}\\;\\text{C}',                                          boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'Planck constant',               latex: 'h = 6.63 \\times 10^{-34}\\;\\text{J s}',                                        boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'gravitational constant',        latex: 'G = 6.67 \\times 10^{-11}\\;\\text{N m}^2\\text{ kg}^{-2}',                      boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'Avogadro constant',             latex: 'N_A = 6.02 \\times 10^{23}\\;\\text{mol}^{-1}',                                  boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'molar gas constant',            latex: 'R = 8.31\\;\\text{J mol}^{-1}\\text{ K}^{-1}',                                   boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'Boltzmann constant',            latex: 'k = 1.38 \\times 10^{-23}\\;\\text{J K}^{-1}',                                   boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'Stefan constant',               latex: '\\sigma = 5.67 \\times 10^{-8}\\;\\text{W m}^{-2}\\text{ K}^{-4}',               boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'permeability of free space',    latex: '\\mu_0 = 4\\pi \\times 10^{-7}\\;\\text{H m}^{-1}',                              boards: 'AQA OCR',         sheet: true },
+      { name: 'electron mass',                 latex: 'm_e = 9.11 \\times 10^{-31}\\;\\text{kg}',                                       boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'proton mass',                   latex: 'm_p = 1.67(3) \\times 10^{-27}\\;\\text{kg}',                                    boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'neutron mass',                  latex: 'm_n = 1.67(5) \\times 10^{-27}\\;\\text{kg}',                                    boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'atomic mass unit',              latex: 'u = 1.661 \\times 10^{-27}\\;\\text{kg} = 931.5\\;\\text{MeV}',                  boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'g on Earth',                    latex: 'g = 9.81\\;\\text{m s}^{-2}',                                                    boards: 'AQA Edexcel OCR', sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.2 PARTICLES & RADIATION
+  // 2. PHOTONS & ENERGY LEVELS
   // ═══════════════════════════════════════════════════
   {
     section: 'Photons & Energy Levels',
     equations: [
-      { name: 'photon energy',               latex: 'E = hf' },
-      { name: 'photon energy (wavelength)',   latex: 'E = \\dfrac{hc}{\\lambda}' },
-      { name: 'photoelectric equation',       latex: 'hf = \\phi + E_{k(\\max)}' },
-      { name: 'de Broglie wavelength',        latex: '\\lambda = \\dfrac{h}{mv}' },
-      { name: 'energy level transition',      latex: 'hf = E_1 - E_2' },
+      // E=hf: NOT on AQA data booklet (must know); IS on Edexcel and OCR data booklets
+      { name: 'photon energy',               latex: 'E = hf',                                                   boards: 'AQA Edexcel OCR', sheet: true },
+      // E=hc/lambda: NOT on AQA data booklet; IS on OCR (as E=hf=hc/lambda) and Edexcel
+      { name: 'photon energy (wavelength)',   latex: 'E = \\dfrac{hc}{\\lambda}',                               boards: 'AQA Edexcel OCR', sheet: true },
+      // Photoelectric: on all three data booklets
+      { name: 'photoelectric equation',       latex: 'hf = \\phi + E_{k(\\max)}',                               boards: 'AQA Edexcel OCR', sheet: true },
+      // de Broglie: on all three data booklets
+      { name: 'de Broglie wavelength',        latex: '\\lambda = \\dfrac{h}{mv}',                               boards: 'AQA OCR',         sheet: true },
+      // Edexcel writes de Broglie as lambda=h/p
+      { name: 'de Broglie wavelength (momentum)',  latex: '\\lambda = \\dfrac{h}{p}',                           boards: 'Edexcel',          sheet: true },
+      // Energy level transition: on AQA and OCR data booklets
+      { name: 'energy level transition',      latex: 'hf = E_1 - E_2',                                         boards: 'AQA OCR',          sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.3 WAVES
+  // 3. PROGRESSIVE WAVES
   // ═══════════════════════════════════════════════════
   {
     section: 'Progressive Waves',
     equations: [
-      { name: 'wave speed',           latex: 'v = f\\lambda' },
-      { name: 'period',               latex: 'f = \\dfrac{1}{T}' },
-      { name: 'intensity',            latex: 'I = \\dfrac{P}{A}' },
-    ]
-  },
-  {
-    section: 'Refraction',
-    equations: [
-      { name: 'refractive index',        latex: 'n = \\dfrac{c}{v}' },
-      { name: "Snell's law",             latex: 'n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2' },
-      { name: 'critical angle',          latex: '\\sin\\theta_c = \\dfrac{n_2}{n_1}' },
-    ]
-  },
-  {
-    section: 'Interference & Diffraction',
-    equations: [
-      { name: 'diffraction grating',     latex: 'd\\sin\\theta = n\\lambda' },
-      { name: 'double slit',             latex: 'w = \\dfrac{\\lambda D}{s}' },
+      // v=f*lambda: NOT on AQA data booklet (must know); IS on Edexcel and OCR data booklets
+      { name: 'wave speed',                  latex: 'v = f\\lambda',                                             boards: 'AQA Edexcel OCR', sheet: true },
+      // f=1/T: NOT on AQA data booklet; IS on OCR data booklet
+      { name: 'period',                      latex: 'f = \\dfrac{1}{T}',                                        boards: 'AQA Edexcel OCR', sheet: true },
+      // Intensity: NOT on AQA data booklet; IS on OCR and Edexcel data booklets
+      { name: 'intensity',                   latex: 'I = \\dfrac{P}{A}',                                        boards: 'AQA Edexcel OCR', sheet: true },
+      // Vector components: OCR Module 2 data booklet only
+      { name: 'horizontal component',        latex: 'F_x = F\\cos\\theta',                                      boards: 'OCR',              sheet: true },
+      { name: 'vertical component',          latex: 'F_y = F\\sin\\theta',                                      boards: 'OCR',              sheet: true },
+      // Wave on a string: Edexcel only
+      { name: 'wave speed on string',        latex: 'v = \\sqrt{\\dfrac{T}{\\mu}}',                             boards: 'Edexcel',          sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.4 MECHANICS & MATERIALS
+  // 4. REFRACTION
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Refraction',
+    equations: [
+      // n=c/v: NOT on AQA data booklet (must know); IS on OCR and Edexcel data booklets
+      { name: 'refractive index',            latex: 'n = \\dfrac{c}{v}',                                        boards: 'AQA Edexcel OCR', sheet: true },
+      // Snell's law: NOT on AQA data booklet; IS on OCR and Edexcel
+      { name: "Snell's law",                 latex: 'n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2',                  boards: 'AQA Edexcel OCR', sheet: true },
+      // Critical angle: NOT on AQA data booklet; IS on OCR and Edexcel
+      { name: 'critical angle',              latex: '\\sin\\theta_c = \\dfrac{1}{n}',                           boards: 'AQA Edexcel OCR', sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 5. INTERFERENCE & DIFFRACTION
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Interference & Diffraction',
+    equations: [
+      // Diffraction grating: on all three data booklets
+      { name: 'diffraction grating',         latex: 'd\\sin\\theta = n\\lambda',                                 boards: 'AQA Edexcel OCR', sheet: true },
+      // Double slit: AQA uses w=lambdaD/s; OCR uses lambda=ax/D
+      { name: 'double slit (AQA)',           latex: 'w = \\dfrac{\\lambda D}{s}',                                boards: 'AQA',             sheet: true },
+      { name: 'double slit (OCR)',           latex: '\\lambda = \\dfrac{ax}{D}',                                 boards: 'OCR',             sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 6. KINEMATICS (SUVAT)
   // ═══════════════════════════════════════════════════
   {
     section: 'Kinematics (SUVAT)',
     equations: [
-      { name: 'v = u + at',             latex: 'v = u + at' },
-      { name: 'v² = u² + 2as',          latex: 'v^2 = u^2 + 2as' },
-      { name: 's = ut + ½at²',          latex: 's = ut + \\tfrac{1}{2}at^2' },
-      { name: 's = ½(u+v)t',            latex: 's = \\tfrac{1}{2}(u + v)t' },
-      { name: 's = vt − ½at²',          latex: 's = vt - \\tfrac{1}{2}at^2' },
-    ]
-  },
-  {
-    section: 'Forces & Momentum',
-    equations: [
-      { name: 'force (Newton II)',       latex: 'F = ma' },
-      { name: 'weight',                  latex: 'W = mg' },
-      { name: 'momentum',                latex: 'p = mv' },
-      { name: 'impulse',                 latex: 'F\\,\\Delta t = \\Delta(mv)' },
-      { name: 'moment',                  latex: '\\text{moment} = Fd' },
-    ]
-  },
-  {
-    section: 'Energy & Power',
-    equations: [
-      { name: 'work done',              latex: 'W = Fs\\cos\\theta' },
-      { name: 'kinetic energy',          latex: 'E_k = \\tfrac{1}{2}mv^2' },
-      { name: 'gravitational PE',       latex: '\\Delta E_p = mg\\Delta h' },
-      { name: 'power',                   latex: 'P = \\dfrac{\\Delta W}{\\Delta t}' },
-      { name: 'power (force × velocity)',latex: 'P = Fv' },
-      { name: 'efficiency',              latex: '\\text{efficiency} = \\dfrac{\\text{useful output}}{\\text{total input}}' },
-    ]
-  },
-  {
-    section: 'Materials',
-    equations: [
-      { name: 'density',                 latex: '\\rho = \\dfrac{m}{V}' },
-      { name: 'Hooke\'s law',            latex: 'F = k\\,\\Delta L' },
-      { name: 'Young modulus',            latex: 'E = \\dfrac{\\sigma}{\\varepsilon} = \\dfrac{FL}{A\\,\\Delta L}' },
-      { name: 'stress',                  latex: '\\sigma = \\dfrac{F}{A}' },
-      { name: 'strain',                  latex: '\\varepsilon = \\dfrac{\\Delta L}{L}' },
-      { name: 'elastic strain energy',   latex: 'E = \\tfrac{1}{2}F\\,\\Delta L = \\tfrac{1}{2}k\\,(\\Delta L)^2' },
+      // All 4 SUVAT equations are on all three data booklets
+      { name: 'v = u + at',                  latex: 'v = u + at',                                                boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'v\\u00B2 = u\\u00B2 + 2as',  latex: 'v^2 = u^2 + 2as',                                          boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 's = ut + \\u00BDat\\u00B2',   latex: 's = ut + \\tfrac{1}{2}at^2',                               boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 's = \\u00BD(u+v)t',           latex: 's = \\tfrac{1}{2}(u + v)t',                                boards: 'AQA Edexcel OCR', sheet: true },
+      // 5th SUVAT: on AQA data booklet; not separately listed by Edexcel/OCR (derived)
+      { name: 's = vt - \\u00BDat\\u00B2',   latex: 's = vt - \\tfrac{1}{2}at^2',                               boards: 'AQA',             sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.5 ELECTRICITY
+  // 7. FORCES & MOMENTUM
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Forces & Momentum',
+    equations: [
+      // F=ma: NOT on AQA data booklet (must know); Edexcel has SigmaF=ma on data booklet; OCR derives from F=Dp/Dt
+      { name: 'Newton\'s second law',         latex: 'F = ma',                                                   boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel explicitly writes SigmaF=ma on data booklet
+      { name: 'net force (Edexcel)',          latex: '\\Sigma F = ma',                                           boards: 'Edexcel',          sheet: true },
+      // Weight: NOT on AQA data booklet; on Edexcel data booklet (W=mg); OCR implicit
+      { name: 'weight',                       latex: 'W = mg',                                                   boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel writes g=F/m on data booklet
+      { name: 'gravitational field strength (surface)', latex: 'g = \\dfrac{F}{m}',                              boards: 'Edexcel OCR',      sheet: true },
+      // Momentum: NOT on AQA data booklet; on Edexcel and OCR data booklets
+      { name: 'momentum',                     latex: 'p = mv',                                                   boards: 'AQA Edexcel OCR', sheet: true },
+      // Force as rate of change of momentum: on AQA data booklet; OCR data booklet
+      { name: 'force (rate of change of momentum, AQA)', latex: 'F = \\dfrac{\\Delta(mv)}{\\Delta t}',           boards: 'AQA',             sheet: true },
+      { name: 'force (rate of change of momentum, OCR)', latex: 'F = \\dfrac{\\Delta p}{\\Delta t}',             boards: 'OCR',             sheet: true },
+      // Impulse: on AQA data booklet; Edexcel writes F*Delta(t)=Delta(p)
+      { name: 'impulse (AQA)',                latex: 'F\\,\\Delta t = \\Delta(mv)',                              boards: 'AQA',             sheet: true },
+      { name: 'impulse (Edexcel)',            latex: 'F\\,\\Delta t = \\Delta p',                                boards: 'Edexcel',          sheet: true },
+      // Moment: on AQA data booklet as moment=Fd; OCR has moment=Fx and torque=Fd
+      { name: 'moment of a force',            latex: '\\text{moment} = Fd',                                     boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR torque of a couple: on OCR data booklet
+      { name: 'torque of a couple',           latex: '\\tau = Fd',                                               boards: 'OCR',             sheet: true },
+      // Edexcel KE from momentum: on Edexcel data booklet
+      { name: 'kinetic energy (momentum)',    latex: 'E_k = \\dfrac{p^2}{2m}',                                  boards: 'Edexcel',          sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 8. ENERGY & POWER
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Energy & Power',
+    equations: [
+      // Work done: on AQA data booklet; Edexcel writes Delta(W)=F*Delta(s)
+      { name: 'work done (AQA/OCR)',          latex: 'W = Fs\\cos\\theta',                                      boards: 'AQA OCR',         sheet: true },
+      { name: 'work done (Edexcel)',          latex: '\\Delta W = F\\,\\Delta s',                                boards: 'Edexcel',          sheet: true },
+      // KE: NOT on AQA data booklet (must know); on Edexcel and OCR data booklets
+      { name: 'kinetic energy',               latex: 'E_k = \\tfrac{1}{2}mv^2',                                 boards: 'AQA Edexcel OCR', sheet: true },
+      // GPE: NOT on AQA data booklet (must know); on Edexcel and OCR data booklets
+      { name: 'gravitational PE',             latex: '\\Delta E_p = mg\\Delta h',                                boards: 'AQA Edexcel OCR', sheet: true },
+      // Power: on AQA data booklet; on Edexcel (as P=E/t=W/t) and OCR
+      { name: 'power',                        latex: 'P = \\dfrac{\\Delta W}{\\Delta t}',                       boards: 'AQA OCR',         sheet: true },
+      { name: 'power (Edexcel)',              latex: 'P = \\dfrac{E}{t} = \\dfrac{W}{t}',                       boards: 'Edexcel',          sheet: true },
+      // P=Fv: on AQA, OCR, and Edexcel data booklets
+      { name: 'power (force \\u00D7 velocity)', latex: 'P = Fv',                                                boards: 'AQA Edexcel OCR', sheet: true },
+      // Efficiency: NOT on AQA data booklet; on Edexcel and OCR data booklets
+      { name: 'efficiency',                   latex: '\\text{efficiency} = \\dfrac{\\text{useful output}}{\\text{total input}}', boards: 'AQA Edexcel OCR', sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 9. MATERIALS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Materials',
+    equations: [
+      // Density: NOT on AQA data booklet (must know); on OCR and Edexcel data booklets
+      { name: 'density',                      latex: '\\rho = \\dfrac{m}{V}',                                   boards: 'AQA Edexcel OCR', sheet: true },
+      // Pressure: OCR has p=F/A and hydrostatic p=h*rho*g on data booklet; Edexcel not explicit
+      { name: 'pressure',                     latex: 'p = \\dfrac{F}{A}',                                       boards: 'OCR',             sheet: true },
+      { name: 'hydrostatic pressure',         latex: 'p = h\\rho g',                                            boards: 'OCR',             sheet: true },
+      // Hooke's law: on AQA data booklet; on OCR (F=kx); on Edexcel (Delta(F)=k*Delta(x))
+      { name: 'Hooke\'s law (AQA)',           latex: 'F = k\\,\\Delta L',                                       boards: 'AQA',             sheet: true },
+      { name: 'Hooke\'s law (OCR)',           latex: 'F = kx',                                                  boards: 'OCR',             sheet: true },
+      { name: 'Hooke\'s law (Edexcel)',       latex: '\\Delta F = k\\,\\Delta x',                               boards: 'Edexcel',          sheet: true },
+      // Young modulus: on all three data booklets
+      { name: 'Young modulus',                latex: 'E = \\dfrac{\\sigma}{\\varepsilon}',                      boards: 'AQA Edexcel OCR', sheet: true },
+      // Stress: on all three data booklets
+      { name: 'stress',                       latex: '\\sigma = \\dfrac{F}{A}',                                 boards: 'AQA Edexcel OCR', sheet: true },
+      // Strain: on all three data booklets (AQA uses DeltaL/L; OCR uses x/L; Edexcel uses Deltax/x)
+      { name: 'strain (AQA)',                 latex: '\\varepsilon = \\dfrac{\\Delta L}{L}',                    boards: 'AQA',             sheet: true },
+      { name: 'strain (OCR)',                 latex: '\\varepsilon = \\dfrac{x}{L}',                            boards: 'OCR',             sheet: true },
+      { name: 'strain (Edexcel)',             latex: '\\varepsilon = \\dfrac{\\Delta x}{x}',                    boards: 'Edexcel',          sheet: true },
+      // Elastic strain energy: on all three data booklets
+      { name: 'elastic strain energy',        latex: 'E = \\tfrac{1}{2}F\\,\\Delta L = \\tfrac{1}{2}k\\,(\\Delta L)^2', boards: 'AQA',     sheet: true },
+      { name: 'elastic strain energy (OCR)',  latex: 'E = \\tfrac{1}{2}Fx = \\tfrac{1}{2}kx^2',                boards: 'OCR',             sheet: true },
+      { name: 'elastic strain energy (Edexcel)', latex: '\\Delta E_{el} = \\tfrac{1}{2}F\\,\\Delta x',         boards: 'Edexcel',          sheet: true },
+      // Stokes' law: Edexcel only
+      { name: 'Stokes\' law',                 latex: 'F = 6\\pi\\eta r v',                                     boards: 'Edexcel',          sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 10. CURRENT & CHARGE
   // ═══════════════════════════════════════════════════
   {
     section: 'Current & Charge',
     equations: [
-      { name: 'charge',                  latex: '\\Delta Q = I\\,\\Delta t' },
-      { name: 'potential difference',    latex: 'V = \\dfrac{W}{Q}' },
-      { name: 'Ohm\'s law',              latex: 'V = IR' },
-      { name: 'resistivity',             latex: 'R = \\dfrac{\\rho L}{A}' },
-    ]
-  },
-  {
-    section: 'Power & Energy',
-    equations: [
-      { name: 'electrical power',        latex: 'P = IV = I^2 R = \\dfrac{V^2}{R}' },
-      { name: 'energy transferred',      latex: 'W = VIt' },
-      { name: 'EMF equation',            latex: '\\varepsilon = I(R + r)' },
-      { name: 'terminal PD',             latex: '\\varepsilon = V + Ir' },
-    ]
-  },
-  {
-    section: 'Circuit Rules',
-    equations: [
-      { name: 'resistors in series',     latex: 'R_T = R_1 + R_2 + R_3 + \\cdots' },
-      { name: 'resistors in parallel',   latex: '\\dfrac{1}{R_T} = \\dfrac{1}{R_1} + \\dfrac{1}{R_2} + \\dfrac{1}{R_3} + \\cdots' },
-      { name: 'potential divider',       latex: 'V_{\\text{out}} = \\dfrac{R_2}{R_1 + R_2}\\,V_{\\text{in}}' },
+      // Charge: on AQA and OCR data booklets; Edexcel writes I=DeltaQ/Deltat
+      { name: 'charge (AQA/OCR)',             latex: '\\Delta Q = I\\,\\Delta t',                                boards: 'AQA OCR',         sheet: true },
+      { name: 'current (Edexcel)',            latex: 'I = \\dfrac{\\Delta Q}{\\Delta t}',                       boards: 'Edexcel',          sheet: true },
+      // Drift velocity: on OCR and Edexcel data booklets; NOT on AQA
+      { name: 'drift velocity (OCR)',         latex: 'I = Anev',                                                boards: 'OCR',             sheet: true },
+      { name: 'drift velocity (Edexcel)',     latex: 'I = nqvA',                                                boards: 'Edexcel',          sheet: true },
+      // Potential difference: NOT on AQA data booklet (must know); on OCR (W=VQ); on Edexcel (V=W/Q)
+      { name: 'potential difference',         latex: 'V = \\dfrac{W}{Q}',                                      boards: 'AQA Edexcel OCR', sheet: true },
+      // Ohm's law: NOT on AQA data booklet; on Edexcel (R=V/I); implicit in all boards
+      { name: 'Ohm\'s law',                   latex: 'V = IR',                                                  boards: 'AQA Edexcel OCR', sheet: true },
+      // Resistivity: on AQA, OCR, and Edexcel data booklets
+      { name: 'resistivity',                  latex: 'R = \\dfrac{\\rho L}{A}',                                 boards: 'AQA Edexcel OCR', sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.6 FURTHER MECHANICS & THERMAL
+  // 11. POWER & ENERGY (ELECTRICAL)
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Power & Energy (Electrical)',
+    equations: [
+      // Electrical power: NOT on AQA data booklet (must know); on Edexcel and OCR data booklets
+      { name: 'electrical power',             latex: 'P = IV = I^2 R = \\dfrac{V^2}{R}',                        boards: 'AQA Edexcel OCR', sheet: true },
+      // Energy transferred: on AQA data booklet; on Edexcel and OCR data booklets
+      { name: 'energy transferred',           latex: 'W = VIt',                                                 boards: 'AQA Edexcel OCR', sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 12. CIRCUIT RULES
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Circuit Rules',
+    equations: [
+      // EMF: on all three data booklets
+      { name: 'EMF equation',                 latex: '\\varepsilon = I(R + r)',                                  boards: 'AQA Edexcel OCR', sheet: true },
+      // Terminal PD: on AQA and OCR data booklets
+      { name: 'terminal PD',                  latex: '\\varepsilon = V + Ir',                                   boards: 'AQA OCR',         sheet: true },
+      // Resistors in series: on AQA and OCR data booklets; on Edexcel (implicit)
+      { name: 'resistors in series',          latex: 'R_T = R_1 + R_2 + R_3 + \\cdots',                        boards: 'AQA Edexcel OCR', sheet: true },
+      // Resistors in parallel: on AQA and OCR data booklets; on Edexcel (implicit)
+      { name: 'resistors in parallel',        latex: '\\dfrac{1}{R_T} = \\dfrac{1}{R_1} + \\dfrac{1}{R_2} + \\dfrac{1}{R_3} + \\cdots', boards: 'AQA Edexcel OCR', sheet: true },
+      // Potential divider: on AQA data booklet; on OCR with two forms
+      { name: 'potential divider',            latex: 'V_{\\text{out}} = \\dfrac{R_2}{R_1 + R_2}\\,V_{\\text{in}}', boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR alternative potential divider form
+      { name: 'potential divider (ratio, OCR)', latex: '\\dfrac{V_1}{V_2} = \\dfrac{R_1}{R_2}',                boards: 'OCR',             sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 13. CIRCULAR MOTION
   // ═══════════════════════════════════════════════════
   {
     section: 'Circular Motion',
     equations: [
-      { name: 'angular speed',           latex: '\\omega = \\dfrac{2\\pi}{T} = 2\\pi f' },
-      { name: 'linear speed',            latex: 'v = \\omega r' },
-      { name: 'centripetal acceleration', latex: 'a = \\dfrac{v^2}{r} = \\omega^2 r' },
-      { name: 'centripetal force',        latex: 'F = \\dfrac{mv^2}{r} = m\\omega^2 r' },
-    ]
-  },
-  {
-    section: 'Simple Harmonic Motion',
-    equations: [
-      { name: 'SHM condition',           latex: 'a = -\\omega^2 x' },
-      { name: 'displacement',            latex: 'x = A\\cos(\\omega t)' },
-      { name: 'velocity (max)',          latex: 'v_{\\max} = \\omega A' },
-      { name: 'velocity',                latex: 'v = \\pm\\omega\\sqrt{A^2 - x^2}' },
-      { name: 'period (mass–spring)',    latex: 'T = 2\\pi\\sqrt{\\dfrac{m}{k}}' },
-      { name: 'period (pendulum)',       latex: 'T = 2\\pi\\sqrt{\\dfrac{l}{g}}' },
-    ]
-  },
-  {
-    section: 'Thermal Physics',
-    equations: [
-      { name: 'internal energy',          latex: '\\Delta U = Q - W' },
-      { name: 'specific heat capacity',  latex: 'Q = mc\\,\\Delta\\theta' },
-      { name: 'specific latent heat',    latex: 'Q = mL' },
-      { name: 'ideal gas law',            latex: 'pV = nRT' },
-      { name: 'ideal gas (Boltzmann)',   latex: 'pV = NkT' },
-      { name: 'kinetic theory',          latex: '\\tfrac{1}{2}m\\langle c^2\\rangle = \\tfrac{3}{2}kT' },
-      { name: 'gas pressure',            latex: 'pV = \\tfrac{1}{3}Nm\\langle c^2\\rangle' },
+      // Angular speed: on all three data booklets
+      { name: 'angular speed',                latex: '\\omega = \\dfrac{2\\pi}{T} = 2\\pi f',                   boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel writes T=2pi/omega separately
+      { name: 'period from angular speed',    latex: 'T = \\dfrac{2\\pi}{\\omega}',                             boards: 'Edexcel',          sheet: true },
+      // Linear speed: on all three data booklets
+      { name: 'linear speed',                 latex: 'v = \\omega r',                                           boards: 'AQA Edexcel OCR', sheet: true },
+      // Centripetal acceleration: on all three data booklets
+      { name: 'centripetal acceleration',      latex: 'a = \\dfrac{v^2}{r} = \\omega^2 r',                     boards: 'AQA Edexcel OCR', sheet: true },
+      // Centripetal force: on all three data booklets
+      { name: 'centripetal force',             latex: 'F = \\dfrac{mv^2}{r} = m\\omega^2 r',                   boards: 'AQA Edexcel OCR', sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.7 FIELDS
+  // 14. SIMPLE HARMONIC MOTION
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Simple Harmonic Motion',
+    equations: [
+      // SHM defining equation: on all three data booklets
+      { name: 'SHM condition',                latex: 'a = -\\omega^2 x',                                        boards: 'AQA Edexcel OCR', sheet: true },
+      // SHM restoring force: on Edexcel data booklet
+      { name: 'SHM restoring force',          latex: 'F = -kx',                                                 boards: 'Edexcel',          sheet: true },
+      // Displacement: cos form on all three; OCR also gives sin form
+      { name: 'displacement (cos)',            latex: 'x = A\\cos(\\omega t)',                                   boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'displacement (sin, OCR)',       latex: 'x = A\\sin(\\omega t)',                                   boards: 'OCR',             sheet: true },
+      // Velocity: Edexcel gives explicit v = -Aw sin(wt); AQA/OCR give v = +/-w*sqrt(A^2-x^2)
+      { name: 'velocity (Edexcel)',            latex: 'v = -A\\omega\\sin(\\omega t)',                           boards: 'Edexcel',          sheet: true },
+      { name: 'velocity',                      latex: 'v = \\pm\\omega\\sqrt{A^2 - x^2}',                      boards: 'AQA OCR',         sheet: true },
+      // Acceleration: Edexcel gives explicit a = -Aw^2 cos(wt)
+      { name: 'acceleration (Edexcel)',        latex: 'a = -A\\omega^2\\cos(\\omega t)',                         boards: 'Edexcel',          sheet: true },
+      // Maximum velocity
+      { name: 'maximum velocity',              latex: 'v_{\\max} = \\omega A',                                  boards: 'AQA Edexcel OCR', sheet: false },
+      // Period (mass-spring): on all three data booklets
+      { name: 'period (mass-spring)',          latex: 'T = 2\\pi\\sqrt{\\dfrac{m}{k}}',                         boards: 'AQA Edexcel OCR', sheet: true },
+      // Period (pendulum): on all three data booklets
+      { name: 'period (pendulum)',             latex: 'T = 2\\pi\\sqrt{\\dfrac{l}{g}}',                         boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel also writes omega=2pi*f and T=1/f=2pi/omega
+      { name: 'SHM angular frequency',        latex: '\\omega = 2\\pi f',                                       boards: 'Edexcel',          sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 15. THERMAL PHYSICS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Thermal Physics',
+    equations: [
+      // Specific heat capacity: on all three data booklets (OCR/Edexcel use E instead of Q)
+      { name: 'specific heat capacity (AQA)',  latex: 'Q = mc\\,\\Delta\\theta',                                boards: 'AQA',             sheet: true },
+      { name: 'specific heat capacity (OCR/Edexcel)', latex: 'E = mc\\,\\Delta\\theta',                         boards: 'Edexcel OCR',     sheet: true },
+      // Specific latent heat: on all three data booklets
+      { name: 'specific latent heat (AQA)',    latex: 'Q = mL',                                                 boards: 'AQA',             sheet: true },
+      { name: 'specific latent heat (OCR/Edexcel)', latex: 'E = mL',                                            boards: 'Edexcel OCR',     sheet: true },
+      // Ideal gas law: on all three data booklets
+      { name: 'ideal gas law (moles)',         latex: 'pV = nRT',                                               boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'ideal gas law (molecules)',     latex: 'pV = NkT',                                               boards: 'AQA Edexcel OCR', sheet: true },
+      // Kinetic theory: on all three data booklets
+      { name: 'mean KE of molecule',           latex: '\\tfrac{1}{2}m\\langle c^2\\rangle = \\tfrac{3}{2}kT',  boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR also writes E = 3/2 kT as standalone
+      { name: 'thermal energy per molecule (OCR)', latex: 'E = \\tfrac{3}{2}kT',                                boards: 'OCR',             sheet: true },
+      // Gas pressure equation: on all three data booklets
+      { name: 'gas pressure',                  latex: 'pV = \\tfrac{1}{3}Nm\\langle c^2\\rangle',              boards: 'AQA Edexcel OCR', sheet: true },
+      // First law of thermodynamics
+      { name: 'first law of thermodynamics',   latex: '\\Delta U = Q - W',                                     boards: 'AQA',             sheet: false },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 16. GRAVITATIONAL FIELDS
   // ═══════════════════════════════════════════════════
   {
     section: 'Gravitational Fields',
     equations: [
-      { name: 'Newton\'s law of gravitation', latex: 'F = \\dfrac{Gm_1 m_2}{r^2}' },
-      { name: 'gravitational field strength', latex: 'g = \\dfrac{F}{m} = \\dfrac{GM}{r^2}' },
-      { name: 'gravitational potential',      latex: 'V = -\\dfrac{GM}{r}' },
-      { name: 'orbital speed',                latex: 'v = \\sqrt{\\dfrac{GM}{r}}' },
-      { name: 'orbital period',               latex: 'T^2 = \\dfrac{4\\pi^2 r^3}{GM}' },
-      { name: 'escape velocity',              latex: 'v_{\\text{esc}} = \\sqrt{\\dfrac{2GM}{r}}' },
-    ]
-  },
-  {
-    section: 'Electric Fields',
-    equations: [
-      { name: 'Coulomb\'s law',               latex: 'F = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q_1 Q_2}{r^2}' },
-      { name: 'electric field strength (radial)', latex: 'E = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q}{r^2}' },
-      { name: 'electric field strength (uniform)', latex: 'E = \\dfrac{V}{d}' },
-      { name: 'field strength',               latex: 'E = \\dfrac{F}{Q}' },
-      { name: 'electric potential',            latex: 'V = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q}{r}' },
-      { name: 'work done (field)',             latex: 'W = QV' },
-    ]
-  },
-  {
-    section: 'Capacitance',
-    equations: [
-      { name: 'capacitance',                  latex: 'C = \\dfrac{Q}{V}' },
-      { name: 'parallel plate capacitor',     latex: 'C = \\dfrac{\\varepsilon_0 \\varepsilon_r A}{d}' },
-      { name: 'energy stored',                latex: 'E = \\tfrac{1}{2}QV = \\tfrac{1}{2}CV^2 = \\dfrac{Q^2}{2C}' },
-      { name: 'capacitors in parallel',       latex: 'C_T = C_1 + C_2 + C_3' },
-      { name: 'capacitors in series',         latex: '\\dfrac{1}{C_T} = \\dfrac{1}{C_1} + \\dfrac{1}{C_2} + \\dfrac{1}{C_3}' },
-      { name: 'charging/discharging',         latex: 'Q = Q_0\\,e^{-t/RC}' },
-      { name: 'time constant',                latex: '\\tau = RC' },
-    ]
-  },
-  {
-    section: 'Magnetic Fields',
-    equations: [
-      { name: 'force on wire',                latex: 'F = BIl\\sin\\theta' },
-      { name: 'force on charge',              latex: 'F = BQv\\sin\\theta' },
-      { name: 'magnetic flux',                latex: '\\Phi = BA\\cos\\theta' },
-      { name: 'flux linkage',                 latex: 'N\\Phi = BAN\\cos\\theta' },
-      { name: 'Faraday\'s law',               latex: '\\varepsilon = -N\\dfrac{\\Delta\\Phi}{\\Delta t}' },
-      { name: 'transformer ratio',            latex: '\\dfrac{V_s}{V_p} = \\dfrac{N_s}{N_p}' },
-      { name: 'alternating current',          latex: 'I_{\\text{rms}} = \\dfrac{I_0}{\\sqrt{2}},\\quad V_{\\text{rms}} = \\dfrac{V_0}{\\sqrt{2}}' },
+      // Newton's law of gravitation: on all three data booklets
+      { name: 'Newton\'s law of gravitation',  latex: 'F = \\dfrac{Gm_1 m_2}{r^2}',                            boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR has negative sign: F = -GMm/r^2
+      { name: 'gravitational force (OCR, with sign)', latex: 'F = -\\dfrac{GMm}{r^2}',                         boards: 'OCR',             sheet: true },
+      // Field strength: on all three data booklets
+      { name: 'gravitational field strength',  latex: 'g = \\dfrac{GM}{r^2}',                                  boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR has negative sign
+      { name: 'gravitational field strength (OCR, with sign)', latex: 'g = -\\dfrac{GM}{r^2}',                  boards: 'OCR',             sheet: true },
+      // Gravitational potential: on all three data booklets
+      { name: 'gravitational potential',       latex: 'V_g = -\\dfrac{GM}{r}',                                  boards: 'AQA Edexcel OCR', sheet: true },
+      // Gravitational PE: on OCR data booklet explicitly
+      { name: 'gravitational PE (field)',      latex: 'E = -\\dfrac{GMm}{r}',                                   boards: 'OCR',             sheet: true },
+      // Orbital period: on AQA and OCR data booklets
+      { name: 'orbital period',                latex: 'T^2 = \\dfrac{4\\pi^2 r^3}{GM}',                        boards: 'AQA OCR',         sheet: true },
+      // Orbital/escape velocities: on AQA data booklet
+      { name: 'orbital speed',                 latex: 'v = \\sqrt{\\dfrac{GM}{r}}',                             boards: 'AQA',             sheet: true },
+      { name: 'escape velocity',               latex: 'v_{\\text{esc}} = \\sqrt{\\dfrac{2GM}{r}}',             boards: 'AQA',             sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // 3.8 NUCLEAR PHYSICS
+  // 17. ELECTRIC FIELDS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Electric Fields',
+    equations: [
+      // Coulomb's law: on all three data booklets
+      { name: 'Coulomb\'s law',                latex: 'F = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q_1 Q_2}{r^2}', boards: 'AQA Edexcel OCR', sheet: true },
+      // Field strength (definition): on all three data booklets
+      { name: 'electric field strength',       latex: 'E = \\dfrac{F}{Q}',                                     boards: 'AQA Edexcel OCR', sheet: true },
+      // Radial field strength: on all three data booklets
+      { name: 'electric field (radial)',       latex: 'E = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q}{r^2}',    boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel also writes using k
+      { name: 'electric field (radial, Edexcel)', latex: 'E = \\dfrac{kQ}{r^2}',                               boards: 'Edexcel',          sheet: true },
+      // Uniform field: on all three data booklets
+      { name: 'electric field (uniform)',      latex: 'E = \\dfrac{V}{d}',                                     boards: 'AQA Edexcel OCR', sheet: true },
+      // Electric potential: on all three data booklets
+      { name: 'electric potential',            latex: 'V = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q}{r}',      boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel also writes using k
+      { name: 'electric potential (Edexcel)',  latex: 'V = \\dfrac{kQ}{r}',                                    boards: 'Edexcel',          sheet: true },
+      // Work done in electric field: on AQA and OCR data booklets
+      { name: 'work done (electric field)',    latex: 'W = QV',                                                 boards: 'AQA Edexcel OCR', sheet: true },
+      // Electric PE (OCR): on OCR data booklet
+      { name: 'electric PE (OCR)',             latex: 'E = \\dfrac{Qq}{4\\pi\\varepsilon_0 r}',                boards: 'OCR',             sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 18. CAPACITANCE
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Capacitance',
+    equations: [
+      // Capacitance: on all three data booklets
+      { name: 'capacitance',                   latex: 'C = \\dfrac{Q}{V}',                                     boards: 'AQA Edexcel OCR', sheet: true },
+      // Parallel plate: on AQA data booklet (with epsilon_r); OCR writes without epsilon_r
+      { name: 'parallel plate capacitor (AQA)', latex: 'C = \\dfrac{\\varepsilon_0 \\varepsilon_r A}{d}',      boards: 'AQA',             sheet: true },
+      { name: 'parallel plate capacitor (OCR)', latex: 'C = \\dfrac{\\varepsilon_0 A}{d}',                     boards: 'OCR',             sheet: true },
+      // Spherical capacitor: OCR only
+      { name: 'spherical capacitor (OCR)',     latex: 'C = 4\\pi\\varepsilon_0 R',                              boards: 'OCR',             sheet: true },
+      // Energy stored: on all three data booklets
+      { name: 'energy stored',                 latex: 'E = \\tfrac{1}{2}QV = \\tfrac{1}{2}CV^2 = \\dfrac{Q^2}{2C}', boards: 'AQA Edexcel OCR', sheet: true },
+      // Capacitors in parallel: on AQA and OCR data booklets
+      { name: 'capacitors in parallel',        latex: 'C_T = C_1 + C_2 + C_3',                                 boards: 'AQA Edexcel OCR', sheet: true },
+      // Capacitors in series: on AQA and OCR data booklets
+      { name: 'capacitors in series',          latex: '\\dfrac{1}{C_T} = \\dfrac{1}{C_1} + \\dfrac{1}{C_2} + \\dfrac{1}{C_3}', boards: 'AQA Edexcel OCR', sheet: true },
+      // Discharge: on all three data booklets
+      { name: 'capacitor discharge (charge)',  latex: 'Q = Q_0\\,e^{-t/RC}',                                   boards: 'AQA Edexcel OCR', sheet: true },
+      // Edexcel also gives log form for discharge
+      { name: 'capacitor discharge (log form, Edexcel)', latex: '\\ln Q = \\ln Q_0 - \\dfrac{t}{RC}',          boards: 'Edexcel',          sheet: true },
+      // Edexcel also gives V and I discharge forms
+      { name: 'capacitor discharge (voltage)', latex: 'V = V_0\\,e^{-t/RC}',                                   boards: 'Edexcel OCR',     sheet: true },
+      { name: 'capacitor discharge (current)', latex: 'I = I_0\\,e^{-t/RC}',                                   boards: 'Edexcel OCR',     sheet: true },
+      // OCR charging capacitor: on OCR data booklet
+      { name: 'capacitor charging (OCR)',      latex: 'x = x_0\\left(1 - e^{-t/CR}\\right)',                   boards: 'OCR',             sheet: true },
+      // Time constant: on AQA and OCR data booklets
+      { name: 'time constant',                 latex: '\\tau = RC',                                             boards: 'AQA Edexcel OCR', sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 19. MAGNETIC FIELDS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Magnetic Fields',
+    equations: [
+      // Force on wire: on all three data booklets
+      { name: 'force on current-carrying wire', latex: 'F = BIl\\sin\\theta',                                  boards: 'AQA Edexcel OCR', sheet: true },
+      // Force on charge: on all three data booklets (OCR omits sin theta)
+      { name: 'force on moving charge',        latex: 'F = BQv\\sin\\theta',                                   boards: 'AQA Edexcel',     sheet: true },
+      { name: 'force on moving charge (OCR)',  latex: 'F = BQv',                                               boards: 'OCR',             sheet: true },
+      // Magnetic flux: on all three data booklets
+      { name: 'magnetic flux',                 latex: '\\Phi = BA\\cos\\theta',                                 boards: 'AQA Edexcel OCR', sheet: true },
+      // Faraday's law: on all three data booklets
+      { name: 'Faraday\'s law',                latex: '\\varepsilon = -N\\dfrac{\\Delta\\Phi}{\\Delta t}',     boards: 'AQA OCR',         sheet: true },
+      // Edexcel writes Faraday's law as epsilon = -d(NPhi)/dt
+      { name: 'Faraday\'s law (Edexcel)',      latex: '\\varepsilon = -\\dfrac{d(N\\Phi)}{dt}',                boards: 'Edexcel',          sheet: true },
+      // Transformer: on all three data booklets
+      { name: 'transformer ratio',             latex: '\\dfrac{N_s}{N_p} = \\dfrac{V_s}{V_p}',                boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR also gives current ratio in transformer
+      { name: 'transformer (current, OCR)',    latex: '\\dfrac{N_s}{N_p} = \\dfrac{V_s}{V_p} = \\dfrac{I_p}{I_s}', boards: 'OCR',        sheet: true },
+      // RMS values: on AQA and Edexcel data booklets
+      { name: 'RMS voltage',                   latex: 'V_{\\text{rms}} = \\dfrac{V_0}{\\sqrt{2}}',             boards: 'AQA Edexcel',     sheet: true },
+      { name: 'RMS current',                   latex: 'I_{\\text{rms}} = \\dfrac{I_0}{\\sqrt{2}}',             boards: 'AQA Edexcel',     sheet: true },
+      // Flux linkage: on AQA data booklet
+      { name: 'flux linkage',                  latex: 'N\\Phi = BAN\\cos\\theta',                               boards: 'AQA',             sheet: true },
+      // Edexcel: charged particle radius in magnetic field
+      { name: 'radius of charged particle in B-field (Edexcel)', latex: 'r = \\dfrac{p}{BQ}',                  boards: 'Edexcel',          sheet: true },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 20. NUCLEAR PHYSICS
   // ═══════════════════════════════════════════════════
   {
     section: 'Nuclear Physics',
     equations: [
-      { name: 'mass–energy equivalence',      latex: 'E = mc^2' },
-      { name: 'mass–energy (amu)',            latex: '\\Delta E = \\Delta m\\,c^2' },
-      { name: 'activity',                     latex: 'A = \\lambda N' },
-      { name: 'decay law',                    latex: 'N = N_0\\,e^{-\\lambda t}' },
-      { name: 'half-life',                    latex: 't_{\\frac{1}{2}} = \\dfrac{\\ln 2}{\\lambda}' },
-      { name: 'nuclear radius',               latex: 'R = R_0\\,A^{1/3}' },
-      { name: 'inverse square law (gamma)',   latex: 'I = \\dfrac{k}{x^2}' },
+      // Mass-energy: on all three data booklets
+      { name: 'mass-energy equivalence',       latex: '\\Delta E = \\Delta m\\,c^2',                           boards: 'AQA Edexcel OCR', sheet: true },
+      // Activity: on all three data booklets
+      { name: 'activity',                      latex: 'A = \\lambda N',                                        boards: 'AQA Edexcel OCR', sheet: true },
+      // Decay law: on all three data booklets
+      { name: 'decay law (number)',            latex: 'N = N_0\\,e^{-\\lambda t}',                             boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'decay law (activity)',          latex: 'A = A_0\\,e^{-\\lambda t}',                             boards: 'AQA Edexcel OCR', sheet: true },
+      // Half-life: on all three data booklets
+      { name: 'half-life',                     latex: 't_{\\frac{1}{2}} = \\dfrac{\\ln 2}{\\lambda}',         boards: 'AQA Edexcel OCR', sheet: true },
+      // Decay rate: on OCR and Edexcel data booklets
+      { name: 'decay rate (OCR)',              latex: '\\dfrac{\\Delta N}{\\Delta t} = -\\lambda N',            boards: 'OCR',             sheet: true },
+      { name: 'decay rate (Edexcel)',          latex: '\\dfrac{dN}{dt} = -\\lambda N',                         boards: 'Edexcel',          sheet: true },
+      // Nuclear radius: on AQA and OCR data booklets
+      { name: 'nuclear radius',                latex: 'R = R_0\\,A^{1/3}',                                    boards: 'AQA OCR',         sheet: true },
+      // Inverse square law (gamma): AQA
+      { name: 'inverse square law (gamma)',    latex: 'I = \\dfrac{k}{x^2}',                                  boards: 'AQA',             sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // OPTION A — ASTROPHYSICS
+  // 21. ASTROPHYSICS & COSMOLOGY
   // ═══════════════════════════════════════════════════
   {
-    section: 'Astrophysics',
+    section: 'Astrophysics & Cosmology',
     equations: [
-      { name: 'lens equation',                latex: '\\dfrac{1}{u} + \\dfrac{1}{v} = \\dfrac{1}{f}' },
-      { name: 'magnification (telescope)',    latex: 'M = \\dfrac{f_o}{f_e}' },
-      { name: 'resolving power (Rayleigh)',   latex: '\\theta \\approx \\dfrac{\\lambda}{D}' },
-      { name: 'Stefan\'s law',                latex: 'P = \\sigma A T^4' },
-      { name: 'Wien\'s law',                  latex: '\\lambda_{\\max} T = 2.898 \\times 10^{-3}\\;\\text{m K}' },
-      { name: 'luminosity–intensity',         latex: 'I = \\dfrac{L}{4\\pi d^2}' },
-      { name: 'Doppler (red/blue shift)',     latex: '\\dfrac{\\Delta\\lambda}{\\lambda} = \\dfrac{\\Delta f}{f} \\approx \\dfrac{v}{c}' },
-      { name: 'Hubble\'s law',                latex: 'v = H_0\\,d' },
-      { name: 'cosmological red shift',       latex: '\\dfrac{\\Delta\\lambda}{\\lambda} \\approx \\dfrac{v}{c}' },
-      { name: 'standard candle ratio',        latex: '\\dfrac{d_1}{d_2} = \\sqrt{\\dfrac{I_2}{I_1}}' },
+      // Stefan-Boltzmann law: on OCR and Edexcel data booklets; AQA option (on AQA data booklet too)
+      { name: 'Stefan-Boltzmann law',          latex: 'L = 4\\pi r^2 \\sigma T^4',                            boards: 'AQA Edexcel OCR', sheet: true },
+      { name: 'Stefan\'s law (power form)',    latex: 'P = \\sigma A T^4',                                    boards: 'AQA',             sheet: true },
+      // Wien's displacement law: on OCR and Edexcel data booklets; AQA option
+      { name: 'Wien\'s displacement law',      latex: '\\lambda_{\\max} T = 2.898 \\times 10^{-3}\\;\\text{m K}', boards: 'AQA Edexcel OCR', sheet: true },
+      // OCR writes Wien as proportionality
+      { name: 'Wien\'s law (OCR)',             latex: '\\lambda_{\\max} \\propto \\dfrac{1}{T}',               boards: 'OCR',             sheet: true },
+      // Luminosity-intensity: on Edexcel data booklet; AQA option; OCR
+      { name: 'inverse square law (luminosity)', latex: 'I = \\dfrac{L}{4\\pi d^2}',                          boards: 'AQA Edexcel OCR', sheet: true },
+      // Doppler/red shift: on all three data booklets
+      { name: 'Doppler / cosmological red shift', latex: '\\dfrac{\\Delta\\lambda}{\\lambda} = \\dfrac{\\Delta f}{f} \\approx \\dfrac{v}{c}', boards: 'AQA Edexcel OCR', sheet: true },
+      // Hubble's law: on all three data booklets
+      { name: 'Hubble\'s law',                 latex: 'v = H_0\\,d',                                          boards: 'AQA Edexcel OCR', sheet: true },
+      // Cosmological age: OCR only
+      { name: 'age of universe (OCR)',         latex: 't \\approx H_0^{-1}',                                   boards: 'OCR',             sheet: true },
+      // Stellar parallax: OCR only
+      { name: 'stellar parallax (OCR)',        latex: 'p = \\dfrac{1}{d}',                                    boards: 'OCR',             sheet: true },
+      // AQA astrophysics option specifics
+      { name: 'Rayleigh criterion',            latex: '\\theta \\approx \\dfrac{\\lambda}{D}',                boards: 'AQA',             sheet: true },
+      { name: 'telescope magnification',       latex: 'M = \\dfrac{f_o}{f_e}',                                boards: 'AQA',             sheet: true },
+      { name: 'standard candle ratio',         latex: '\\dfrac{d_1}{d_2} = \\sqrt{\\dfrac{I_2}{I_1}}',       boards: 'AQA',             sheet: true },
+      // Redshift z (Edexcel): on data booklet
+      { name: 'redshift z',                    latex: 'z = \\dfrac{\\Delta\\lambda}{\\lambda} \\approx \\dfrac{v}{c}', boards: 'Edexcel', sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // OPTION B — MEDICAL PHYSICS
+  // 22. MEDICAL PHYSICS
   // ═══════════════════════════════════════════════════
   {
     section: 'Medical Physics',
     equations: [
-      { name: 'X-ray attenuation',            latex: 'I = I_0\\,e^{-\\mu x}' },
-      { name: 'half-value thickness',         latex: '\\mu = \\dfrac{\\ln 2}{x_{1/2}}' },
-      { name: 'acoustic impedance',           latex: 'Z = \\rho c' },
-      { name: 'reflection coefficient',       latex: '\\dfrac{I_r}{I_0} = \\left(\\dfrac{Z_2 - Z_1}{Z_2 + Z_1}\\right)^2' },
-      { name: 'Doppler ultrasound',            latex: '\\Delta f = \\dfrac{2f_0\\,v\\cos\\theta}{c}' },
+      // X-ray attenuation: on AQA option (sheet=true on AQA booklet) and OCR Module 6 data booklet
+      { name: 'X-ray attenuation',             latex: 'I = I_0\\,e^{-\\mu x}',                                boards: 'AQA OCR',         sheet: true },
+      // Half-value thickness: AQA option
+      { name: 'half-value thickness',          latex: '\\mu = \\dfrac{\\ln 2}{x_{1/2}}',                      boards: 'AQA',             sheet: true },
+      // Acoustic impedance: on AQA option and OCR data booklet
+      { name: 'acoustic impedance',            latex: 'Z = \\rho c',                                          boards: 'AQA OCR',         sheet: true },
+      // Reflection coefficient: on AQA option and OCR data booklet
+      { name: 'intensity reflection coefficient', latex: '\\dfrac{I_r}{I_0} = \\left(\\dfrac{Z_2 - Z_1}{Z_2 + Z_1}\\right)^2', boards: 'AQA OCR', sheet: true },
+      // Doppler ultrasound: AQA option uses 2fv*costheta/c; OCR uses Deltaf/f = 2v*costheta/c
+      { name: 'Doppler ultrasound (AQA)',      latex: '\\Delta f = \\dfrac{2f_0\\,v\\cos\\theta}{c}',         boards: 'AQA',             sheet: true },
+      { name: 'Doppler ultrasound (OCR)',      latex: '\\dfrac{\\Delta f}{f} = \\dfrac{2v\\cos\\theta}{c}',   boards: 'OCR',             sheet: true },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // OPTION D — TURNING POINTS
+  // 23. TURNING POINTS (AQA OPTION)
   // ═══════════════════════════════════════════════════
   {
     section: 'Turning Points',
     equations: [
-      { name: 'specific charge (e/m)',        latex: '\\dfrac{e}{m} = \\dfrac{2V}{B^2 r^2}' },
-      { name: 'Millikan\'s oil drop',         latex: 'QE = mg - U' },
-      { name: 'electron in E and B fields',   latex: 'v = \\dfrac{E}{B}' },
-      { name: 'Bragg diffraction',            latex: 'n\\lambda = 2d\\sin\\theta' },
+      { name: 'specific charge (e/m)',         latex: '\\dfrac{e}{m} = \\dfrac{2V}{B^2 r^2}',                 boards: 'AQA',             sheet: false },
+      { name: 'Millikan\'s oil drop',          latex: 'QE = mg - U',                                          boards: 'AQA',             sheet: false },
+      { name: 'velocity selector',             latex: 'v = \\dfrac{E}{B}',                                    boards: 'AQA',             sheet: false },
+      { name: 'Bragg diffraction',             latex: 'n\\lambda = 2d\\sin\\theta',                           boards: 'AQA',             sheet: false },
     ]
   },
 
   // ═══════════════════════════════════════════════════
-  // OPTION E — ELECTRONICS
+  // 24. ELECTRONICS (AQA OPTION)
   // ═══════════════════════════════════════════════════
   {
     section: 'Electronics',
     equations: [
-      { name: 'inverting amplifier',          latex: 'V_{\\text{out}} = -\\dfrac{R_f}{R_{\\text{in}}}\\,V_{\\text{in}}' },
-      { name: 'non-inverting amplifier',      latex: 'V_{\\text{out}} = \\left(1 + \\dfrac{R_f}{R_{\\text{in}}}\\right)V_{\\text{in}}' },
-      { name: 'gain (dB)',                     latex: 'G = 10\\log\\dfrac{P_{\\text{out}}}{P_{\\text{in}}}' },
-      { name: 'bandwidth × gain',             latex: 'f_{3\\text{dB}} \\times A = \\text{const}' },
+      { name: 'inverting amplifier',           latex: 'V_{\\text{out}} = -\\dfrac{R_f}{R_{\\text{in}}}\\,V_{\\text{in}}', boards: 'AQA', sheet: false },
+      { name: 'non-inverting amplifier',       latex: 'V_{\\text{out}} = \\left(1 + \\dfrac{R_f}{R_{\\text{in}}}\\right)V_{\\text{in}}', boards: 'AQA', sheet: false },
+      { name: 'gain (dB)',                     latex: 'G = 10\\log\\dfrac{P_{\\text{out}}}{P_{\\text{in}}}',   boards: 'AQA',             sheet: false },
+      { name: 'bandwidth \\u00D7 gain',        latex: 'f_{3\\text{dB}} \\times A = \\text{const}',            boards: 'AQA',             sheet: false },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 25. LENSES & OPTICS (EDEXCEL)
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Lenses & Optics',
+    equations: [
+      // Lens equation: on Edexcel data booklet; also AQA astrophysics option
+      { name: 'thin lens equation',            latex: '\\dfrac{1}{u} + \\dfrac{1}{v} = \\dfrac{1}{f}',       boards: 'AQA Edexcel',     sheet: true },
+      // Power of a lens: Edexcel only
+      { name: 'power of a lens',              latex: 'P = \\dfrac{1}{f}',                                    boards: 'Edexcel',          sheet: true },
+      // Lens combination: Edexcel only
+      { name: 'combined lens power',           latex: 'P = P_1 + P_2 + \\cdots',                              boards: 'Edexcel',          sheet: true },
+      // Magnification: Edexcel only (on data booklet)
+      { name: 'magnification (lens)',          latex: 'm = \\dfrac{v}{u}',                                    boards: 'Edexcel',          sheet: true },
     ]
   },
 ];
@@ -2026,6 +2333,8 @@ const CIRCUIT_COMPONENTS = [
 let selectedColour = '#343a40';
 let editingItemId  = null;   // Miro item ID of equation being edited
 let revealColour   = '#7C3AED';
+let bgColour       = 'none'; // 'none' = transparent, or hex like '#ffffff'
+let bgRadius       = 8;
 let revealWidth    = 200;
 let revealHeight   = 80;
 
@@ -2164,10 +2473,34 @@ document.querySelectorAll('.text-colour-btn').forEach(btn => {
 
 document.getElementById('btn-remove-colour').addEventListener('click', () => {
   const input = document.getElementById('latex-input');
-  // Remove \textcolor{...}{...} wrappers — unwrap to just the inner content
-  input.value = input.value.replace(/\\textcolor\{[^}]*\}\{([^}]*)\}/g, '$1');
+  // Remove \textcolor{colour}{content} — handles nested braces via balanced matching
+  input.value = input.value.replace(/\\textcolor\{[^}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
   input.focus();
   updatePreview();
+});
+
+// ══════════════════════════════════════════════════════════════
+// BACKGROUND FILL
+// ══════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.bg-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('selected'));
+    swatch.classList.add('selected');
+    bgColour = swatch.dataset.bg;
+    document.getElementById('bg-label').textContent = bgColour === 'none' ? '(none)' : bgColour;
+  });
+});
+
+document.getElementById('custom-bg').addEventListener('input', e => {
+  bgColour = e.target.value;
+  document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('selected'));
+  document.getElementById('bg-label').textContent = bgColour;
+});
+
+document.getElementById('bg-radius').addEventListener('input', e => {
+  bgRadius = parseInt(e.target.value);
+  document.getElementById('radius-val').textContent = bgRadius + 'px';
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -2188,14 +2521,15 @@ document.querySelectorAll('.tab').forEach(tab => {
 // ══════════════════════════════════════════════════════════════
 
 /** Render LaTeX to a PNG data-URL using KaTeX HTML + html2canvas */
-async function renderLatexToPng(latex, colour, size) {
+async function renderLatexToPng(latex, colour, size, bg = 'none', radius = 0) {
   const html = katex.renderToString(latex, {
     throwOnError: true,
     displayMode: true,
   });
 
+  const hasBg = bg && bg !== 'none';
   const container = document.createElement('div');
-  container.style.cssText = `position:absolute;left:-9999px;top:-9999px;font-size:${size}px;color:${colour};padding:8px 12px;display:inline-block;background:transparent;`;
+  container.style.cssText = `position:absolute;left:-9999px;top:-9999px;font-size:${size}px;color:${colour};padding:${hasBg ? '12px 18px' : '8px 12px'};display:inline-block;background:${hasBg ? bg : 'transparent'};border-radius:${hasBg ? radius + 'px' : '0'};`;
   container.innerHTML = html;
   document.body.appendChild(container);
 
@@ -2247,7 +2581,7 @@ async function handlePlace(updating = false) {
 
   try {
     const size = getFontSize();
-    const pngUrl = await renderLatexToPng(latex, selectedColour, size);
+    const pngUrl = await renderLatexToPng(latex, selectedColour, size, bgColour, bgRadius);
 
     if (updating && editingItemId) {
       const old = await miro.board.getById(editingItemId);
@@ -2486,6 +2820,41 @@ document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit)
 // LIBRARY PAGE
 // ══════════════════════════════════════════════════════════════
 
+let libBoardFilter = 'all';
+
+function filterLibrary() {
+  const container = document.getElementById('lib-sections');
+  const q = (document.getElementById('lib-search').value || '').toLowerCase().trim();
+  container.querySelectorAll('.lib-section').forEach(sec => {
+    const items = sec.querySelectorAll('.lib-item');
+    const grid = sec.querySelector('.lib-grid');
+    const header = sec.querySelector('.lib-section-header');
+    let anyVisible = false;
+    items.forEach(item => {
+      const matchSearch = !q || item.dataset.search.includes(q);
+      let matchBoard = true;
+      if (libBoardFilter === 'sheet') {
+        matchBoard = item.dataset.sheet === 'true';
+      } else if (libBoardFilter !== 'all') {
+        matchBoard = (item.dataset.boards || '').includes(libBoardFilter);
+      }
+      const visible = matchSearch && matchBoard;
+      item.style.display = visible ? '' : 'none';
+      if (visible) anyVisible = true;
+    });
+    sec.style.display = anyVisible ? '' : 'none';
+    if ((q || libBoardFilter !== 'all') && anyVisible) {
+      grid.classList.remove('collapsed');
+      header.classList.add('open');
+    }
+    if (!q && libBoardFilter === 'all') {
+      const isFirst = sec === container.firstElementChild;
+      if (!isFirst) { grid.classList.add('collapsed'); header.classList.remove('open'); }
+      else { grid.classList.remove('collapsed'); header.classList.add('open'); }
+    }
+  });
+}
+
 function buildLibrary() {
   const container = document.getElementById('lib-sections');
   container.innerHTML = '';
@@ -2494,7 +2863,6 @@ function buildLibrary() {
     const div = document.createElement('div');
     div.className = 'lib-section';
 
-    // Collapsible header
     const header = document.createElement('div');
     header.className = 'lib-section-header';
     header.innerHTML = `<h3>${section.section} <span class="lib-tag">${section.equations.length}</span></h3><span class="toggle">▶</span>`;
@@ -2503,7 +2871,6 @@ function buildLibrary() {
       grid.classList.toggle('collapsed');
     });
 
-    // Grid of equations (collapsed by default except first)
     const grid = document.createElement('div');
     grid.className = 'lib-grid' + (idx > 0 ? ' collapsed' : '');
     if (idx === 0) header.classList.add('open');
@@ -2513,13 +2880,20 @@ function buildLibrary() {
       item.className = 'lib-item';
       item.title = 'Click to load in editor';
       item.dataset.search = (eq.name + ' ' + section.section).toLowerCase();
+      item.dataset.boards = eq.boards || '';
+      item.dataset.sheet = eq.sheet ? 'true' : 'false';
 
       let rendered = '';
       try {
         rendered = katex.renderToString(eq.latex, { throwOnError: false, displayMode: false });
       } catch(e) { rendered = eq.name; }
 
-      item.innerHTML = `<div class="eq-name">${eq.name}</div><div class="eq-katex">${rendered}</div>`;
+      // Build board pills
+      const boards = (eq.boards || '').split(' ').filter(Boolean);
+      let pills = boards.map(b => `<span class="eq-pill ${b.toLowerCase()}">${b}</span>`).join('');
+      if (eq.sheet) pills += '<span class="eq-pill on-sheet">📋</span>';
+
+      item.innerHTML = `<div class="eq-name">${eq.name}</div><div class="eq-katex">${rendered}</div><div class="eq-pills">${pills}</div>`;
       item.addEventListener('click', () => {
         document.getElementById('latex-input').value = eq.latex;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2538,30 +2912,15 @@ function buildLibrary() {
   });
 
   // Search
-  document.getElementById('lib-search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    container.querySelectorAll('.lib-section').forEach(sec => {
-      const items = sec.querySelectorAll('.lib-item');
-      const grid = sec.querySelector('.lib-grid');
-      const header = sec.querySelector('.lib-section-header');
-      let anyVisible = false;
-      items.forEach(item => {
-        const match = !q || item.dataset.search.includes(q);
-        item.style.display = match ? '' : 'none';
-        if (match) anyVisible = true;
-      });
-      sec.style.display = anyVisible ? '' : 'none';
-      // Auto-expand matching sections during search
-      if (q && anyVisible) {
-        grid.classList.remove('collapsed');
-        header.classList.add('open');
-      }
-      if (!q) {
-        // Collapse all except first on clear
-        const isFirst = sec === container.firstElementChild;
-        if (!isFirst) { grid.classList.add('collapsed'); header.classList.remove('open'); }
-        else { grid.classList.remove('collapsed'); header.classList.add('open'); }
-      }
+  document.getElementById('lib-search').addEventListener('input', () => filterLibrary());
+
+  // Board filter chips
+  document.querySelectorAll('#lib-board-filter .board-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#lib-board-filter .board-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      libBoardFilter = chip.dataset.board;
+      filterLibrary();
     });
   });
 }
