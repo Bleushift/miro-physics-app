@@ -186,23 +186,66 @@
     #edit-banner.visible { display: flex; }
     #edit-banner span { flex: 1; }
 
+    /* ── Library search ────────────────────────── */
+    #lib-search {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    #lib-search:focus { border-color: var(--purple); }
+    #lib-search::placeholder { color: var(--muted); }
+    .lib-tag {
+      display: inline-block;
+      background: #2a1f4e;
+      color: var(--purple);
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+
     /* ── Physics library ───────────────────────── */
-    .lib-section { margin-bottom: 14px; }
-    .lib-section h3 {
+    .lib-section { margin-bottom: 6px; }
+    .lib-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 6px 8px;
+      background: var(--black);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      margin-bottom: 4px;
+      user-select: none;
+    }
+    .lib-section-header:hover { border-color: var(--purple); }
+    .lib-section-header h3 {
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--purple);
-      margin-bottom: 6px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border);
+      margin: 0;
     }
+    .lib-section-header .toggle { color: var(--muted); font-size: 10px; transition: transform 0.2s; }
+    .lib-section-header.open .toggle { transform: rotate(90deg); }
     .lib-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px;
+      grid-template-columns: 1fr;
+      gap: 3px;
+      margin-bottom: 8px;
     }
+    .lib-grid.collapsed { display: none; }
     .lib-item {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -210,10 +253,13 @@
       padding: 6px 8px;
       cursor: pointer;
       transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .lib-item:hover { border-color: var(--teal); background: #1e2e32; }
-    .lib-item .eq-name { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
-    .lib-item .eq-katex { font-size: 11px; }
+    .lib-item .eq-name { font-size: 11px; color: var(--muted); min-width: 80px; flex-shrink: 0; }
+    .lib-item .eq-katex { font-size: 16px; flex: 1; }
     .lib-item .eq-katex .katex { color: var(--teal); }
 
     /* ── Embed panel ───────────────────────────── */
@@ -392,7 +438,8 @@
 ══════════════════════════════════════════════ -->
 <div class="page" id="page-library">
   <div class="scroll" id="library-scroll">
-    <!-- Populated by JS -->
+    <input type="text" id="lib-search" placeholder="Search equations... (e.g. SUVAT, capacitor, Snell)" />
+    <div id="lib-sections"></div>
   </div>
 </div>
 
@@ -489,95 +536,306 @@
 // ══════════════════════════════════════════════════════════════
 
 const PHYSICS_LIBRARY = [
+  // ═══════════════════════════════════════════════════
+  // FUNDAMENTAL CONSTANTS & VALUES
+  // ═══════════════════════════════════════════════════
   {
-    section: 'Mechanics – SUVAT',
+    section: 'Fundamental Constants',
     equations: [
-      { name: 'v = u + at',           latex: 'v = u + at' },
-      { name: 'v² = u² + 2as',        latex: 'v^2 = u^2 + 2as' },
-      { name: 's = ut + ½at²',        latex: 's = ut + \\tfrac{1}{2}at^2' },
-      { name: 's = ½(u+v)t',          latex: 's = \\tfrac{1}{2}(u+v)t' },
-      { name: 's = vt − ½at²',        latex: 's = vt - \\tfrac{1}{2}at^2' },
+      { name: 'speed of light',                latex: 'c = 3.00 \\times 10^8\\;\\text{m s}^{-1}' },
+      { name: 'permittivity of free space',    latex: '\\varepsilon_0 = 8.85 \\times 10^{-12}\\;\\text{F m}^{-1}' },
+      { name: 'Coulomb constant',              latex: '\\dfrac{1}{4\\pi\\varepsilon_0} = 8.99 \\times 10^9\\;\\text{N m}^2\\text{ C}^{-2}' },
+      { name: 'electron charge',               latex: 'e = 1.60 \\times 10^{-19}\\;\\text{C}' },
+      { name: 'Planck constant',               latex: 'h = 6.63 \\times 10^{-34}\\;\\text{J s}' },
+      { name: 'gravitational constant',        latex: 'G = 6.67 \\times 10^{-11}\\;\\text{N m}^2\\text{ kg}^{-2}' },
+      { name: 'Avogadro constant',             latex: 'N_A = 6.02 \\times 10^{23}\\;\\text{mol}^{-1}' },
+      { name: 'molar gas constant',            latex: 'R = 8.31\\;\\text{J mol}^{-1}\\text{ K}^{-1}' },
+      { name: 'Boltzmann constant',            latex: 'k = 1.38 \\times 10^{-23}\\;\\text{J K}^{-1}' },
+      { name: 'Stefan constant',               latex: '\\sigma = 5.67 \\times 10^{-8}\\;\\text{W m}^{-2}\\text{ K}^{-4}' },
+      { name: 'permeability of free space',    latex: '\\mu_0 = 4\\pi \\times 10^{-7}\\;\\text{H m}^{-1}' },
+      { name: 'electron mass',                 latex: 'm_e = 9.11 \\times 10^{-31}\\;\\text{kg}' },
+      { name: 'proton mass',                   latex: 'm_p = 1.67(3) \\times 10^{-27}\\;\\text{kg}' },
+      { name: 'neutron mass',                  latex: 'm_n = 1.67(5) \\times 10^{-27}\\;\\text{kg}' },
+      { name: 'atomic mass unit',              latex: 'u = 1.661 \\times 10^{-27}\\;\\text{kg} = 931.5\\;\\text{MeV}' },
+      { name: 'g on Earth',                    latex: 'g = 9.81\\;\\text{m s}^{-2}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.2 PARTICLES & RADIATION
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Photons & Energy Levels',
+    equations: [
+      { name: 'photon energy',               latex: 'E = hf' },
+      { name: 'photon energy (wavelength)',   latex: 'E = \\dfrac{hc}{\\lambda}' },
+      { name: 'photoelectric equation',       latex: 'hf = \\phi + E_{k(\\max)}' },
+      { name: 'de Broglie wavelength',        latex: '\\lambda = \\dfrac{h}{mv}' },
+      { name: 'energy level transition',      latex: 'hf = E_1 - E_2' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.3 WAVES
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Progressive Waves',
+    equations: [
+      { name: 'wave speed',           latex: 'v = f\\lambda' },
+      { name: 'period',               latex: 'f = \\dfrac{1}{T}' },
+      { name: 'intensity',            latex: 'I = \\dfrac{P}{A}' },
     ]
   },
   {
-    section: "Newton's Laws",
+    section: 'Refraction',
     equations: [
-      { name: 'F = ma',               latex: '\\vec{F} = m\\vec{a}' },
-      { name: 'F = Δp/Δt',            latex: 'F = \\dfrac{\\Delta p}{\\Delta t}' },
-      { name: 'p = mv',               latex: 'p = mv' },
-      { name: 'W = mg',               latex: 'W = mg' },
-      { name: 'F = μR',               latex: 'F = \\mu R' },
+      { name: 'refractive index',        latex: 'n = \\dfrac{c}{v}' },
+      { name: "Snell's law",             latex: 'n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2' },
+      { name: 'critical angle',          latex: '\\sin\\theta_c = \\dfrac{n_2}{n_1}' },
     ]
   },
   {
-    section: 'Energy & Work',
+    section: 'Interference & Diffraction',
     equations: [
-      { name: 'W = Fd cosθ',          latex: 'W = Fd\\cos\\theta' },
-      { name: 'KE = ½mv²',            latex: 'E_k = \\tfrac{1}{2}mv^2' },
-      { name: 'GPE = mgh',            latex: 'E_p = mgh' },
-      { name: 'P = W/t',              latex: 'P = \\dfrac{W}{t}' },
-      { name: 'efficiency',           latex: '\\eta = \\dfrac{P_{\\text{out}}}{P_{\\text{in}}}' },
+      { name: 'diffraction grating',     latex: 'd\\sin\\theta = n\\lambda' },
+      { name: 'double slit',             latex: 'w = \\dfrac{\\lambda D}{s}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.4 MECHANICS & MATERIALS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Kinematics (SUVAT)',
+    equations: [
+      { name: 'v = u + at',             latex: 'v = u + at' },
+      { name: 'v² = u² + 2as',          latex: 'v^2 = u^2 + 2as' },
+      { name: 's = ut + ½at²',          latex: 's = ut + \\tfrac{1}{2}at^2' },
+      { name: 's = ½(u+v)t',            latex: 's = \\tfrac{1}{2}(u + v)t' },
+      { name: 's = vt − ½at²',          latex: 's = vt - \\tfrac{1}{2}at^2' },
     ]
   },
   {
-    section: 'Waves',
+    section: 'Forces & Momentum',
     equations: [
-      { name: 'v = fλ',               latex: 'v = f\\lambda' },
-      { name: 'T = 1/f',              latex: 'T = \\dfrac{1}{f}' },
-      { name: 'n = c/v',              latex: 'n = \\dfrac{c}{v}' },
-      { name: "Snell's law",          latex: 'n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2' },
-      { name: 'diffraction grating',  latex: 'd\\sin\\theta = n\\lambda' },
+      { name: 'force (Newton II)',       latex: 'F = ma' },
+      { name: 'weight',                  latex: 'W = mg' },
+      { name: 'momentum',                latex: 'p = mv' },
+      { name: 'impulse',                 latex: 'F\\,\\Delta t = \\Delta(mv)' },
+      { name: 'moment',                  latex: '\\text{moment} = Fd' },
     ]
   },
   {
-    section: 'Electricity',
+    section: 'Energy & Power',
     equations: [
-      { name: 'V = IR',               latex: 'V = IR' },
-      { name: 'P = IV',               latex: 'P = IV = I^2R = \\dfrac{V^2}{R}' },
-      { name: 'Q = It',               latex: 'Q = It' },
-      { name: 'E = QV',               latex: 'E = QV' },
-      { name: 'resistors series',     latex: 'R_T = R_1 + R_2 + \\cdots' },
-      { name: 'resistors parallel',   latex: '\\dfrac{1}{R_T} = \\dfrac{1}{R_1} + \\dfrac{1}{R_2}' },
+      { name: 'work done',              latex: 'W = Fs\\cos\\theta' },
+      { name: 'kinetic energy',          latex: 'E_k = \\tfrac{1}{2}mv^2' },
+      { name: 'gravitational PE',       latex: '\\Delta E_p = mg\\Delta h' },
+      { name: 'power',                   latex: 'P = \\dfrac{\\Delta W}{\\Delta t}' },
+      { name: 'power (force × velocity)',latex: 'P = Fv' },
+      { name: 'efficiency',              latex: '\\text{efficiency} = \\dfrac{\\text{useful output}}{\\text{total input}}' },
     ]
   },
   {
-    section: 'Fields',
+    section: 'Materials',
     equations: [
-      { name: 'Coulomb',              latex: 'F = \\dfrac{kQ_1 Q_2}{r^2}' },
-      { name: 'E field',              latex: 'E = \\dfrac{F}{q} = \\dfrac{V}{d}' },
-      { name: 'gravitational',        latex: 'F = \\dfrac{Gm_1 m_2}{r^2}' },
-      { name: 'g field',              latex: 'g = \\dfrac{GM}{r^2}' },
-      { name: 'magnetic force',       latex: 'F = BIl\\sin\\theta' },
-      { name: 'Faraday',             latex: '\\mathcal{E} = -N\\dfrac{\\Delta\\Phi}{\\Delta t}' },
+      { name: 'density',                 latex: '\\rho = \\dfrac{m}{V}' },
+      { name: 'Hooke\'s law',            latex: 'F = k\\,\\Delta L' },
+      { name: 'Young modulus',            latex: 'E = \\dfrac{\\sigma}{\\varepsilon} = \\dfrac{FL}{A\\,\\Delta L}' },
+      { name: 'stress',                  latex: '\\sigma = \\dfrac{F}{A}' },
+      { name: 'strain',                  latex: '\\varepsilon = \\dfrac{\\Delta L}{L}' },
+      { name: 'elastic strain energy',   latex: 'E = \\tfrac{1}{2}F\\,\\Delta L = \\tfrac{1}{2}k\\,(\\Delta L)^2' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.5 ELECTRICITY
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Current & Charge',
+    equations: [
+      { name: 'charge',                  latex: '\\Delta Q = I\\,\\Delta t' },
+      { name: 'potential difference',    latex: 'V = \\dfrac{W}{Q}' },
+      { name: 'Ohm\'s law',              latex: 'V = IR' },
+      { name: 'resistivity',             latex: 'R = \\dfrac{\\rho L}{A}' },
+    ]
+  },
+  {
+    section: 'Power & Energy',
+    equations: [
+      { name: 'electrical power',        latex: 'P = IV = I^2 R = \\dfrac{V^2}{R}' },
+      { name: 'energy transferred',      latex: 'W = VIt' },
+      { name: 'EMF equation',            latex: '\\varepsilon = I(R + r)' },
+      { name: 'terminal PD',             latex: '\\varepsilon = V + Ir' },
+    ]
+  },
+  {
+    section: 'Circuit Rules',
+    equations: [
+      { name: 'resistors in series',     latex: 'R_T = R_1 + R_2 + R_3 + \\cdots' },
+      { name: 'resistors in parallel',   latex: '\\dfrac{1}{R_T} = \\dfrac{1}{R_1} + \\dfrac{1}{R_2} + \\dfrac{1}{R_3} + \\cdots' },
+      { name: 'potential divider',       latex: 'V_{\\text{out}} = \\dfrac{R_2}{R_1 + R_2}\\,V_{\\text{in}}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.6 FURTHER MECHANICS & THERMAL
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Circular Motion',
+    equations: [
+      { name: 'angular speed',           latex: '\\omega = \\dfrac{2\\pi}{T} = 2\\pi f' },
+      { name: 'linear speed',            latex: 'v = \\omega r' },
+      { name: 'centripetal acceleration', latex: 'a = \\dfrac{v^2}{r} = \\omega^2 r' },
+      { name: 'centripetal force',        latex: 'F = \\dfrac{mv^2}{r} = m\\omega^2 r' },
+    ]
+  },
+  {
+    section: 'Simple Harmonic Motion',
+    equations: [
+      { name: 'SHM condition',           latex: 'a = -\\omega^2 x' },
+      { name: 'displacement',            latex: 'x = A\\cos(\\omega t)' },
+      { name: 'velocity (max)',          latex: 'v_{\\max} = \\omega A' },
+      { name: 'velocity',                latex: 'v = \\pm\\omega\\sqrt{A^2 - x^2}' },
+      { name: 'period (mass–spring)',    latex: 'T = 2\\pi\\sqrt{\\dfrac{m}{k}}' },
+      { name: 'period (pendulum)',       latex: 'T = 2\\pi\\sqrt{\\dfrac{l}{g}}' },
     ]
   },
   {
     section: 'Thermal Physics',
     equations: [
-      { name: 'ideal gas',            latex: 'pV = nRT' },
-      { name: 'kinetic theory',       latex: 'pV = \\tfrac{1}{3}Nm\\langle c^2 \\rangle' },
-      { name: 'internal energy',      latex: '\\Delta U = Q + W' },
-      { name: 'Q = mcΔT',            latex: 'Q = mc\\Delta T' },
+      { name: 'internal energy',          latex: '\\Delta U = Q - W' },
+      { name: 'specific heat capacity',  latex: 'Q = mc\\,\\Delta\\theta' },
+      { name: 'specific latent heat',    latex: 'Q = mL' },
+      { name: 'ideal gas law',            latex: 'pV = nRT' },
+      { name: 'ideal gas (Boltzmann)',   latex: 'pV = NkT' },
+      { name: 'kinetic theory',          latex: '\\tfrac{1}{2}m\\langle c^2\\rangle = \\tfrac{3}{2}kT' },
+      { name: 'gas pressure',            latex: 'pV = \\tfrac{1}{3}Nm\\langle c^2\\rangle' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.7 FIELDS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Gravitational Fields',
+    equations: [
+      { name: 'Newton\'s law of gravitation', latex: 'F = \\dfrac{Gm_1 m_2}{r^2}' },
+      { name: 'gravitational field strength', latex: 'g = \\dfrac{F}{m} = \\dfrac{GM}{r^2}' },
+      { name: 'gravitational potential',      latex: 'V = -\\dfrac{GM}{r}' },
+      { name: 'orbital speed',                latex: 'v = \\sqrt{\\dfrac{GM}{r}}' },
+      { name: 'orbital period',               latex: 'T^2 = \\dfrac{4\\pi^2 r^3}{GM}' },
+      { name: 'escape velocity',              latex: 'v_{\\text{esc}} = \\sqrt{\\dfrac{2GM}{r}}' },
     ]
   },
   {
-    section: 'Quantum & Nuclear',
+    section: 'Electric Fields',
     equations: [
-      { name: 'photon energy',        latex: 'E = hf = \\dfrac{hc}{\\lambda}' },
-      { name: 'photoelectric',        latex: 'hf = \\phi + E_{k,\\max}' },
-      { name: 'de Broglie',           latex: '\\lambda = \\dfrac{h}{p} = \\dfrac{h}{mv}' },
-      { name: 'mass–energy',          latex: 'E = mc^2' },
-      { name: 'activity',             latex: 'A = \\lambda N' },
-      { name: 'half-life',            latex: 't_{\\frac{1}{2}} = \\dfrac{\\ln 2}{\\lambda}' },
+      { name: 'Coulomb\'s law',               latex: 'F = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q_1 Q_2}{r^2}' },
+      { name: 'electric field strength (radial)', latex: 'E = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q}{r^2}' },
+      { name: 'electric field strength (uniform)', latex: 'E = \\dfrac{V}{d}' },
+      { name: 'field strength',               latex: 'E = \\dfrac{F}{Q}' },
+      { name: 'electric potential',            latex: 'V = \\dfrac{1}{4\\pi\\varepsilon_0}\\dfrac{Q}{r}' },
+      { name: 'work done (field)',             latex: 'W = QV' },
     ]
   },
   {
-    section: 'Circular & SHM',
+    section: 'Capacitance',
     equations: [
-      { name: 'centripetal F',        latex: 'F = \\dfrac{mv^2}{r} = mr\\omega^2' },
-      { name: 'angular velocity',     latex: 'v = r\\omega,\\quad \\omega = \\dfrac{2\\pi}{T}' },
-      { name: 'SHM displacement',     latex: 'x = A\\cos(\\omega t + \\phi)' },
-      { name: 'SHM acceleration',     latex: 'a = -\\omega^2 x' },
+      { name: 'capacitance',                  latex: 'C = \\dfrac{Q}{V}' },
+      { name: 'parallel plate capacitor',     latex: 'C = \\dfrac{\\varepsilon_0 \\varepsilon_r A}{d}' },
+      { name: 'energy stored',                latex: 'E = \\tfrac{1}{2}QV = \\tfrac{1}{2}CV^2 = \\dfrac{Q^2}{2C}' },
+      { name: 'capacitors in parallel',       latex: 'C_T = C_1 + C_2 + C_3' },
+      { name: 'capacitors in series',         latex: '\\dfrac{1}{C_T} = \\dfrac{1}{C_1} + \\dfrac{1}{C_2} + \\dfrac{1}{C_3}' },
+      { name: 'charging/discharging',         latex: 'Q = Q_0\\,e^{-t/RC}' },
+      { name: 'time constant',                latex: '\\tau = RC' },
+    ]
+  },
+  {
+    section: 'Magnetic Fields',
+    equations: [
+      { name: 'force on wire',                latex: 'F = BIl\\sin\\theta' },
+      { name: 'force on charge',              latex: 'F = BQv\\sin\\theta' },
+      { name: 'magnetic flux',                latex: '\\Phi = BA\\cos\\theta' },
+      { name: 'flux linkage',                 latex: 'N\\Phi = BAN\\cos\\theta' },
+      { name: 'Faraday\'s law',               latex: '\\varepsilon = -N\\dfrac{\\Delta\\Phi}{\\Delta t}' },
+      { name: 'transformer ratio',            latex: '\\dfrac{V_s}{V_p} = \\dfrac{N_s}{N_p}' },
+      { name: 'alternating current',          latex: 'I_{\\text{rms}} = \\dfrac{I_0}{\\sqrt{2}},\\quad V_{\\text{rms}} = \\dfrac{V_0}{\\sqrt{2}}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // 3.8 NUCLEAR PHYSICS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Nuclear Physics',
+    equations: [
+      { name: 'mass–energy equivalence',      latex: 'E = mc^2' },
+      { name: 'mass–energy (amu)',            latex: '\\Delta E = \\Delta m\\,c^2' },
+      { name: 'activity',                     latex: 'A = \\lambda N' },
+      { name: 'decay law',                    latex: 'N = N_0\\,e^{-\\lambda t}' },
+      { name: 'half-life',                    latex: 't_{\\frac{1}{2}} = \\dfrac{\\ln 2}{\\lambda}' },
+      { name: 'nuclear radius',               latex: 'R = R_0\\,A^{1/3}' },
+      { name: 'inverse square law (gamma)',   latex: 'I = \\dfrac{k}{x^2}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // OPTION A — ASTROPHYSICS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Astrophysics',
+    equations: [
+      { name: 'lens equation',                latex: '\\dfrac{1}{u} + \\dfrac{1}{v} = \\dfrac{1}{f}' },
+      { name: 'magnification (telescope)',    latex: 'M = \\dfrac{f_o}{f_e}' },
+      { name: 'resolving power (Rayleigh)',   latex: '\\theta \\approx \\dfrac{\\lambda}{D}' },
+      { name: 'Stefan\'s law',                latex: 'P = \\sigma A T^4' },
+      { name: 'Wien\'s law',                  latex: '\\lambda_{\\max} T = 2.898 \\times 10^{-3}\\;\\text{m K}' },
+      { name: 'luminosity–intensity',         latex: 'I = \\dfrac{L}{4\\pi d^2}' },
+      { name: 'Doppler (red/blue shift)',     latex: '\\dfrac{\\Delta\\lambda}{\\lambda} = \\dfrac{\\Delta f}{f} \\approx \\dfrac{v}{c}' },
+      { name: 'Hubble\'s law',                latex: 'v = H_0\\,d' },
+      { name: 'cosmological red shift',       latex: '\\dfrac{\\Delta\\lambda}{\\lambda} \\approx \\dfrac{v}{c}' },
+      { name: 'standard candle ratio',        latex: '\\dfrac{d_1}{d_2} = \\sqrt{\\dfrac{I_2}{I_1}}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // OPTION B — MEDICAL PHYSICS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Medical Physics',
+    equations: [
+      { name: 'X-ray attenuation',            latex: 'I = I_0\\,e^{-\\mu x}' },
+      { name: 'half-value thickness',         latex: '\\mu = \\dfrac{\\ln 2}{x_{1/2}}' },
+      { name: 'acoustic impedance',           latex: 'Z = \\rho c' },
+      { name: 'reflection coefficient',       latex: '\\dfrac{I_r}{I_0} = \\left(\\dfrac{Z_2 - Z_1}{Z_2 + Z_1}\\right)^2' },
+      { name: 'Doppler ultrasound',            latex: '\\Delta f = \\dfrac{2f_0\\,v\\cos\\theta}{c}' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // OPTION D — TURNING POINTS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Turning Points',
+    equations: [
+      { name: 'specific charge (e/m)',        latex: '\\dfrac{e}{m} = \\dfrac{2V}{B^2 r^2}' },
+      { name: 'Millikan\'s oil drop',         latex: 'QE = mg - U' },
+      { name: 'electron in E and B fields',   latex: 'v = \\dfrac{E}{B}' },
+      { name: 'Bragg diffraction',            latex: 'n\\lambda = 2d\\sin\\theta' },
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // OPTION E — ELECTRONICS
+  // ═══════════════════════════════════════════════════
+  {
+    section: 'Electronics',
+    equations: [
+      { name: 'inverting amplifier',          latex: 'V_{\\text{out}} = -\\dfrac{R_f}{R_{\\text{in}}}\\,V_{\\text{in}}' },
+      { name: 'non-inverting amplifier',      latex: 'V_{\\text{out}} = \\left(1 + \\dfrac{R_f}{R_{\\text{in}}}\\right)V_{\\text{in}}' },
+      { name: 'gain (dB)',                     latex: 'G = 10\\log\\dfrac{P_{\\text{out}}}{P_{\\text{in}}}' },
+      { name: 'bandwidth × gain',             latex: 'f_{3\\text{dB}} \\times A = \\text{const}' },
     ]
   },
 ];
@@ -944,17 +1202,32 @@ document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit)
 // ══════════════════════════════════════════════════════════════
 
 function buildLibrary() {
-  const container = document.getElementById('library-scroll');
-  PHYSICS_LIBRARY.forEach(section => {
+  const container = document.getElementById('lib-sections');
+  container.innerHTML = '';
+
+  PHYSICS_LIBRARY.forEach((section, idx) => {
     const div = document.createElement('div');
     div.className = 'lib-section';
-    div.innerHTML = `<h3>${section.section}</h3><div class="lib-grid"></div>`;
-    const grid = div.querySelector('.lib-grid');
+
+    // Collapsible header
+    const header = document.createElement('div');
+    header.className = 'lib-section-header';
+    header.innerHTML = `<h3>${section.section} <span class="lib-tag">${section.equations.length}</span></h3><span class="toggle">▶</span>`;
+    header.addEventListener('click', () => {
+      header.classList.toggle('open');
+      grid.classList.toggle('collapsed');
+    });
+
+    // Grid of equations (collapsed by default except first)
+    const grid = document.createElement('div');
+    grid.className = 'lib-grid' + (idx > 0 ? ' collapsed' : '');
+    if (idx === 0) header.classList.add('open');
 
     section.equations.forEach(eq => {
       const item = document.createElement('div');
       item.className = 'lib-item';
       item.title = 'Click to load in editor';
+      item.dataset.search = (eq.name + ' ' + section.section).toLowerCase();
 
       let rendered = '';
       try {
@@ -964,7 +1237,6 @@ function buildLibrary() {
       item.innerHTML = `<div class="eq-name">${eq.name}</div><div class="eq-katex">${rendered}</div>`;
       item.addEventListener('click', () => {
         document.getElementById('latex-input').value = eq.latex;
-        // Switch to LaTeX tab
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelector('[data-tab="latex"]').classList.add('active');
@@ -975,7 +1247,37 @@ function buildLibrary() {
       grid.appendChild(item);
     });
 
+    div.appendChild(header);
+    div.appendChild(grid);
     container.appendChild(div);
+  });
+
+  // Search
+  document.getElementById('lib-search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    container.querySelectorAll('.lib-section').forEach(sec => {
+      const items = sec.querySelectorAll('.lib-item');
+      const grid = sec.querySelector('.lib-grid');
+      const header = sec.querySelector('.lib-section-header');
+      let anyVisible = false;
+      items.forEach(item => {
+        const match = !q || item.dataset.search.includes(q);
+        item.style.display = match ? '' : 'none';
+        if (match) anyVisible = true;
+      });
+      sec.style.display = anyVisible ? '' : 'none';
+      // Auto-expand matching sections during search
+      if (q && anyVisible) {
+        grid.classList.remove('collapsed');
+        header.classList.add('open');
+      }
+      if (!q) {
+        // Collapse all except first on clear
+        const isFirst = sec === container.firstElementChild;
+        if (!isFirst) { grid.classList.add('collapsed'); header.classList.remove('open'); }
+        else { grid.classList.remove('collapsed'); header.classList.add('open'); }
+      }
+    });
   });
 }
 
