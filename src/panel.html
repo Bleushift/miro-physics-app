@@ -980,8 +980,8 @@ const PHYSICS_LIBRARY = [
       // Diffraction grating: on all three data booklets
       { name: 'diffraction grating',         latex: 'd\\sin\\theta = n\\lambda',                                 boards: 'AQA Edexcel OCR', sheet: true },
       // Double slit: AQA uses w=lambdaD/s; OCR uses lambda=ax/D
-      { name: 'double slit (AQA)',           latex: 'w = \\dfrac{\\lambda D}{s}',                                boards: 'AQA',             sheet: true },
-      { name: 'double slit (OCR)',           latex: '\\lambda = \\dfrac{ax}{D}',                                 boards: 'OCR',             sheet: true },
+      { name: 'fringe separation (AQA)',     latex: 'w = \\dfrac{\\lambda D}{s}',                                boards: 'AQA',             sheet: true },
+      { name: 'fringe separation (OCR)',     latex: '\\lambda = \\dfrac{ax}{D}',                                 boards: 'OCR',             sheet: true },
     ]
   },
 
@@ -2568,10 +2568,13 @@ document.querySelectorAll('.tab').forEach(tab => {
 (function initTheme() {
   const btn = document.getElementById('theme-toggle');
   const saved = localStorage.getItem('pp-miro-theme');
-  if (saved === 'light') {
+  if (saved !== 'dark') {
     document.documentElement.setAttribute('data-theme', 'light');
     btn.textContent = '☀️';
     btn.title = 'Switch to dark theme';
+  } else {
+    btn.textContent = '🌙';
+    btn.title = 'Switch to light theme';
   }
   btn.addEventListener('click', () => {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -3051,7 +3054,7 @@ function buildGeogebraList() {
     item.dataset.boards = getBoards(applet.tags);
     item.innerHTML = `<span>${applet.name}</span>`;
     item.addEventListener('click', async () => {
-      const embedUrl = `https://www.geogebra.org/material/iframe/id/${applet.id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/false/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/false/ctl/false`;
+      const embedUrl = `https://www.geogebra.org/material/iframe/id/${applet.id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/true/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/true/ctl/false`;
       try {
         await miro.board.createEmbed({ url: embedUrl, width: 640, height: 480 });
         toast('Embedded: ' + applet.name + ' ✓');
@@ -3084,7 +3087,7 @@ document.getElementById('btn-ggb-embed').addEventListener('click', async () => {
   const match = raw.match(/geogebra\.org\/(?:m|material)\/([a-zA-Z0-9]+)/);
   const id = match ? match[1] : raw;
 
-  const embedUrl = `https://www.geogebra.org/material/iframe/id/${id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/false/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/false/ctl/false`;
+  const embedUrl = `https://www.geogebra.org/material/iframe/id/${id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/true/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/true/ctl/false`;
   try {
     await miro.board.createEmbed({ url: embedUrl, width: 640, height: 480 });
     toast('GeoGebra applet embedded ✓');
@@ -3468,6 +3471,41 @@ async function init() {
   buildExternalSimsList();
   buildCircuitGrid();
   updateRevealCount();
+
+  // Auto-load equation into editor when selected on board
+  try {
+    miro.board.ui.on('selection:update', async (event) => {
+      const items = event.items;
+      if (!items || items.length !== 1) return;
+      const item = items[0];
+      try {
+        const meta = await item.getMetadata('pp-latex');
+        if (!meta || !meta.latex) return;
+
+        // Load into editor
+        document.getElementById('latex-input').value = meta.latex;
+        if (meta.colour) {
+          selectedColour = meta.colour;
+          document.getElementById('custom-colour').value = meta.colour;
+          document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+        }
+        editingItemId = item.id;
+
+        // Switch to LaTeX tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelector('[data-tab="latex"]').classList.add('active');
+        document.getElementById('page-latex').classList.add('active');
+
+        // Show edit UI
+        document.getElementById('edit-banner').classList.add('visible');
+        document.getElementById('btn-place').style.display = 'none';
+        document.getElementById('btn-place-update').style.display = '';
+
+        updatePreview();
+      } catch(e) { /* item has no pp-latex metadata — ignore */ }
+    });
+  } catch(e) { /* selection event not available outside Miro */ }
 
   // Wait for KaTeX to be ready, then trigger a preview if there's input
   if (typeof katex !== 'undefined') {
