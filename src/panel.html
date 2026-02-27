@@ -575,14 +575,14 @@
 
     <label style="margin-top:12px">Whole equation colour</label>
     <div class="colour-row">
-      <div class="colour-swatch selected" style="background:#343a40" data-colour="#343a40" title="Charcoal"></div>
+      <div class="colour-swatch selected" style="background:#1e1e1e" data-colour="#1e1e1e" title="Black"></div>
+      <div class="colour-swatch" style="background:#343a40" data-colour="#343a40" title="Charcoal"></div>
       <div class="colour-swatch" style="background:#7C3AED" data-colour="#7C3AED" title="PP Purple"></div>
       <div class="colour-swatch" style="background:#A78BFA" data-colour="#A78BFA" title="PP Lavender"></div>
       <div class="colour-swatch" style="background:#5eead4" data-colour="#5eead4" title="PP Teal"></div>
       <div class="colour-swatch" style="background:#E11D48" data-colour="#E11D48" title="PP Red"></div>
       <div class="colour-swatch" style="background:#ffffff" data-colour="#ffffff" title="White"></div>
-      <div class="colour-swatch" style="background:#1e1e1e" data-colour="#1e1e1e" title="Dark Grey"></div>
-      <input type="color" id="custom-colour" value="#343a40" title="Custom colour" />
+      <input type="color" id="custom-colour" value="#1e1e1e" title="Custom colour" />
     </div>
 
     <label style="margin-top:10px">Size <span id="size-val" style="color:var(--text)">36px</span></label>
@@ -2330,7 +2330,7 @@ const CIRCUIT_COMPONENTS = [
 // STATE
 // ══════════════════════════════════════════════════════════════
 
-let selectedColour = '#343a40';
+let selectedColour = '#1e1e1e';
 let editingItemId  = null;   // Miro item ID of equation being edited
 let revealColour   = '#7C3AED';
 let bgColour       = 'none'; // 'none' = transparent, or hex like '#ffffff'
