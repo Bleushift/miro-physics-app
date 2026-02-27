@@ -836,12 +836,56 @@ document.getElementById('btn-place').addEventListener('click', () => handlePlace
 document.getElementById('btn-place-update').addEventListener('click', () => handlePlace(true));
 
 // Cmd+Enter (Mac) or Ctrl+Enter (Windows) to place/update
+// Cmd+Shift+A — toggle aligned environment (align by =)
 document.getElementById('latex-input').addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
     e.preventDefault();
     handlePlace(!!editingItemId);
+    return;
+  }
+
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+    e.preventDefault();
+    toggleAligned();
+    return;
   }
 });
+
+function toggleAligned() {
+  const input = document.getElementById('latex-input');
+  let val = input.value.trim();
+
+  // If already aligned, unwrap
+  if (val.includes('\\begin{aligned}')) {
+    val = val
+      .replace(/\\begin\{aligned\}\s*/g, '')
+      .replace(/\s*\\end\{aligned\}/g, '')
+      .replace(/\s*&=/g, ' =')
+      .replace(/\s*\\\\\s*/g, '\n');
+    input.value = val;
+    updatePreview();
+    toast('Alignment removed');
+    return;
+  }
+
+  // Split on newlines or \\
+  let lines = val.split(/\n|\\\\/).map(l => l.trim()).filter(l => l.length > 0);
+
+  if (lines.length < 2) {
+    toast('Type multiple lines first (one equation per line)');
+    return;
+  }
+
+  // Insert & before each = (but not &= which is already done, and not \= or <=, >=, !=)
+  lines = lines.map(line => {
+    // Only add & before the first standalone = in each line
+    return line.replace(/(?<!&)(?<!\\)(?<![<>!])=/, '&=');
+  });
+
+  input.value = `\\begin{aligned}\n${lines.join(' \\\\\\\\\n')}\n\\end{aligned}`;
+  updatePreview();
+  toast('Aligned by = ✓');
+}
 
 // ══════════════════════════════════════════════════════════════
 // LOAD SELECTION FOR EDITING
