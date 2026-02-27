@@ -387,15 +387,114 @@
       transition: all 0.15s;
     }
     .phet-item:hover { border-color: var(--yellow); color: var(--yellow); }
+
+    /* ── Board filter chips ────────────────── */
+    .board-filter {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .board-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+      transition: all 0.15s;
+      color: var(--muted);
+    }
+    .board-chip:hover { border-color: var(--purple); color: var(--purple); }
+    .board-chip.active { border-color: var(--purple); background: rgba(167,139,250,0.15); color: var(--purple); }
+
+    /* ── External sims grid ────────────────── */
+    .ext-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3px;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .ext-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ext-item:hover { border-color: var(--teal); color: var(--teal); }
+    .ext-item .ext-name { flex: 1; }
+    .ext-item .ext-source {
+      font-size: 9px;
+      color: var(--muted);
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+    .ext-item .ext-boards {
+      font-size: 8px;
+      color: var(--purple);
+      margin-left: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Circuit components grid ─────────────── */
+    .circuit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+    .circuit-category {
+      grid-column: 1 / -1;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 6px 0 2px;
+    }
+    .circuit-category:first-child { padding-top: 0; }
+    .circuit-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 4px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .circuit-item:hover { border-color: var(--teal); background: #1e2e32; }
+    .circuit-item svg { width: 52px; height: 28px; display: block; margin: 0 auto 4px; }
+    .circuit-item .cname { font-size: 9px; color: var(--muted); line-height: 1.2; }
+
+    /* ── Reveal size presets ──────────────────── */
+    .reveal-size {
+      flex: 1;
+      transition: all 0.15s;
+    }
+    .reveal-size.active {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
   </style>
 </head>
 <body>
 
 <!-- ── Tab bar ── -->
 <div class="tabs">
-  <div class="tab active" data-tab="latex">𝑓(𝑥) LaTeX</div>
+  <div class="tab active" data-tab="latex">𝑓(𝑥)</div>
   <div class="tab" data-tab="library">Library</div>
   <div class="tab" data-tab="embeds">Embeds</div>
+  <div class="tab" data-tab="circuits">Circuits</div>
+  <div class="tab" data-tab="tools">Tools</div>
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -522,6 +621,11 @@
         <span class="name">Isaac Physics</span>
         <span class="note">Opens tab</span>
       </div>
+      <div class="embed-btn" data-embed="external">
+        <span class="icon">🌐</span>
+        <span class="name">External Sims</span>
+        <span class="note">Opens tab</span>
+      </div>
     </div>
 
     <!-- YouTube -->
@@ -536,6 +640,12 @@
     <!-- GeoGebra -->
     <div class="embed-form" id="form-geogebra">
       <label>Your GeoGebra applets (click to embed)</label>
+      <div class="board-filter" id="ggb-board-filter">
+        <span class="board-chip active" data-board="all">All</span>
+        <span class="board-chip" data-board="AQA">AQA</span>
+        <span class="board-chip" data-board="Edexcel">Edexcel</span>
+        <span class="board-chip" data-board="OCR">OCR</span>
+      </div>
       <input type="text" id="ggb-search" placeholder="Search applets... (e.g. SHM, waves, capacitor)" style="margin-bottom:6px;" />
       <div class="geogebra-grid" id="ggb-list">
         <!-- Populated by JS -->
@@ -576,6 +686,106 @@
       <button class="btn btn-yellow btn-full" id="btn-isaac-card">Place Isaac Physics card</button>
     </div>
 
+    <!-- External Sims -->
+    <div class="embed-form" id="form-external">
+      <label>External simulations (click to open)</label>
+      <div class="board-filter" id="ext-board-filter">
+        <span class="board-chip active" data-board="all">All</span>
+        <span class="board-chip" data-board="AQA">AQA</span>
+        <span class="board-chip" data-board="Edexcel">Edexcel</span>
+        <span class="board-chip" data-board="OCR">OCR</span>
+      </div>
+      <input type="text" id="ext-search" placeholder="Search sims... (e.g. drift velocity, cyclotron, decay)" style="margin-bottom:6px;" />
+      <div class="ext-grid" id="ext-list">
+        <!-- Populated by JS -->
+      </div>
+      <div class="info-box" style="margin-top:8px">
+        External sims open in a new browser tab. Sources include iwant2study, Falstad, Walter Fendt, oPhysics, and PhysicsTJC.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 4: Circuit Diagrams
+══════════════════════════════════════════════ -->
+<div class="page" id="page-circuits">
+  <div class="scroll">
+    <label>Circuit Components</label>
+    <p style="color:var(--muted);font-size:11px;margin-bottom:8px">
+      Click a component to place it on the board. Use Miro's line tool or the wire button below to connect them.
+    </p>
+    <input type="text" id="circuit-search" placeholder="Search components..." style="margin-bottom:6px;font-family:-apple-system,sans-serif;font-size:12px" />
+    <div id="circuit-grid" class="circuit-grid">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="spacer"></div>
+    <label>Wire tool</label>
+    <div class="info-box">
+      Select two components on the board (Shift+click), then click Connect.
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-teal btn-full" id="btn-connect-wire">
+      Connect selected components
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 5: Tools
+══════════════════════════════════════════════ -->
+<div class="page" id="page-tools">
+  <div class="scroll">
+    <label>Reveal Covers</label>
+    <p style="color:var(--muted);font-size:11px;margin-bottom:8px">
+      Place a cover over content on your board. Remove it during the lesson to reveal what's underneath.
+    </p>
+
+    <label>Cover label</label>
+    <input type="text" id="reveal-label" placeholder="? Reveal" style="font-family:-apple-system,sans-serif;font-size:13px" />
+
+    <label style="margin-top:8px">Cover colour</label>
+    <div class="colour-row" id="reveal-colour-row">
+      <div class="colour-swatch selected" style="background:#7C3AED" data-reveal-colour="#7C3AED" title="PP Purple"></div>
+      <div class="colour-swatch" style="background:#a78bfa" data-reveal-colour="#a78bfa" title="Lavender"></div>
+      <div class="colour-swatch" style="background:#5eead4" data-reveal-colour="#5eead4" title="Teal"></div>
+      <div class="colour-swatch" style="background:#fbbf24" data-reveal-colour="#fbbf24" title="Yellow"></div>
+      <div class="colour-swatch" style="background:#343a40" data-reveal-colour="#343a40" title="Dark"></div>
+      <input type="color" id="reveal-custom-colour" value="#7C3AED" title="Custom colour" />
+    </div>
+
+    <label style="margin-top:8px">Size</label>
+    <div class="row" style="gap:4px;margin-bottom:8px">
+      <button class="btn btn-ghost btn-sm reveal-size active" data-w="200" data-h="80">Small</button>
+      <button class="btn btn-ghost btn-sm reveal-size" data-w="400" data-h="150">Medium</button>
+      <button class="btn btn-ghost btn-sm reveal-size" data-w="600" data-h="300">Large</button>
+    </div>
+
+    <button class="btn btn-primary btn-full" id="btn-create-reveal">
+      Place cover on board
+    </button>
+
+    <div class="spacer"></div>
+    <hr style="border-color:var(--border)">
+    <div class="spacer"></div>
+
+    <label>Remove covers</label>
+    <p style="color:var(--muted);font-size:11px;margin-bottom:8px">
+      Select a cover on the board, then click Reveal. Or remove all covers at once.
+    </p>
+    <div class="row" style="gap:6px">
+      <button class="btn btn-teal" id="btn-reveal-selected" style="flex:1">
+        Reveal selected
+      </button>
+      <button class="btn btn-ghost" id="btn-reveal-all" style="flex:1">
+        Reveal all
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+    <div id="reveal-count" style="color:var(--muted);font-size:11px;text-align:center"></div>
   </div>
 </div>
 
@@ -1223,6 +1433,425 @@ const GEOGEBRA_APPLETS = [
   // ── Special Relativity ──
   { name: 'Special Relativity v2', id: 'xwvbdmts', tags: 'special relativity' },
   { name: 'Special Relativity', id: 'bmbf9nh3', tags: 'special relativity' },
+
+  // ══════════════════════════════════════════════════════════════
+  // NEW: From 9702-physics.blogspot.com (214 additional applets)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── Practical Skills & Measurements (new) ──
+  { name: 'High Resolution Vernier Calipers', id: 'DemUu87n', tags: 'practical skills measurements' },
+  { name: 'Micrometer Screw Gauge Readings', id: 'vwrafxmp', tags: 'practical skills measurements' },
+  { name: 'Cathode Ray Oscilloscope', id: 'kh7SAVdD', tags: 'electricity practical skills' },
+  { name: 'Adding and Subtracting Uncertainties', id: 'Uy5Zq8ws', tags: 'practical skills measurements' },
+  { name: 'Line of Best Fit (alt)', id: 'f96zyayz', tags: 'practical skills measurements' },
+  { name: 'Least Square Best Fit', id: 'zHwQNvpW', tags: 'practical skills measurements' },
+  { name: 'Physics Diagrams Maker', id: 'vUK7gGkN', tags: 'practical skills' },
+
+  // ── Mechanics — Kinematics (new) ──
+  { name: 'Gradient of A Graph Rollercoaster', id: 'z6ewahft', tags: 'mechanics kinematics' },
+  { name: 'Displacement Velocity Acceleration Graphs', id: 'Kc88gNS3', tags: 'mechanics kinematics' },
+  { name: 'Weird DVA Graphs', id: 'pdNj3DgD', tags: 'mechanics kinematics' },
+  { name: 'Average vs Instantaneous Velocity', id: 'mctbbgzn', tags: 'mechanics kinematics' },
+  { name: 'Graphs of Ball Thrown Vertically', id: 'qpxcs6vb', tags: 'mechanics kinematics' },
+  { name: 'Graph of Ball with Rebound', id: 'q7qan5jz', tags: 'mechanics kinematics' },
+  { name: 'Graph of Trampoline Motion', id: 'R6q4pz6J', tags: 'mechanics kinematics' },
+  { name: 'Relative Velocities', id: 'DmhSaMnE', tags: 'mechanics kinematics' },
+
+  // ── Mechanics — Projectiles (new) ──
+  { name: 'Projectile Initial Velocity Affects Path', id: 'rspzuwrs', tags: 'mechanics projectiles' },
+  { name: 'Projectile Motion Vectors Non-Animated', id: 'JDxA5kPR', tags: 'mechanics projectiles' },
+  { name: 'Horizontal Projectile (alt)', id: 'c6qqNRjw', tags: 'mechanics projectiles' },
+  { name: 'Projectile Motion with Air Resistance', id: 'mPku8Yu6', tags: 'mechanics projectiles' },
+  { name: 'Projectile Motion with Drag Force', id: 'rYmNxYMY', tags: 'mechanics projectiles' },
+  { name: 'Projectile Motion Air Resistance Ellipse', id: 'ac6hexma', tags: 'mechanics projectiles' },
+  { name: 'Projectile Game Shoot the Monkey', id: 'pEvjAEY7', tags: 'mechanics projectiles' },
+
+  // ── Mechanics — Forces (new) ──
+  { name: 'Free Body Diagrams', id: 'kadDJnnw', tags: 'mechanics forces' },
+  { name: 'Pulley with Two Hanging Masses', id: 'xVcYXtMw', tags: 'mechanics forces' },
+  { name: 'Pulley on Table', id: 'fpczhdfk', tags: 'mechanics forces' },
+  { name: 'Scale in Elevator', id: 'NgAZr3dQ', tags: 'mechanics forces' },
+  { name: 'Velocity Parachutist Graph with Forces', id: 'bkgb7fdz', tags: 'mechanics forces terminal velocity' },
+  { name: 'Terminal Velocity Parachutist Graph', id: 'cqmxbk2v', tags: 'mechanics forces terminal velocity' },
+  { name: 'Choosing Terminal Velocities of Parachutist', id: 'nmkzvg7c', tags: 'mechanics forces terminal velocity' },
+  { name: 'Exploring Friction', id: 'jZeNyTTj', tags: 'mechanics forces' },
+  { name: 'Inclined Plane Force Vectors FBD', id: 'myxfH8tW', tags: 'mechanics forces' },
+  { name: 'Inclined Plane Pulley with Friction', id: 'jVUxzEry', tags: 'mechanics forces' },
+  { name: 'Hanging Picture Frame Equilibrium', id: 'jqp9z9qc', tags: 'mechanics forces' },
+  { name: 'Centre of Gravity Bottle Flip', id: 'bxz2adv8', tags: 'mechanics forces' },
+  { name: 'Double Tension Hanging Equilibrium FBD', id: 'Q9hVSxcR', tags: 'mechanics forces' },
+  { name: 'Double Tension Hanging Vector Triangle', id: 'CEBvTU3Q', tags: 'mechanics vectors forces' },
+
+  // ── Mechanics — Moments (new) ──
+  { name: 'COG Stability Toppling Block', id: 'qszfx35k', tags: 'mechanics forces moments' },
+  { name: 'Topple Block Uniform Density', id: 'xmx55cj5', tags: 'mechanics forces moments' },
+  { name: 'Topple Block Varying COG', id: 'wdjjugwz', tags: 'mechanics forces moments' },
+  { name: 'Wall Shelf Equilibrium (alt)', id: 'xdbr7qr5', tags: 'mechanics forces moments' },
+  { name: 'Inclined Ladder Against Wall', id: 'cm7fqnnp', tags: 'mechanics forces moments' },
+  { name: 'Static Equilibrium of Arm', id: 'eDz9xba5', tags: 'mechanics forces moments' },
+
+  // ── Mechanics — Momentum (new) ──
+  { name: 'Impulsive Force Graph', id: 'cwVjvXCn', tags: 'mechanics momentum' },
+  { name: 'Newtons Cradle', id: 'c5jjRGvc', tags: 'mechanics momentum' },
+  { name: 'Momentum Graph in Collisions', id: 'XTQqxU7n', tags: 'mechanics momentum' },
+
+  // ── Mechanics — Fluids & Pressure (new) ──
+  { name: 'Hydrostatic Pressure Forces on Object', id: 'xxeyzkqq', tags: 'mechanics fluids pressure' },
+  { name: 'Diver Pressure in Depth', id: 'MK7KhgSh', tags: 'mechanics fluids pressure' },
+  { name: 'Density Pressure Force in 2 Beakers', id: 'wWkbsTzs', tags: 'mechanics fluids pressure' },
+  { name: 'Upthrust on Block', id: 'gYwbsBfG', tags: 'mechanics fluids' },
+  { name: 'Pressure in U Tube', id: 'dg3Yn8U8', tags: 'mechanics fluids pressure' },
+
+  // ── Mechanics — Energy (new) ──
+  { name: 'Work Done by Two Forces as Area Under Graph', id: 'qvhthk5a', tags: 'mechanics energy' },
+  { name: 'Freefall Energy Graph', id: 'XDDECKtJ', tags: 'mechanics energy' },
+  { name: 'Bouncing Freefall Energy Graph', id: 'QxBc6t9r', tags: 'mechanics energy' },
+  { name: 'Conservation of Energy on Ramp', id: 'GV3z6qgk', tags: 'mechanics energy' },
+  { name: 'Single Ramp Energy Graph', id: 'H952a2Wc', tags: 'mechanics energy' },
+  { name: 'Double Ramp Energy Graph', id: 'rVxC99XV', tags: 'mechanics energy' },
+  { name: 'Instant vs Average Power', id: 'evtcje9v', tags: 'mechanics energy' },
+
+  // ── Materials (new) ──
+  { name: 'Hookes Law', id: 'tb98aHHz', tags: 'materials hookes law' },
+  { name: 'Young Modulus Stress-Strain Graph', id: 'AMjGYhNm', tags: 'materials' },
+
+  // ── Waves — General (new) ──
+  { name: 'Basic Wave Properties', id: 'cwyjdf2y', tags: 'waves' },
+  { name: 'Longitudinal vs Transverse Wave', id: 'auyft2pd', tags: 'waves' },
+  { name: 'Progressive Wave Particle Oscillation', id: 'jnjsgsd5', tags: 'waves' },
+  { name: 'Displacement vs Distance-time Graphs Progressive Wave', id: 'f7faw3r6', tags: 'waves' },
+  { name: 'Displacement-Position Graph Longitudinal Wave', id: 'FDGVdN3J', tags: 'waves' },
+  { name: 'Measuring Speed of A Wave (alt)', id: 'yxmv39jq', tags: 'waves practical skills' },
+  { name: 'Phase Difference Between Two Waves', id: 'ymyxaejr', tags: 'waves' },
+  { name: 'Waves in a Container of Liquid', id: 'chyp4y99', tags: 'waves' },
+  { name: 'Huygens Principle of Wavelets', id: 'S5h6EVBJ', tags: 'waves' },
+  { name: 'Huygens Reflection', id: 'BqXTsyXK', tags: 'waves' },
+  { name: 'Fourier Series Square Waves', id: 'juzs5gxf', tags: 'waves' },
+  { name: 'Fourier Transform Graph', id: 'aenhzjpz', tags: 'waves' },
+
+  // ── Waves — Electromagnetic (new) ──
+  { name: 'Electromagnetic Waves Vary Amplitude', id: 'fmk46vcw', tags: 'waves electromagnetic' },
+  { name: 'Electromagnetic Waves Equation', id: 'SdNMfHrt', tags: 'waves electromagnetic' },
+  { name: 'Amplitude and Frequency Modulation', id: 'WAby9sC8', tags: 'waves electromagnetic' },
+  { name: 'Binary Digital FM', id: 'K3zfr6qH', tags: 'waves electromagnetic' },
+  { name: 'Overlayed FM Frequency Deviation', id: 'ct8ghwk9', tags: 'waves electromagnetic' },
+  { name: 'Analog-to-Digital Sampling Animation', id: 'Hcy2rAuN', tags: 'waves electromagnetic' },
+
+  // ── Waves — Doppler (new) ──
+  { name: 'Doppler Effect Static', id: 'MhXH3vcu', tags: 'waves doppler' },
+  { name: 'Frequency-Position Doppler Graph', id: 'aSDNfNFp', tags: 'waves doppler' },
+
+  // ── Waves — Polarisation (new) ──
+  { name: 'Polarization Filters', id: 'E6jZ52vK', tags: 'waves polarisation' },
+
+  // ── Waves — Refraction (new) ──
+  { name: 'Huygens Refraction', id: 'uPtecKsy', tags: 'waves refraction' },
+  { name: 'Wave Crossing Boundaries Refraction', id: 'uKrm9Rab', tags: 'waves refraction' },
+
+  // ── Waves — Standing Waves (new) ──
+  { name: 'Phase Difference on Stationary Waves', id: 'xm5mnfyq', tags: 'waves superposition' },
+  { name: 'Progressive vs Standing Longitudinal Wave', id: 'zsESysFA', tags: 'waves superposition' },
+  { name: 'Standing Wave Transverse Longitudinal Pressure', id: 'EJ8USu9q', tags: 'waves superposition' },
+  { name: 'Standing Waves on String Animated', id: 'qYX5eakP', tags: 'waves superposition' },
+  { name: 'Standing Wave in Air Columns', id: 'qc7nMkww', tags: 'waves superposition' },
+  { name: 'Standing Wave Open Pipe Harmonics Animated', id: 'zesBvfdY', tags: 'waves superposition' },
+  { name: 'Standing Wave Closed-Open Pipe Harmonics', id: 'mGtpHehr', tags: 'waves superposition' },
+  { name: 'Vary Length Open-Closed Pipe', id: 'gm9k6hkg', tags: 'waves superposition' },
+  { name: 'Vary Length Open-Open Pipe', id: 'tsufws72', tags: 'waves superposition' },
+  { name: 'Standing Wave Displacement and Pressure Graph', id: 'xbknrstt', tags: 'waves superposition' },
+  { name: 'Standing Sound Waves Animation', id: 'pEQMcXCr', tags: 'waves superposition' },
+  { name: '1D Wave Pulse Interference', id: 'dJrTcxYd', tags: 'waves superposition' },
+  { name: '1D Wave Interference Vary Frequency', id: 'zMQw6nue', tags: 'waves interference' },
+
+  // ── Waves — Diffraction & Interference (new) ──
+  { name: 'Double Slit Phase Difference', id: 'w4xBU2FZ', tags: 'waves diffraction' },
+  { name: 'Double Slit Path Difference Calculations', id: 'G7Yrkr8Z', tags: 'waves diffraction' },
+  { name: 'Double Slit Path Difference Change Multiple Lambda', id: 'jkqmuvne', tags: 'waves diffraction' },
+  { name: 'Double Slit Small Angle Approximation', id: 'nSaqKUPc', tags: 'waves diffraction' },
+  { name: 'Double Slit Fringe Location', id: 'MkY5sh44', tags: 'waves diffraction' },
+  { name: 'Double Slit 2D Interference Basic', id: 'Tm7x7hhp', tags: 'waves interference' },
+  { name: 'Double Slit 2D Interference Full Variables', id: 'gH9M8w2P', tags: 'waves interference' },
+  { name: 'Laser Interferometer', id: 'Htzxnm6r', tags: 'waves interference' },
+  { name: 'Single Slit Top View Huygens', id: 't55SAJVR', tags: 'waves diffraction' },
+  { name: 'Diffraction Grating Laser 3D', id: 'myyuuhbg', tags: 'waves diffraction' },
+  { name: 'Diffraction Grating Patterns Fringe', id: 'p5m34MKj', tags: 'waves diffraction' },
+  { name: 'Single Slit Diffraction Multiple Sources', id: 'Jd2VfGCH', tags: 'waves diffraction' },
+  { name: 'Double Slit Diffraction Grating Patterns', id: 'NcnT6MK9', tags: 'waves diffraction' },
+
+  // ── Waves — Thin Film Interference (new) ──
+  { name: 'Thin Film Multiple Reflections', id: 'Z993C6QS', tags: 'waves interference' },
+  { name: 'Thin Film Interference 1', id: 'r6Xruz49', tags: 'waves interference' },
+  { name: 'Thin Film Interference 2', id: 'AaXxWvwu', tags: 'waves interference' },
+  { name: 'Thin Film Interference Calculations', id: 'Sjv3g6C2', tags: 'waves interference' },
+
+  // ── Electric Fields (new) ──
+  { name: 'Uniform Electric Field', id: 'rzspyvpy', tags: 'electric fields' },
+  { name: 'Projectiles in Electric Field Deflection', id: 'pCPnUzUQ', tags: 'electric fields' },
+  { name: 'Oil Drop Equilibrium Experiment', id: 'JUjVkmjK', tags: 'electric fields quantum physics' },
+  { name: 'Electric Potential and Force Graphs', id: 'bPexk3Uw', tags: 'electric fields' },
+  { name: '3D Potential Surface Free Rotation', id: 'MCypqnq3', tags: 'electric fields' },
+  { name: '3D Potential Surface Auto-Rotate', id: 'khVy6MZa', tags: 'electric fields' },
+  { name: 'Two Charged Spherical Shells V Graph', id: 'rkcmcheb', tags: 'electric fields' },
+
+  // ── Capacitance (new) ──
+  { name: 'Parallel Plate Capacitor E-field', id: 'P9THhRfY', tags: 'capacitance electric fields' },
+  { name: 'Simple RC Circuit Charging', id: 'X4AVQ2Us', tags: 'capacitance' },
+  { name: 'Charging and Discharging Capacitor', id: 'jF4CZMAZ', tags: 'capacitance' },
+
+  // ── Electricity & Circuits (new) ──
+  { name: 'Circuit Potential Energy Visualization', id: 'xeAMdVQp', tags: 'electricity circuits' },
+  { name: 'Resistor I-V Graph', id: 'zpZREWcS', tags: 'electricity circuits' },
+  { name: 'Parallel Circuit Current and Voltage', id: 'pHHxZrAf', tags: 'electricity circuits' },
+  { name: 'Series Circuit Current and Voltage', id: 'BZCC4nkW', tags: 'electricity circuits' },
+  { name: 'Maximum Power Theorem and Graph', id: 'hscshcj8', tags: 'electricity circuits' },
+  { name: 'Internal Resistance Graph', id: 'UP4zF7qR', tags: 'electricity circuits' },
+  { name: 'Potentiometer Circuit', id: 'pzy3qua8', tags: 'electricity circuits' },
+  { name: 'Half-Wave Rectification Circuit Graphs', id: 'hnf5zbpj', tags: 'electricity circuits' },
+
+  // ── Magnetic Fields (new) ──
+  { name: 'Force Between Two Equal Current Wires', id: 'hxPKcVSb', tags: 'magnetic fields' },
+  { name: 'Force Between Two Unequal Current Wires', id: 'JSrCbknr', tags: 'magnetic fields' },
+  { name: 'Charged Particles in a Magnetic Field', id: 'dFQG5amD', tags: 'magnetic fields' },
+  { name: 'Charged Particle in Magnetic Field Spiral 3D', id: 'qajRP2O4', tags: 'magnetic fields' },
+  { name: 'Hall Effect', id: 'MjNK8MP4', tags: 'magnetic fields' },
+  { name: 'Sliding Wire Rail Gun', id: 'gBDr859x', tags: 'magnetic fields electromagnetic induction' },
+  { name: 'Transmission of Electrical Power', id: 'DU6nNR2V', tags: 'magnetic fields' },
+  { name: 'DC Motor Basics', id: 'PN2YrxBb', tags: 'magnetic fields' },
+  { name: 'AC Generator 3D', id: 'gpjfkhzw', tags: 'magnetic fields electromagnetic induction' },
+
+  // ── Circular Motion (new) ──
+  { name: 'Kinematics of Uniform Circular Motion', id: 'WBuX8YqT', tags: 'circular motion' },
+  { name: 'Angular Displacement', id: 'x7dmuarh', tags: 'circular motion' },
+  { name: 'Horizontal Car Friction', id: 'SQNtuDDj', tags: 'circular motion' },
+  { name: 'Person on Horizontal Rotating Platform', id: 'ywUp7P9P', tags: 'circular motion' },
+  { name: 'Rotating Earth About Axis', id: 'vkqwYHjj', tags: 'circular motion' },
+  { name: 'Conical Pendulum 2D', id: 'pT7sgH5B', tags: 'circular motion' },
+  { name: 'Conical Pendulum 3D', id: 'zdd3qbkm', tags: 'circular motion' },
+  { name: 'Conical Pendulum Spinning Stopper', id: 'qC3Adyr8', tags: 'circular motion' },
+  { name: 'Vertical Circle Yo-yo Constant Speed', id: 'qneBmSxr', tags: 'circular motion' },
+  { name: 'Vertical Circles Full', id: 'KTAgQ4kF', tags: 'circular motion' },
+  { name: 'Vertical Circle Contact Force', id: 'm28vcnbz', tags: 'circular motion' },
+  { name: 'Rolling or Slipping Wheel', id: 'xapu7tz2', tags: 'mechanics rotational' },
+
+  // ── Gravitational Fields (new) ──
+  { name: 'Force of Gravity Two Objects', id: 'cwttNHQ3', tags: 'gravitational fields' },
+  { name: 'Gravitational Field Lines', id: 'wyVkQa23', tags: 'gravitational fields' },
+  { name: 'Test Mass in G-Field', id: 'dafww6rp', tags: 'gravitational fields' },
+  { name: 'G-field Graph Two Objects', id: 'yfhyxdm4', tags: 'gravitational fields' },
+  { name: 'Gravitational Potential Graph Two Planets', id: 'ycuqv3wz', tags: 'gravitational fields' },
+  { name: 'Comparing Satellite Orbital Speed', id: 'ur2vjDQF', tags: 'gravitational fields orbits' },
+  { name: 'Orbital Velocity Basics', id: 'MDnrKMf6', tags: 'gravitational fields orbits' },
+  { name: 'Orbit Velocity vs Radius Around Black Hole', id: 'TGQnAjGg', tags: 'gravitational fields orbits' },
+  { name: 'Find the Black Hole Game', id: 'AhrxawdP', tags: 'gravitational fields' },
+  { name: 'Acceleration of Gravity (alt)', id: 'yv2C4XdP', tags: 'gravitational fields' },
+  { name: 'Acceleration of Gravity on Planets (alt)', id: 'EfBMY4UE', tags: 'gravitational fields' },
+  { name: 'Satellite in Orbit Energy Graphs', id: 'jmqytcsc', tags: 'gravitational fields orbits' },
+  { name: 'Orbital Motion Energy with KE and GE Graphs', id: 'pymub7nq', tags: 'gravitational fields orbits' },
+
+  // ── Thermal Physics (new) ──
+  { name: 'Celsius to Fahrenheit Conversion', id: 'dye7f4kf', tags: 'thermal physics' },
+  { name: 'Thermometer Calibration Fixed Points', id: 'KSYSMasd', tags: 'thermal physics' },
+  { name: 'Heat Capacity and Phase Change', id: 'eD6nnXA7', tags: 'thermal physics' },
+  { name: 'Specific Heat Capacity of Metal Block', id: 'P8Gj2RNF', tags: 'thermal physics' },
+  { name: 'Ideal Gas Law Graphs', id: 'YzwWBYP3', tags: 'thermal physics ideal gases' },
+  { name: 'Deriving Pressure from Ideal Gas', id: 'Vg4pTrrA', tags: 'thermal physics kinetic theory' },
+  { name: 'PV Graphs', id: 'kx7U7Kr9', tags: 'thermal physics ideal gases' },
+  { name: 'PV Graphs 3 Lab Situations', id: 'gSh2hm2h', tags: 'thermal physics ideal gases' },
+  { name: 'Adiabatic Transforms Graph', id: 'RMFmkK2A', tags: 'thermal physics' },
+  { name: 'Isobaric Transforms Graph', id: 'DYDvqQk9', tags: 'thermal physics' },
+  { name: 'Isothermal Transforms Graph', id: 'CUmVA66V', tags: 'thermal physics' },
+  { name: 'Isochoric Transforms Graph', id: 'pJ3ePZzf', tags: 'thermal physics' },
+  { name: 'All Thermodynamic Processes', id: 'uew8B9rT', tags: 'thermal physics' },
+  { name: 'Carnot Cycle', id: 'dW93FqWd', tags: 'thermal physics' },
+  { name: 'Cyclic Process', id: 'wAdvWJwM', tags: 'thermal physics' },
+
+  // ── SHM & Oscillations (new) ──
+  { name: 'Pendulum SHM', id: 'Jz2AvTjP', tags: 'SHM oscillations' },
+  { name: 'Pendulum SHM with Graph', id: 'AkEDFDZ7', tags: 'SHM oscillations' },
+  { name: 'Circular Motion to SHM Trigo Graph', id: 'aCduUPv4', tags: 'SHM oscillations' },
+  { name: 'Spring SHM Force and Acceleration', id: 'cbDueVGA', tags: 'SHM oscillations' },
+  { name: 'Derivation of Sine and Cosine Graphs', id: 'vxxw7hfp', tags: 'SHM oscillations' },
+  { name: 'Average vs Instantaneous Velocity Derivatives', id: 'rafyjqpr', tags: 'SHM oscillations' },
+  { name: 'All SHM Kinematics Graphs', id: 'xwcfqwya', tags: 'SHM oscillations' },
+  { name: 'SHM Energy KE PE Graph', id: 'bjpSQ6Q5', tags: 'SHM oscillations' },
+  { name: 'Spring SHM Work Done by Friction', id: 'XJyycUym', tags: 'SHM oscillations' },
+  { name: 'Damped Harmonic Motion', id: 'ZMjkkEwU', tags: 'SHM oscillations' },
+  { name: 'Resonance Curve with Displacement', id: 'HMu9ZwnS', tags: 'SHM resonance' },
+  { name: 'RLC Circuit Oscillation', id: 'uWJTQjsP', tags: 'SHM oscillations capacitance magnetic fields' },
+  { name: 'Oscillation Graphs Quiz', id: 'fK8Z7T76', tags: 'SHM oscillations' },
+  { name: 'Spring Energy SHM', id: 'mRceWEDx', tags: 'SHM oscillations' },
+
+  // ── Quantum Physics (new) ──
+  { name: 'Energy of Visible Light', id: 'X4xhAkgq', tags: 'quantum physics' },
+  { name: 'Photo Electric Effect', id: 'CNjjqZq9', tags: 'quantum physics' },
+  { name: 'Energy Level Diagrams', id: 'XY2K8htr', tags: 'quantum physics' },
+  { name: 'Hydrogen Energy Level Diagrams', id: 'WrW6PWYR', tags: 'quantum physics' },
+  { name: 'Photon Absorption and Ionization Energy Levels', id: 'wFTR6bdz', tags: 'quantum physics' },
+
+  // ── Nuclear Physics (new) ──
+  { name: 'The Standard Model', id: 'Nq8KAXUX', tags: 'nuclear physics' },
+  { name: 'Alpha Decay Energy Calculation', id: 'cp5MMTZc', tags: 'nuclear physics' },
+  { name: 'Energy in Alpha Decay', id: 'pzRmc22H', tags: 'nuclear physics' },
+  { name: 'Feynman Diagram Annihilation', id: 'eryu5tS4', tags: 'nuclear physics' },
+  { name: 'Feynman Diagram 2 Vertices', id: 'xw7QHNeA', tags: 'nuclear physics' },
+  { name: 'Half-Life Graph', id: 'Ym5NQWJp', tags: 'nuclear physics' },
+
+  // ── Medical Physics — Ultrasound (new) ──
+  { name: 'Ultrasound A Scan', id: 'SrpZwGxQ', tags: 'medical physics ultrasound' },
+  { name: 'Ultrasound B Scan', id: 'pak8vu2W', tags: 'medical physics ultrasound' },
+  { name: 'Ultrasound Pulse Separation', id: 'gXaPPBBD', tags: 'medical physics ultrasound' },
+  { name: 'Ultrasound Pulse Length', id: 'nMVjqTEU', tags: 'medical physics ultrasound' },
+  { name: 'Aperture and Beam Collimation', id: 'WEMWsPaa', tags: 'medical physics ultrasound' },
+
+  // ── Medical Physics — NMR / MRI (new) ──
+  { name: 'NMR 1 Receiver Signal', id: 'hMSwKsWg', tags: 'medical physics MRI' },
+  { name: 'NMR 2 Receiver Signal', id: 'AGMWrpzt', tags: 'medical physics MRI' },
+  { name: 'NMR 3 Receiver Signal', id: 'PfavCrSP', tags: 'medical physics MRI' },
+  { name: 'NMR 4', id: 'xaHjwmrZ', tags: 'medical physics MRI' },
+  { name: 'NMR 5', id: 'PQ88bRgj', tags: 'medical physics MRI' },
+
+  // ══════════════════════════════════════════════════════════════
+  // NEW: From physicstjc.github.io (140 additional applets)
+  // ══════════════════════════════════════════════════════════════
+  { name: 'Using a Vernier Scale (TJC)', id: 'PxFdhgEk', tags: 'practical skills measurements' },
+  { name: 'Vernier Calipers (TJC)', id: 'csqf7b8m', tags: 'practical skills measurements' },
+  { name: 'Vernier Calipers with Zero Error (TJC)', id: 'jybrnwgp', tags: 'practical skills measurements' },
+  { name: 'Micrometer with Zero Error (TJC)', id: 'qedrwymk', tags: 'practical skills measurements' },
+  { name: 'Standard Form and Prefixes (TJC)', id: 'qxjun83v', tags: 'practical skills measurements' },
+  { name: 'Accuracy and Precision', id: 'JPWSCM3W', tags: 'practical skills measurements' },
+  { name: 'Vector Addition', id: 'FCknj7c3', tags: 'mechanics vectors' },
+  { name: 'Relative Velocity Boat River', id: 'jgA3FrVk', tags: 'mechanics kinematics' },
+  { name: 'Vector Addition 2D', id: 'p2yvdsvs', tags: 'mechanics vectors' },
+  { name: 'Relative Velocity', id: 'b9ehq8ua', tags: 'mechanics kinematics' },
+  { name: 'Resolution of Vectors', id: 'j63uznk7', tags: 'mechanics vectors' },
+  { name: 'Acceleration Interaction Animation', id: 'UDUdnA32', tags: 'mechanics kinematics' },
+  { name: 'Vertical Throw', id: 'zvsydy9f', tags: 'mechanics kinematics' },
+  { name: 'Equations of Motion SUVAT', id: 'mfvvhjrj', tags: 'mechanics kinematics' },
+  { name: 'Bouncing Ball (TJC)', id: 'dfb53dps', tags: 'mechanics kinematics' },
+  { name: 'Graphs of Motion (TJC)', id: 'tsn4x2jp', tags: 'mechanics kinematics' },
+  { name: 'Motion Straight Line with Velocity', id: 'vhgwfrkj', tags: 'mechanics kinematics' },
+  { name: 'Projectile Motion (TJC)', id: 'BXBMnZPS', tags: 'mechanics projectiles' },
+  { name: 'Kinematics of Rectilinear Motion', id: 'mW8xdnQf', tags: 'mechanics kinematics' },
+  { name: 'Velocity and Displacement Graphs', id: 'a5nzhx4r', tags: 'mechanics kinematics' },
+  { name: 'Acceleration and Velocity Graphs (TJC)', id: 'ynwtuvf5', tags: 'mechanics kinematics' },
+  { name: 'Parachute V3', id: 'wytxsyrd', tags: 'mechanics forces terminal velocity' },
+  { name: 'Change in Velocity (TJC)', id: 'vb2fcque', tags: 'mechanics kinematics' },
+  { name: 'Displacement-Time Graph (TJC)', id: 'rxpukb8d', tags: 'mechanics kinematics' },
+  { name: 'Parachute Applet', id: 'wavar9bx', tags: 'mechanics forces terminal velocity' },
+  { name: 'Resultant Force on Point Mass', id: 'u2cgrc5q', tags: 'mechanics forces' },
+  { name: 'Forces in Equilibrium', id: 'ac6cjzfe', tags: 'mechanics forces' },
+  { name: 'Forces on Box on Slope', id: 'pkpukanq', tags: 'mechanics forces' },
+  { name: 'Dynamics Problem', id: 'kbkabucg', tags: 'mechanics forces' },
+  { name: 'Inclined Plane Two Masses Pulley', id: 'MQpSdK2A', tags: 'mechanics forces' },
+  { name: 'Two Mass Problem', id: 'fh5pwc37', tags: 'mechanics forces' },
+  { name: 'Inclined Plane Friction Pulley', id: 'kZ4H4C7v', tags: 'mechanics forces' },
+  { name: 'Friction Pulling Box Horizontal', id: 'ynATf9QU', tags: 'mechanics forces' },
+  { name: 'Coplanar Concurrent Forces', id: 'vw8grewc', tags: 'mechanics forces' },
+  { name: 'Elastic Inelastic Collisions', id: 'n3X5njnT', tags: 'mechanics momentum' },
+  { name: 'Moments', id: 'Qnb2Tzcc', tags: 'mechanics forces moments' },
+  { name: 'Calculating Moment of a Force', id: 'qzyczffy', tags: 'mechanics forces moments' },
+  { name: 'Equilibrium of a Wall Shelf (TJC)', id: 'fysec9eh', tags: 'mechanics forces moments' },
+  { name: 'Girl on Suspended Plank', id: 'ndjxzry9', tags: 'mechanics forces moments' },
+  { name: 'Torque of a Couple', id: 'prmucjp6', tags: 'mechanics forces moments' },
+  { name: 'Turning Effect on Tilted Beam', id: 'sas5ybxu', tags: 'mechanics forces moments' },
+  { name: 'Mass Volume and Density', id: 'Pw89jUe2', tags: 'mechanics fluids' },
+  { name: 'Buoyancy', id: 'uM5fD5KD', tags: 'mechanics fluids' },
+  { name: 'Upthrust', id: 'qvsp9ny9', tags: 'mechanics fluids' },
+  { name: 'Pressure in U Tube (TJC)', id: 'SD6m3YHr', tags: 'mechanics fluids pressure' },
+  { name: 'Pascals Principle Hydraulic Lift', id: 'yb42hP5D', tags: 'mechanics fluids pressure' },
+  { name: 'Hydraulic Press', id: 'egyer7nk', tags: 'mechanics fluids pressure' },
+  { name: 'U Tube Manometer', id: 'qyuncz3h', tags: 'mechanics fluids pressure' },
+  { name: 'Work Done', id: 'mpgu7qa3', tags: 'mechanics energy' },
+  { name: 'LOL Energy Diagram Template', id: 'u2m3gnzj', tags: 'mechanics energy' },
+  { name: 'Conservation of Energy Vertical Spring', id: 'TxXK2dnq', tags: 'mechanics energy SHM' },
+  { name: 'Work Done (TJC alt)', id: 'zhjhx9d9', tags: 'mechanics energy' },
+  { name: 'Work Done with Initial Velocity', id: 'vgqsdsqz', tags: 'mechanics energy' },
+  { name: 'Bungee Jumping Energy Conservation', id: 'aBRsx86n', tags: 'mechanics energy' },
+  { name: 'Angular Velocity', id: 'zfw87g5b', tags: 'circular motion' },
+  { name: 'Uniform Circular Motion', id: 'rjza5pwy', tags: 'circular motion' },
+  { name: 'Aircraft in Circular Motion', id: 'jxee2cwd', tags: 'circular motion' },
+  { name: 'Vertical Non-uniform Circular Motion', id: 'ny3jhhsp', tags: 'circular motion' },
+  { name: 'Centripetal Acceleration', id: 'rnkrmcx8', tags: 'circular motion' },
+  { name: 'Circular Motion Variable Tension', id: 's4fpkqz2', tags: 'circular motion' },
+  { name: 'Gravitational Potential Between Two Planets', id: 'hzfyjejx', tags: 'gravitational fields' },
+  { name: 'Escape Velocity (TJC)', id: 'va3dbqyd', tags: 'gravitational fields' },
+  { name: 'Pluto and Charon Orbit', id: 'angpz9uu', tags: 'gravitational fields orbits' },
+  { name: 'Heating a Metal Model', id: 'QDdSsy8t', tags: 'thermal physics' },
+  { name: 'First Law of Thermodynamics', id: 'yu2mkfxs', tags: 'thermal physics' },
+  { name: 'PV Diagram Ideal Gas', id: 'xyqhfvyw', tags: 'thermal physics ideal gases' },
+  { name: 'Idealized Stirling Cycle', id: 'pbnw2yas', tags: 'thermal physics' },
+  { name: 'SHM Mass-Spring System', id: 'aebg46df', tags: 'SHM oscillations' },
+  { name: 'Velocity vs Displacement SHM', id: 'xwx3skfd', tags: 'SHM oscillations' },
+  { name: 'Box Losing Contact with Spring', id: 'ev62ku7w', tags: 'SHM oscillations' },
+  { name: 'Resonance with Masses on Springs', id: 'JCyp4bYH', tags: 'SHM resonance' },
+  { name: 'Acceleration-Time Graph SHM', id: 'vrqf9hyj', tags: 'SHM oscillations' },
+  { name: 'Oscillations Overview', id: 'CdBu65h4', tags: 'SHM oscillations' },
+  { name: 'SHM Graphs with Energy', id: 'h7jzv58z', tags: 'SHM oscillations' },
+  { name: 'SHM in 3D', id: 'tsz95u6p', tags: 'SHM oscillations' },
+  { name: 'Torsional Pendulum', id: 'jhc4xvpe', tags: 'SHM oscillations' },
+  { name: 'Linear Wavefront', id: 'kmzaends', tags: 'waves' },
+  { name: 'Circular Wavefronts', id: 'gwffcn7c', tags: 'waves' },
+  { name: 'Graph of Longitudinal Wave', id: 'kq3e2qjk', tags: 'waves' },
+  { name: 'Phase Difference Two Particles on Wave', id: 'kmpdntk6', tags: 'waves' },
+  { name: 'Polarisation Malus Law', id: 'x5w3XjJs', tags: 'waves polarisation' },
+  { name: 'Amplitude After Linear Polarisation', id: 'nxqRUBJm', tags: 'waves polarisation' },
+  { name: 'Electromagnetic Waves Spectrum', id: 'xhYwXSsH', tags: 'waves electromagnetic' },
+  { name: 'Frequency and Amplitude of Sound', id: 'cnba7x4g', tags: 'waves sound' },
+  { name: 'Sound Wave Displacement and Pressure', id: 'dfh2jjxy', tags: 'waves sound' },
+  { name: 'Conditions for Stationary Waves', id: 'wse5hvmj', tags: 'waves superposition' },
+  { name: 'Phase Difference Stationary Wave Fixed', id: 'zg4spztb', tags: 'waves superposition' },
+  { name: 'Resonant Frequency Standing Waves String', id: 'bpnejfsv', tags: 'waves superposition' },
+  { name: 'Single Slit Diffraction Intensity', id: 'g6m4dh9s', tags: 'waves diffraction' },
+  { name: 'Two Source Path Difference', id: 'ayECjetm', tags: 'waves interference' },
+  { name: 'Double Slit Interference (TJC)', id: 'nxkcffkd', tags: 'waves interference' },
+  { name: 'Wave Interference in 3D', id: 'XdW2SjQ8', tags: 'waves interference' },
+  { name: 'Resolution Rayleigh Criterion', id: 'er2sravh', tags: 'waves diffraction' },
+  { name: 'Wave Interference', id: 'dnbpbvz7', tags: 'waves interference' },
+  { name: 'Reflection from Plane Mirror', id: 'gzPUZMBb', tags: 'waves refraction' },
+  { name: 'Snells Law', id: 'KUchQNVQ', tags: 'waves refraction' },
+  { name: 'Ray Diagram Converging Lens', id: 'J8Xv8ZB3', tags: 'waves lenses' },
+  { name: 'Optics of the Human Eye', id: 'ux9ke25p', tags: 'medical physics lenses' },
+  { name: 'Converging Lens', id: 'pfncxexz', tags: 'waves lenses' },
+  { name: 'Concave Mirror', id: 'Dk34GZUA', tags: 'waves mirrors' },
+  { name: 'Apparent Depth V1', id: 'uubqucvj', tags: 'waves refraction' },
+  { name: 'Thin Converging Lens Movable', id: 'dp6tastr', tags: 'waves lenses' },
+  { name: 'Critical Angle Total Internal Reflection', id: 'DHmnJnHh', tags: 'waves refraction' },
+  { name: 'Reflection and Refraction', id: 'tvstqv47', tags: 'waves refraction' },
+  { name: 'Where is the Fish Refraction', id: 'kdszgpfg', tags: 'waves refraction' },
+  { name: 'Apparent Depth V2', id: 'hu3pcnex', tags: 'waves refraction' },
+  { name: 'Refraction Self-Test', id: 'fhmmuhbg', tags: 'waves refraction' },
+  { name: 'Electric Potential Multiple Charges', id: 'zpdbqgKy', tags: 'electric fields' },
+  { name: 'Charged Particle in Electric Field', id: 'R6UGrg6n', tags: 'electric fields' },
+  { name: 'Electrostatic Forces Two Charges on Third', id: 'RgQdcNuD', tags: 'electric fields' },
+  { name: 'Potential of Two Point Charges', id: 'z8cr66wb', tags: 'electric fields' },
+  { name: 'I-V Characteristics Resistor', id: 'K2gh8kfM', tags: 'electricity circuits' },
+  { name: 'Voltmeter', id: 'watavkq8', tags: 'electricity circuits' },
+  { name: 'Four Identical Bulbs Circuit', id: 'DySEJY3w', tags: 'electricity circuits' },
+  { name: 'Electric Circuits Interactive', id: 'etszj23m', tags: 'electricity circuits' },
+  { name: 'Resistors in Circuits', id: 'jYwhbaN6', tags: 'electricity circuits' },
+  { name: 'Internal Resistance (TJC)', id: 'puvfjxk5', tags: 'electricity circuits' },
+  { name: 'Practical Electricity', id: 'pmatpapk', tags: 'electricity circuits' },
+  { name: 'Compound Circuits', id: 'jkckp9pr', tags: 'electricity circuits' },
+  { name: 'RC Circuit', id: 'rFEV4HJx', tags: 'electricity capacitance' },
+  { name: 'RMS Current Sinusoidal', id: 'btx3uzec', tags: 'electricity circuits' },
+  { name: 'RMS Rectified Current', id: 'pmdfkamh', tags: 'electricity circuits' },
+  { name: 'AC Power', id: 'xmta8sud', tags: 'electricity circuits' },
+  { name: 'Root Mean Square', id: 'tdxdmfzf', tags: 'electricity circuits' },
+  { name: '3D Magnetic Field from Magnet', id: 'g9DXB8AD', tags: 'magnetic fields' },
+  { name: 'B Field Around a Wire', id: 'Xr65rR3b', tags: 'magnetic fields' },
+  { name: 'Flemings Left Hand Rule', id: 'h3kxv53w', tags: 'magnetic fields' },
+  { name: 'Flemings Left Hand Rule (alt)', id: 'jax9jwxc', tags: 'magnetic fields' },
+  { name: 'DC Motor 2D', id: 'bqpjbrnw', tags: 'magnetic fields' },
+  { name: 'DC Motor 3D', id: 'wcmvnj86', tags: 'magnetic fields' },
+  { name: '3D Force on Current in Magnetic Field', id: 'egdpjrpc', tags: 'magnetic fields' },
+  { name: 'Charged Particles in Magnetic Field (TJC)', id: 'mkem6b9y', tags: 'magnetic fields' },
+  { name: 'Charged Particles in Parallel E and B Fields', id: 'erehat7n', tags: 'magnetic fields electric fields' },
+  { name: 'Helical Movement in B Field', id: 'gg6zhevd', tags: 'magnetic fields' },
+  { name: 'Magnetic Induction', id: 'JPFxyhtA', tags: 'magnetic fields electromagnetic induction' },
+  { name: '3D Rotating Coil', id: 'QJdqdmbR', tags: 'magnetic fields electromagnetic induction' },
+  { name: 'AC Transformer', id: 'tc7mxwgs', tags: 'magnetic fields electromagnetic induction' },
+  { name: 'Photoelectric Effect (TJC)', id: 'c6ZmnCQD', tags: 'quantum physics' },
+  { name: 'Hydrogen Atom Electron Energy Levels', id: 'awfut3uv', tags: 'quantum physics' },
 ];
 
 const PHET_SIMS = [
@@ -1240,12 +1869,165 @@ const PHET_SIMS = [
   { name: 'Gas Properties',         slug: 'gas-properties' },
 ];
 
+const EXTERNAL_SIMS = [
+  // ── Electricity ──
+  { name: 'Drift Velocity of Electrons', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_17current/ejss_model_driftvelocity/driftvelocity_Simulation.xhtml', tags: 'electricity drift velocity', source: 'iwant2study' },
+  { name: 'Half-Wave Rectification', url: 'https://www.falstad.com/circuit/e-rectify.html', tags: 'electricity circuits', source: 'falstad' },
+  { name: 'Full-Wave Rectification', url: 'https://www.falstad.com/circuit/e-fullrect.html', tags: 'electricity circuits', source: 'falstad' },
+  { name: 'Full-Wave Rectification + Smoothing', url: 'https://www.falstad.com/circuit/e-fullrectf.html', tags: 'electricity circuits', source: 'falstad' },
+  { name: 'Op-Amp Comparator', url: 'https://www.falstad.com/circuit/e-opamp.html', tags: 'electricity circuits', source: 'falstad' },
+  { name: 'Op-Amp Inverting Amplifier', url: 'https://www.falstad.com/circuit/e-amp-invert.html', tags: 'electricity circuits', source: 'falstad' },
+  { name: 'Op-Amp Non-Inverting Amplifier', url: 'https://www.falstad.com/circuit/e-amp-noninvert.html', tags: 'electricity circuits', source: 'falstad' },
+  { name: 'Potentiometer Ruler Lab', url: 'https://www.walter-fendt.de/html5/phen/potentiometer_en.htm', tags: 'electricity circuits', source: 'walter-fendt' },
+  { name: 'AC Circuits Phase Relationships', url: 'https://www.walter-fendt.de/html5/phen/accircuits_en.htm', tags: 'electricity circuits', source: 'walter-fendt' },
+  // ── Magnetic Fields & EM Induction ──
+  { name: 'B-field Around Two Wires', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_MagneticField2Wirewee4/MagneticField2Wirewee4_Simulation.xhtml', tags: 'magnetic fields', source: 'iwant2study' },
+  { name: 'B-field of Wire Loops', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_MagneticFieldFromLoops/MagneticFieldFromLoops_Simulation.xhtml', tags: 'magnetic fields', source: 'iwant2study' },
+  { name: 'B-field of Helmholtz Coils', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_mirrorfieldwee/mirrorfieldwee_Simulation.xhtml', tags: 'magnetic fields', source: 'iwant2study' },
+  { name: 'Cyclotron Simulator', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_chargeinNScyclotronwee/chargeinNScyclotronwee_Simulation.xhtml', tags: 'magnetic fields', source: 'iwant2study' },
+  { name: '3D Particle in E and B Fields', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_chargein3DEnBfield/chargein3DEnBfield_Simulation.xhtml', tags: 'magnetic fields electric fields', source: 'iwant2study' },
+  { name: 'Mass Spectrometer', url: 'https://iwant2study.org/ospsg/index.php/interactive-resources/physics/05-electricity-and-magnetism/08-electromagnetism/566-massspectrometerv10', tags: 'magnetic fields nuclear physics', source: 'iwant2study' },
+  { name: 'Faraday Rail Gun', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_MO_213S_FaradayExperiment/MO_213S_FaradayExperiment_Simulation.xhtml', tags: 'magnetic fields electromagnetic induction', source: 'iwant2study' },
+  { name: 'Magnet Through Solenoid', url: 'https://iwant2study.org/lookangejss/05electricitynmagnetism_21electromagnetism/ejss_model_MO_221S_StationarySolenoidMovingMagnet_101210/MO_221S_StationarySolenoidMovingMagnet_101210_Simulation.xhtml', tags: 'magnetic fields electromagnetic induction', source: 'iwant2study' },
+  { name: 'Two Magnets Falling in Copper Tube', url: 'https://iwant2study.org/ospsg/index.php/interactive-resources/physics/05-electricity-and-magnetism/08-electromagnetism/762-mo-235s-twomagnetsfallingincoppertube', tags: 'magnetic fields electromagnetic induction', source: 'iwant2study' },
+  // ── Gravitational Fields ──
+  { name: 'Gravitational Potential and Acceleration', url: 'https://iwant2study.org/lookangejss/02_newtonianmechanics_7gravity/ejss_model_gravity06/gravity06_Simulation.xhtml', tags: 'gravitational fields', source: 'iwant2study' },
+  // ── Waves ──
+  { name: 'Standing Wave Reflected', url: 'https://www.walter-fendt.de/html5/phen/standingwavereflection_en.htm', tags: 'waves superposition', source: 'walter-fendt' },
+  // ── Circular Motion ──
+  { name: 'Carousel Pendulums', url: 'https://www.walter-fendt.de/html5/phen/carousel_en.htm', tags: 'circular motion', source: 'walter-fendt' },
+  // ── SHM & Oscillations ──
+  { name: 'SHM Circular Motion Waves Link', url: 'https://ophysics.com/w0.html', tags: 'SHM oscillations waves', source: 'ophysics' },
+  { name: 'Spring-Mass All Graphs', url: 'https://ophysics.com/w1.html', tags: 'SHM oscillations', source: 'ophysics' },
+  { name: 'Dropping Mass on Oscillating Mass', url: 'https://ophysics.com/e5.html', tags: 'SHM oscillations', source: 'ophysics' },
+  { name: 'Falling Spring Two Masses', url: 'https://ophysics.com/fs2.html', tags: 'SHM oscillations', source: 'ophysics' },
+  { name: 'Oscillating RLC Circuit', url: 'https://www.walter-fendt.de/html5/phen/oscillatingcircuit_en.htm', tags: 'SHM oscillations capacitance', source: 'walter-fendt' },
+  // ── Nuclear Physics ──
+  { name: 'Three-Stage Radioactive Decay', url: 'https://iwant2study.org/ospsg/index.php/interactive-resources/physics/06-quantum-physics/02-nuclear/316-decaychangenweethreestate', tags: 'nuclear physics', source: 'iwant2study' },
+  { name: 'Radioactive Decay Law', url: 'https://www.walter-fendt.de/html5/phen/lawdecay_en.htm', tags: 'nuclear physics', source: 'walter-fendt' },
+  // ── Quantum Physics ──
+  { name: 'Bohr Model of the Atom', url: 'https://www.walter-fendt.de/html5/phen/bohrmodel_en.htm', tags: 'quantum physics', source: 'walter-fendt' },
+  // ── Custom JS Sims from physicstjc.github.io ──
+  { name: 'Kinematics Graphs Interactive', url: 'https://physicstjc.github.io/sls/kinematics-graph/index.html', tags: 'mechanics kinematics', source: 'physicstjc' },
+  { name: 'Projectile Simulator', url: 'https://physicstjc.github.io/sls/projectile-simulator/index.html', tags: 'mechanics projectiles', source: 'physicstjc' },
+  { name: 'System Schema FBD Builder', url: 'https://physicstjc.github.io/sls/system-schema/index.html', tags: 'mechanics forces', source: 'physicstjc' },
+  { name: 'Bouncing Ball Energy', url: 'https://physicstjc.github.io/sls/bouncing-ball/index.html', tags: 'mechanics energy', source: 'physicstjc' },
+  { name: 'Thermal Processes PV Diagram', url: 'https://physicstjc.github.io/sls/thermal-processes/index.html', tags: 'thermal physics', source: 'physicstjc' },
+  { name: 'Brownian Motion', url: 'https://physicstjc.github.io/sls/brownian-motion/index.html', tags: 'thermal physics kinetic theory', source: 'physicstjc' },
+  { name: 'Stationary Waves Formation', url: 'https://physicstjc.github.io/sls/stationary-waves/index.html', tags: 'waves superposition', source: 'physicstjc' },
+  { name: 'Wave Motion Animation', url: 'https://physicstjc.github.io/sls/wave-motion/index.html', tags: 'waves', source: 'physicstjc' },
+  { name: 'Electric Potential 2D', url: 'https://physicstjc.github.io/sls/electric-potential/index.html', tags: 'electric fields', source: 'physicstjc' },
+  { name: 'Electric Field Simulation', url: 'https://physicstjc.github.io/sls/electric-field/', tags: 'electric fields', source: 'physicstjc' },
+  { name: 'Radioactive Decay Sim', url: 'https://physicstjc.github.io/sls/radioactive-decay/index.html', tags: 'nuclear physics', source: 'physicstjc' },
+  { name: 'Geiger-Muller Counter', url: 'https://physicstjc.github.io/sls/gm-counter/index.html', tags: 'nuclear physics', source: 'physicstjc' },
+  { name: 'Nuclear Radiation Types', url: 'https://physicstjc.github.io/sls/3radiation/', tags: 'nuclear physics', source: 'physicstjc' },
+  { name: 'Bohr Model of the Atom (TJC)', url: 'https://physicstjc.github.io/sls/bohr-model/index.html', tags: 'quantum physics', source: 'physicstjc' },
+  { name: 'Faradays Experiment EM', url: 'https://physicstjc.github.io/sls/faraday-experiment/index.html', tags: 'magnetic fields electromagnetic induction', source: 'physicstjc' },
+  { name: 'AC Generator (TJC)', url: 'https://physicstjc.github.io/sls/ac-generator/index.html', tags: 'magnetic fields electromagnetic induction', source: 'physicstjc' },
+  { name: 'Lennard Jones Potential', url: 'https://physicstjc.github.io/sls/lennard-jones-potential/', tags: 'thermal physics', source: 'physicstjc' },
+  { name: 'Ray Diagram of Lens', url: 'https://physicstjc.github.io/sls/lens-ray-diagram/', tags: 'waves lenses', source: 'physicstjc' },
+  { name: 'Metal Lattice Resistance', url: 'https://physicstjc.github.io/sls/resistance-and-temperature/', tags: 'electricity circuits', source: 'physicstjc' },
+  { name: 'Rheostat', url: 'https://physicstjc.github.io/sls/rheostat/', tags: 'electricity circuits', source: 'physicstjc' },
+  { name: 'Capacitors in Combination', url: 'https://physicstjc.github.io/sls/capacitance/', tags: 'capacitance', source: 'physicstjc' },
+  { name: 'Sound Level Meter', url: 'https://physicstjc.github.io/sls/sound-level-meter/', tags: 'waves sound', source: 'physicstjc' },
+  { name: 'Sound Frequency Analyser', url: 'https://physicstjc.github.io/sls/sound-frequency-analyser/', tags: 'waves sound', source: 'physicstjc' },
+  { name: 'Graph Plotter Tool', url: 'https://physicstjc.github.io/sls/graph-plotter/index.html', tags: 'practical skills measurements', source: 'physicstjc' },
+  { name: 'Vector Scale Drawing App', url: 'https://physicstjc.github.io/sls/vector-drawing/', tags: 'mechanics vectors practical skills', source: 'physicstjc' },
+];
+
+// Board tag mapping: which tags are relevant to which exam boards
+const TAG_TO_BOARDS = {
+  'mechanics': 'AQA Edexcel OCR', 'kinematics': 'AQA Edexcel OCR', 'projectiles': 'AQA Edexcel OCR',
+  'forces': 'AQA Edexcel OCR', 'moments': 'AQA Edexcel OCR', 'momentum': 'AQA Edexcel OCR',
+  'energy': 'AQA Edexcel OCR', 'vectors': 'AQA Edexcel OCR', 'terminal velocity': 'AQA Edexcel OCR',
+  'fluids': 'Edexcel', 'pressure': 'Edexcel', 'density': 'Edexcel',
+  'rotational': 'AQA', 'materials': 'AQA Edexcel OCR', 'hookes law': 'AQA Edexcel OCR',
+  'circular motion': 'AQA Edexcel OCR', 'SHM': 'AQA Edexcel OCR', 'oscillations': 'AQA Edexcel OCR',
+  'resonance': 'AQA Edexcel OCR', 'waves': 'AQA Edexcel OCR', 'diffraction': 'AQA Edexcel OCR',
+  'refraction': 'AQA Edexcel OCR', 'interference': 'AQA Edexcel OCR', 'superposition': 'AQA Edexcel OCR',
+  'polarisation': 'AQA Edexcel OCR', 'doppler': 'AQA Edexcel', 'electromagnetic': 'AQA Edexcel OCR',
+  'lenses': 'AQA', 'mirrors': 'AQA', 'telescopes': 'AQA', 'sound': 'AQA Edexcel OCR',
+  'thermal physics': 'AQA Edexcel OCR', 'kinetic theory': 'AQA Edexcel OCR', 'ideal gases': 'AQA Edexcel OCR',
+  'electric fields': 'AQA Edexcel OCR', 'capacitance': 'AQA Edexcel OCR',
+  'magnetic fields': 'AQA Edexcel OCR', 'electromagnetic induction': 'AQA Edexcel OCR',
+  'electricity': 'AQA Edexcel OCR', 'circuits': 'AQA Edexcel OCR', 'drift velocity': 'AQA Edexcel OCR',
+  'quantum physics': 'AQA Edexcel OCR', 'nuclear physics': 'AQA Edexcel OCR',
+  'gravitational fields': 'AQA Edexcel OCR', 'orbits': 'AQA Edexcel OCR',
+  'astrophysics': 'AQA Edexcel', 'medical physics': 'AQA', 'ultrasound': 'AQA', 'MRI': 'AQA',
+  'special relativity': 'AQA', 'practical skills': 'AQA Edexcel OCR', 'measurements': 'AQA Edexcel OCR',
+};
+
+function getBoards(tags) {
+  if (!tags) return 'AQA Edexcel OCR';
+  const boards = new Set();
+  const t = tags.toLowerCase();
+  for (const [tag, b] of Object.entries(TAG_TO_BOARDS)) {
+    if (t.includes(tag.toLowerCase())) b.split(' ').forEach(x => boards.add(x));
+  }
+  return boards.size ? [...boards].join(' ') : 'AQA Edexcel OCR';
+}
+
+// ══════════════════════════════════════════════════════════════
+// CIRCUIT COMPONENT DATA (IEC/BS standard symbols)
+// ══════════════════════════════════════════════════════════════
+
+const CIRCUIT_COMPONENTS = [
+  // ── Sources ──
+  { name: 'Cell', id: 'cell', category: 'Sources',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="32" y2="20" stroke="#fff" stroke-width="2"/><line x1="32" y1="6" x2="32" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="40" y1="12" x2="40" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="40" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'Battery', id: 'battery', category: 'Sources',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="20" y2="20" stroke="#fff" stroke-width="2"/><line x1="20" y1="6" x2="20" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="27" y1="12" x2="27" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="34" y1="6" x2="34" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="41" y1="12" x2="41" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="48" y1="6" x2="48" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="55" y1="12" x2="55" y2="28" stroke="#fff" stroke-width="1.5"/><line x1="55" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'AC Source', id: 'ac-source', category: 'Sources',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><path d="M33 20 Q36 12, 40 20 Q44 28, 47 20" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+
+  // ── Resistive ──
+  { name: 'Resistor', id: 'resistor', category: 'Resistive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'Variable Resistor', id: 'variable-resistor', category: 'Resistive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="28" y1="34" x2="52" y2="6" stroke="#fff" stroke-width="1.5"/><polygon points="52,6 48,14 54,12" fill="#fff"/></svg>' },
+  { name: 'LDR', id: 'ldr', category: 'Resistive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="18" y1="4" x2="26" y2="12" stroke="#fff" stroke-width="1.2"/><polygon points="26,12 22,8 24,14" fill="#fff"/><line x1="24" y1="4" x2="32" y2="12" stroke="#fff" stroke-width="1.2"/><polygon points="32,12 28,8 30,14" fill="#fff"/></svg>' },
+  { name: 'Thermistor', id: 'thermistor', category: 'Resistive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="10" width="36" height="20" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="28" y1="30" x2="52" y2="10" stroke="#fff" stroke-width="1.5"/></svg>' },
+  { name: 'Fuse', id: 'fuse', category: 'Resistive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><rect x="22" y="14" width="36" height="12" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="22" y1="20" x2="58" y2="20" stroke="#fff" stroke-width="1"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+
+  // ── Reactive ──
+  { name: 'Capacitor', id: 'capacitor', category: 'Reactive',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="35" y2="20" stroke="#fff" stroke-width="2"/><line x1="35" y1="6" x2="35" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="45" y1="6" x2="45" y2="34" stroke="#fff" stroke-width="2.5"/><line x1="45" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+
+  // ── Output ──
+  { name: 'Bulb / Lamp', id: 'bulb', category: 'Output',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><line x1="30" y1="10" x2="50" y2="30" stroke="#fff" stroke-width="1.5"/><line x1="50" y1="10" x2="30" y2="30" stroke="#fff" stroke-width="1.5"/><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'LED', id: 'led', category: 'Output',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="28" y2="20" stroke="#fff" stroke-width="2"/><polygon points="28,10 28,30 48,20" fill="none" stroke="#fff" stroke-width="2"/><line x1="48" y1="10" x2="48" y2="30" stroke="#fff" stroke-width="2.5"/><line x1="48" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/><line x1="50" y1="8" x2="58" y2="2" stroke="#fff" stroke-width="1.2"/><polygon points="58,2 54,6 58,8" fill="#fff"/><line x1="54" y1="12" x2="62" y2="6" stroke="#fff" stroke-width="1.2"/><polygon points="62,6 58,10 62,12" fill="#fff"/></svg>' },
+
+  // ── Switching ──
+  { name: 'Switch (open)', id: 'switch-open', category: 'Switching',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="26" y2="20" stroke="#fff" stroke-width="2"/><circle cx="28" cy="20" r="3" fill="#fff"/><line x1="28" y1="20" x2="52" y2="8" stroke="#fff" stroke-width="2"/><circle cx="54" cy="20" r="3" fill="#fff"/><line x1="56" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'Switch (closed)', id: 'switch-closed', category: 'Switching',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="26" y2="20" stroke="#fff" stroke-width="2"/><circle cx="28" cy="20" r="3" fill="#fff"/><line x1="28" y1="20" x2="54" y2="20" stroke="#fff" stroke-width="2"/><circle cx="54" cy="20" r="3" fill="#fff"/><line x1="56" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+
+  // ── Measurement ──
+  { name: 'Ammeter', id: 'ammeter', category: 'Measurement',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><text x="40" y="25" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">A</text><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+  { name: 'Voltmeter', id: 'voltmeter', category: 'Measurement',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="22" y2="20" stroke="#fff" stroke-width="2"/><circle cx="40" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><text x="40" y="25" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">V</text><line x1="58" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+
+  // ── Semiconductor ──
+  { name: 'Diode', id: 'diode', category: 'Semiconductor',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40"><line x1="0" y1="20" x2="28" y2="20" stroke="#fff" stroke-width="2"/><polygon points="28,10 28,30 48,20" fill="none" stroke="#fff" stroke-width="2"/><line x1="48" y1="10" x2="48" y2="30" stroke="#fff" stroke-width="2.5"/><line x1="48" y1="20" x2="80" y2="20" stroke="#fff" stroke-width="2"/></svg>' },
+];
+
 // ══════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════
 
 let selectedColour = '#343a40';
 let editingItemId  = null;   // Miro item ID of equation being edited
+let revealColour   = '#7C3AED';
+let revealWidth    = 200;
+let revealHeight   = 80;
 
 // ══════════════════════════════════════════════════════════════
 // HELPERS
@@ -1816,13 +2598,25 @@ document.getElementById('btn-yt-embed').addEventListener('click', async () => {
   }
 });
 
-// ── GeoGebra list ──
+// ── GeoGebra list (with board filtering) ──
+let ggbBoardFilter = 'all';
+
+function filterGeogebraList() {
+  const q = document.getElementById('ggb-search').value.toLowerCase().trim();
+  document.getElementById('ggb-list').querySelectorAll('.ggb-item').forEach(item => {
+    const matchesSearch = !q || item.dataset.search.includes(q);
+    const matchesBoard = ggbBoardFilter === 'all' || (item.dataset.boards || '').includes(ggbBoardFilter);
+    item.style.display = (matchesSearch && matchesBoard) ? '' : 'none';
+  });
+}
+
 function buildGeogebraList() {
   const list = document.getElementById('ggb-list');
   GEOGEBRA_APPLETS.forEach(applet => {
     const item = document.createElement('div');
     item.className = 'ggb-item';
     item.dataset.search = (applet.name + ' ' + (applet.tags || '')).toLowerCase();
+    item.dataset.boards = getBoards(applet.tags);
     item.innerHTML = `<span>${applet.name}</span>`;
     item.addEventListener('click', async () => {
       const embedUrl = `https://www.geogebra.org/material/iframe/id/${applet.id}/width/640/height/480/border/888888/sfsb/true/smb/false/stb/false/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/false/ctl/false`;
@@ -1837,10 +2631,15 @@ function buildGeogebraList() {
   });
 
   // Search
-  document.getElementById('ggb-search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    list.querySelectorAll('.ggb-item').forEach(item => {
-      item.style.display = (!q || item.dataset.search.includes(q)) ? '' : 'none';
+  document.getElementById('ggb-search').addEventListener('input', filterGeogebraList);
+
+  // Board filter chips
+  document.querySelectorAll('#ggb-board-filter .board-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#ggb-board-filter .board-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      ggbBoardFilter = chip.dataset.board;
+      filterGeogebraList();
     });
   });
 }
@@ -1911,6 +2710,315 @@ document.getElementById('btn-isaac-card').addEventListener('click', async () => 
   }
 });
 
+// ── External Sims list (with board filtering) ──
+let extBoardFilter = 'all';
+
+function filterExternalList() {
+  const q = document.getElementById('ext-search').value.toLowerCase().trim();
+  document.getElementById('ext-list').querySelectorAll('.ext-item').forEach(item => {
+    const matchesSearch = !q || item.dataset.search.includes(q);
+    const matchesBoard = extBoardFilter === 'all' || (item.dataset.boards || '').includes(extBoardFilter);
+    item.style.display = (matchesSearch && matchesBoard) ? '' : 'none';
+  });
+}
+
+function buildExternalSimsList() {
+  const list = document.getElementById('ext-list');
+  EXTERNAL_SIMS.forEach(sim => {
+    const boards = getBoards(sim.tags);
+    const item = document.createElement('div');
+    item.className = 'ext-item';
+    item.dataset.search = (sim.name + ' ' + (sim.tags || '') + ' ' + (sim.source || '')).toLowerCase();
+    item.dataset.boards = boards;
+    item.innerHTML = `<span class="ext-name">${sim.name}</span><span class="ext-source">${sim.source}</span><span class="ext-boards">${boards}</span>`;
+    item.addEventListener('click', () => {
+      window.open(sim.url, '_blank');
+      toast('Opened: ' + sim.name + ' ↗');
+    });
+    list.appendChild(item);
+  });
+
+  // Search
+  document.getElementById('ext-search').addEventListener('input', filterExternalList);
+
+  // Board filter chips
+  document.querySelectorAll('#ext-board-filter .board-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#ext-board-filter .board-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      extBoardFilter = chip.dataset.board;
+      filterExternalList();
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CIRCUIT DIAGRAM TOOL
+// ══════════════════════════════════════════════════════════════
+
+/** Convert inline SVG string to a PNG data URL via native canvas */
+function renderSvgToPng(svgString, width, height) {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const scale = 4;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to render SVG'));
+    };
+    img.src = url;
+  });
+}
+
+function buildCircuitGrid() {
+  const grid = document.getElementById('circuit-grid');
+  grid.innerHTML = '';
+  let currentCategory = '';
+
+  CIRCUIT_COMPONENTS.forEach(comp => {
+    // Category header
+    if (comp.category !== currentCategory) {
+      currentCategory = comp.category;
+      const cat = document.createElement('div');
+      cat.className = 'circuit-category';
+      cat.textContent = currentCategory;
+      cat.dataset.search = currentCategory.toLowerCase();
+      grid.appendChild(cat);
+    }
+
+    const item = document.createElement('div');
+    item.className = 'circuit-item';
+    item.dataset.search = (comp.name + ' ' + comp.category + ' ' + comp.id).toLowerCase();
+    item.innerHTML = `${comp.svg}<div class="cname">${comp.name}</div>`;
+    item.addEventListener('click', () => placeCircuitComponent(comp));
+    grid.appendChild(item);
+  });
+
+  // Search
+  document.getElementById('circuit-search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    grid.querySelectorAll('.circuit-item, .circuit-category').forEach(el => {
+      const match = !q || (el.dataset.search && el.dataset.search.includes(q));
+      el.style.display = match ? '' : 'none';
+    });
+  });
+}
+
+async function placeCircuitComponent(comp) {
+  try {
+    const pngUrl = await renderSvgToPng(comp.svg, 80, 40);
+    const viewport = await miro.board.viewport.get();
+    const x = viewport.x + 0.5 * viewport.width;
+    const y = viewport.y + 0.5 * viewport.height;
+
+    const img = await miro.board.createImage({
+      url: pngUrl,
+      title: comp.name,
+      x, y,
+      width: 120,
+    });
+
+    await img.setMetadata('pp-circuit-component', {
+      type: comp.id,
+      name: comp.name,
+    });
+
+    toast(comp.name + ' placed');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+document.getElementById('btn-connect-wire').addEventListener('click', async () => {
+  try {
+    const sel = await miro.board.getSelection();
+    if (!sel || sel.length < 2) {
+      toast('Select two components (Shift+click)');
+      return;
+    }
+
+    const startItem = sel[0];
+    const endItem = sel[1];
+
+    await miro.board.createConnector({
+      start: { item: startItem.id },
+      end: { item: endItem.id },
+      style: {
+        strokeColor: '#ffffff',
+        strokeWidth: 2,
+        startStrokeCap: 'none',
+        endStrokeCap: 'none',
+      },
+      shape: 'elbowed',
+    });
+
+    toast('Wire connected');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// REVEAL MECHANIC
+// ══════════════════════════════════════════════════════════════
+
+// Colour picker for reveal covers
+document.querySelectorAll('[data-reveal-colour]').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('#reveal-colour-row .colour-swatch')
+      .forEach(s => s.classList.remove('selected'));
+    swatch.classList.add('selected');
+    revealColour = swatch.dataset.revealColour;
+    document.getElementById('reveal-custom-colour').value = revealColour;
+  });
+});
+
+document.getElementById('reveal-custom-colour').addEventListener('input', e => {
+  revealColour = e.target.value;
+  document.querySelectorAll('#reveal-colour-row .colour-swatch')
+    .forEach(s => s.classList.remove('selected'));
+});
+
+// Size presets
+document.querySelectorAll('.reveal-size').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.reveal-size').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    revealWidth = parseInt(btn.dataset.w);
+    revealHeight = parseInt(btn.dataset.h);
+  });
+});
+
+// Create a reveal cover shape
+document.getElementById('btn-create-reveal').addEventListener('click', async () => {
+  const label = document.getElementById('reveal-label').value.trim() || '? Reveal';
+
+  try {
+    const viewport = await miro.board.viewport.get();
+    const x = viewport.x + 0.5 * viewport.width;
+    const y = viewport.y + 0.5 * viewport.height;
+
+    const shape = await miro.board.createShape({
+      content: `<p><strong>${label}</strong></p>`,
+      shape: 'round_rectangle',
+      style: {
+        fillColor: revealColour,
+        fontFamily: 'open_sans',
+        fontSize: revealWidth > 300 ? 24 : 16,
+        textAlign: 'center',
+        textAlignVertical: 'middle',
+        color: '#ffffff',
+        fillOpacity: 1.0,
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        borderOpacity: 0.3,
+      },
+      x, y,
+      width: revealWidth,
+      height: revealHeight,
+    });
+
+    await shape.setMetadata('pp-reveal', {
+      type: 'pp-reveal',
+      label: label,
+      colour: revealColour,
+      createdAt: Date.now(),
+    });
+
+    await miro.board.viewport.zoomTo(shape);
+    toast('Cover placed — position it over content');
+    updateRevealCount();
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// Reveal (delete) selected covers
+document.getElementById('btn-reveal-selected').addEventListener('click', async () => {
+  try {
+    const sel = await miro.board.getSelection();
+    if (!sel || sel.length === 0) {
+      toast('Select a cover on the board first');
+      return;
+    }
+
+    let revealed = 0;
+    for (const item of sel) {
+      try {
+        const meta = await item.getMetadata('pp-reveal');
+        if (meta && meta.type === 'pp-reveal') {
+          await miro.board.remove(item);
+          revealed++;
+        }
+      } catch(e) {}
+    }
+
+    if (revealed === 0) {
+      toast('Selected items are not reveal covers');
+    } else {
+      toast(`${revealed} cover${revealed > 1 ? 's' : ''} revealed`);
+      updateRevealCount();
+    }
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// Reveal all covers at once
+document.getElementById('btn-reveal-all').addEventListener('click', async () => {
+  try {
+    const items = await miro.board.get({ type: 'shape' });
+    let revealed = 0;
+
+    for (const item of items) {
+      try {
+        const meta = await item.getMetadata('pp-reveal');
+        if (meta && meta.type === 'pp-reveal') {
+          await miro.board.remove(item);
+          revealed++;
+        }
+      } catch(e) {}
+    }
+
+    if (revealed === 0) {
+      toast('No reveal covers found');
+    } else {
+      toast(`All ${revealed} covers revealed`);
+    }
+    updateRevealCount();
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+});
+
+// Update the cover count indicator
+async function updateRevealCount() {
+  try {
+    const items = await miro.board.get({ type: 'shape' });
+    let count = 0;
+    for (const item of items) {
+      try {
+        const meta = await item.getMetadata('pp-reveal');
+        if (meta && meta.type === 'pp-reveal') count++;
+      } catch(e) {}
+    }
+    document.getElementById('reveal-count').textContent = count > 0
+      ? `${count} cover${count > 1 ? 's' : ''} on this board`
+      : '';
+  } catch(e) {}
+}
+
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
@@ -1925,6 +3033,9 @@ async function init() {
   buildLibrary();
   buildGeogebraList();
   buildPhetList();
+  buildExternalSimsList();
+  buildCircuitGrid();
+  updateRevealCount();
 
   // Wait for KaTeX to be ready, then trigger a preview if there's input
   if (typeof katex !== 'undefined') {
