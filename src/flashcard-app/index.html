@@ -1,7 +1,1162 @@
 <!DOCTYPE html>
-<html><head><script src="https://miro.com/app/static/sdk/v2/miro.js"></script></head>
-<body><script>
-miro.board.ui.on('icon:click', async () => {
-  await miro.board.ui.openPanel({ url: 'panel.html' });
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Pathway Flashcards</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+<style>
+  :root {
+    --bg: #111118;
+    --surface: #1a1a28;
+    --surface2: #22223a;
+    --border: #2a2a44;
+    --text: #e2e2f0;
+    --muted: #888aaa;
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.15);
+    --card-bg: #0F0F0F;
+    --card-border: rgba(168,85,247,0.2);
+    --card-accent: #A78BFA;
+    --card-text: #E8E8F0;
+    --card-muted: #888AAA;
+    --card-hint: #444466;
+    --card-eq-bg: rgba(0,0,0,0.45);
+    --card-eq-border: rgba(168,85,247,0.18);
+    --card-divider: rgba(168,85,247,0.15);
+    --pill-bg: rgba(255,255,255,0.06);
+    --pill-text: #888AAA;
+    --aqa: #A78BFA;
+    --edx: #38BDF8;
+    --ocr: #FB923C;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f5fa;
+    --surface: #ffffff;
+    --surface2: #f0f0f5;
+    --border: #d4d4e0;
+    --text: #1e1e2e;
+    --muted: #64748b;
+    --purple: #7C3AED;
+    --purple-dim: rgba(124,58,237,0.1);
+    --card-bg: #F8FAFC;
+    --card-border: rgba(124,58,237,0.15);
+    --card-accent: #7C3AED;
+    --card-text: #1E293B;
+    --card-muted: #64748B;
+    --card-hint: #94A3B8;
+    --card-eq-bg: #F1F5F9;
+    --card-eq-border: #E2E8F0;
+    --card-divider: #E2E8F0;
+    --pill-bg: #F1F5F9;
+    --pill-text: #475569;
+    --aqa: #7C3AED;
+    --edx: #2563EB;
+    --ocr: #EA580C;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .theme-toggle:hover { border-color: var(--purple); }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 12px 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+  /* ── Pages ── */
+  .page { display: none; padding-top: 16px; }
+  .page.active { display: block; }
+
+  /* ── Board filter chips ── */
+  .board-filter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .board-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .board-chip:hover { border-color: var(--purple); }
+  .board-chip.active {
+    border-color: var(--purple);
+    background: var(--purple-dim);
+    color: var(--purple);
+  }
+
+  /* ── Search ── */
+  .search-input {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus { outline: none; border-color: var(--purple); }
+  .search-input::placeholder { color: var(--muted); }
+
+  /* ── Sections ── */
+  .lib-section { margin-bottom: 16px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    user-select: none;
+    transition: border-color 0.15s;
+  }
+
+  .section-header:hover { border-color: var(--purple); }
+
+  .section-header h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--purple);
+  }
+
+  .section-tag {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--purple-dim);
+    color: var(--purple);
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 8px;
+  }
+
+  .section-toggle {
+    color: var(--muted);
+    font-size: 10px;
+    transition: transform 0.2s;
+  }
+
+  .section-header.open .section-toggle { transform: rotate(90deg); }
+
+  /* ── Card grid ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    padding: 12px 0 0;
+  }
+
+  .card-grid.collapsed { display: none; }
+
+  /* ── Flashcard ── */
+  .card-container {
+    perspective: 1000px;
+    cursor: pointer;
+    height: 220px;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .card-inner.flipped { transform: rotateY(180deg); }
+
+  .card-front, .card-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+  }
+
+  .card-back { transform: rotateY(180deg); }
+
+  /* ── Card front ── */
+  .card-top-bar {
+    height: 3px;
+    background: var(--card-accent);
+  }
+
+  .front-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100% - 3px);
+    padding: 20px 24px;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .front-category {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--card-muted);
+    margin-bottom: 2px;
+  }
+
+  .front-term {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--card-text);
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  .front-hint {
+    font-size: 11px;
+    color: var(--card-hint);
+    margin-top: 12px;
+  }
+
+  .flip-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(167,139,250,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--card-accent);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .card-container:hover .flip-icon {
+    border-color: var(--card-accent);
+    background: rgba(167,139,250,0.1);
+  }
+
+  /* ── Card back ── */
+  .back-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 3px);
+    padding: 16px 20px 12px;
+    overflow: hidden;
+  }
+
+  .back-term {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--card-accent);
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .back-divider {
+    height: 1px;
+    background: var(--card-divider);
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  .back-definition {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--card-text);
+    line-height: 1.5;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .back-equation {
+    margin-top: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: var(--card-eq-bg);
+    border: 1px solid var(--card-eq-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .back-equation .katex { font-size: 16px; }
+
+  .back-pills {
+    display: flex;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 8px;
+    flex-shrink: 0;
+  }
+
+  .board-pill {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--pill-bg);
+    border: 1px solid transparent;
+  }
+
+  .board-pill.aqa { color: var(--aqa); border-color: rgba(167,139,250,0.2); }
+  .board-pill.edexcel { color: var(--edx); border-color: rgba(56,189,248,0.2); }
+  .board-pill.ocr { color: var(--ocr); border-color: rgba(251,146,60,0.2); }
+
+  /* ── Create / Import forms ── */
+  .form-group { margin-bottom: 14px; }
+
+  .form-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  .form-label span {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--purple);
+  }
+
+  .form-textarea { min-height: 70px; resize: vertical; }
+
+  .form-textarea.import-area {
+    min-height: 160px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    line-height: 1.5;
+  }
+
+  .eq-input {
+    font-family: 'KaTeX_Math', 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  .eq-preview {
+    margin-top: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .eq-preview .katex { font-size: 16px; }
+  .eq-preview-placeholder { font-size: 11px; color: var(--muted); font-style: italic; }
+  .eq-preview-error { font-size: 10px; color: #e11d48; }
+
+  .boards-row { display: flex; gap: 6px; }
+
+  .check-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .check-label input { display: none; }
+
+  .check-label.checked {
+    border-color: var(--purple);
+    background: var(--purple-dim);
+  }
+
+  .check-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .check-dot.aqa { background: var(--aqa); }
+  .check-dot.edx { background: var(--edx); }
+  .check-dot.ocr { background: var(--ocr); }
+
+  .form-btn {
+    width: 100%;
+    padding: 11px 0;
+    background: var(--purple);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: 6px;
+  }
+
+  .form-btn:hover { opacity: 0.92; }
+  .form-btn:active { transform: scale(0.98); }
+  .form-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .import-hint {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .import-count {
+    font-size: 12px;
+    color: var(--purple);
+    font-weight: 600;
+    min-height: 18px;
+    margin-top: 6px;
+  }
+
+  .form-max-width { max-width: 480px; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--purple);
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Delete button on custom cards ── */
+  .card-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(225,29,72,0.15);
+    border: 1px solid rgba(225,29,72,0.3);
+    color: #e11d48;
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: background 0.15s;
+  }
+
+  .card-delete:hover { background: rgba(225,29,72,0.3); }
+  .card-container:hover .card-delete.custom { display: flex; }
+
+  @media (max-width: 500px) {
+    .card-grid { grid-template-columns: 1fr; }
+    .app { padding: 0 10px 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="24" height="24">
+        <rect width="64" height="64" rx="12" fill="#1a1a2e"/>
+        <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-size="36" fill="#a78bfa">&#x1D453;</text>
+      </svg>
+      <span class="header-title">Physics Pathway Flashcards</span>
+    </div>
+    <button class="theme-toggle" id="themeBtn" title="Toggle theme"></button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="cards">Cards</div>
+    <div class="tab" data-tab="create">Create</div>
+    <div class="tab" data-tab="import">Import</div>
+  </div>
+
+  <!-- Cards page -->
+  <div class="page active" id="page-cards">
+    <div class="board-filter" id="boardFilter">
+      <span class="board-chip active" data-board="all">All</span>
+      <span class="board-chip" data-board="AQA">AQA</span>
+      <span class="board-chip" data-board="Edexcel">Edexcel</span>
+      <span class="board-chip" data-board="OCR">OCR</span>
+    </div>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search flashcards..." />
+    <div id="libSections"></div>
+  </div>
+
+  <!-- Create page -->
+  <div class="page" id="page-create">
+    <div class="form-max-width">
+      <div class="form-group">
+        <label class="form-label">Term</label>
+        <input type="text" class="form-input" id="createTerm" placeholder="e.g. Ohm's Law" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Definition</label>
+        <textarea class="form-textarea" id="createDef" placeholder="The current through a conductor is directly proportional to..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Equation <span>(optional LaTeX)</span></label>
+        <input type="text" class="form-input eq-input" id="createEq" placeholder="V = IR" />
+        <div class="eq-preview" id="createEqPreview">
+          <span class="eq-preview-placeholder">Equation preview</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" class="form-input" id="createCat" placeholder="e.g. Electricity, Waves, Nuclear" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Boards</label>
+        <div class="boards-row" id="createBoards">
+          <label class="check-label checked"><input type="checkbox" checked /><span class="check-dot aqa"></span>AQA</label>
+          <label class="check-label checked"><input type="checkbox" checked /><span class="check-dot edx"></span>Edexcel</label>
+          <label class="check-label checked"><input type="checkbox" checked /><span class="check-dot ocr"></span>OCR</label>
+        </div>
+      </div>
+      <button class="form-btn" id="createBtn">Add Card</button>
+    </div>
+  </div>
+
+  <!-- Import page -->
+  <div class="page" id="page-import">
+    <div class="form-max-width">
+      <div class="import-hint">
+        Paste your Quizlet export below. Default format: <strong>term [tab] definition</strong> (one per line).<br>
+        Optional third column for LaTeX equations: <strong>term [tab] definition [tab] equation</strong>.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Paste flashcard data</label>
+        <textarea class="form-textarea import-area" id="importArea" placeholder="Ohm's Law&#9;The current through a conductor is directly proportional to the potential difference across it&#10;Kirchhoff's First Law&#9;The total current entering a junction equals the total current leaving it"></textarea>
+      </div>
+      <div class="import-count" id="importCount"></div>
+      <div class="form-group">
+        <label class="form-label">Category for all imported cards</label>
+        <input type="text" class="form-input" id="importCat" placeholder="e.g. Electricity" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Boards</label>
+        <div class="boards-row" id="importBoards">
+          <label class="check-label checked"><input type="checkbox" checked /><span class="check-dot aqa"></span>AQA</label>
+          <label class="check-label checked"><input type="checkbox" checked /><span class="check-dot edx"></span>Edexcel</label>
+          <label class="check-label checked"><input type="checkbox" checked /><span class="check-dot ocr"></span>OCR</label>
+        </div>
+      </div>
+      <button class="form-btn" id="importBtn" disabled>Import Cards</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   FLASHCARD LIBRARY — Pre-loaded cards
+   ═══════════════════════════════════════════════════════════ */
+var FLASHCARD_LIBRARY = [
+  {
+    section: 'Electricity',
+    cards: [
+      { term: "Ohm's Law", definition: "The current through a conductor is directly proportional to the potential difference across it, provided its temperature remains constant.", equation: "V = IR", boards: "AQA Edexcel OCR" },
+      { term: "Kirchhoff's First Law", definition: "The total current entering a junction equals the total current leaving it (conservation of charge).", equation: "\\sum I_{\\text{in}} = \\sum I_{\\text{out}}", boards: "AQA Edexcel OCR" },
+      { term: "Kirchhoff's Second Law", definition: "The sum of EMFs in a closed loop equals the sum of the potential differences across components.", equation: "\\sum \\varepsilon = \\sum IR", boards: "AQA Edexcel OCR" },
+      { term: "Power", definition: "The rate of energy transfer by an electrical component.", equation: "P = IV = I^2R = \\frac{V^2}{R}", boards: "AQA Edexcel OCR" },
+      { term: "Resistivity", definition: "A property of a material that quantifies how strongly it resists the flow of current. Depends on temperature.", equation: "\\rho = \\frac{RA}{L}", boards: "AQA Edexcel OCR" },
+      { term: "EMF", definition: "The energy transferred per unit charge by a source in driving current around a complete circuit. Includes energy wasted internally.", equation: "\\varepsilon = I(R + r)", boards: "AQA Edexcel OCR" }
+    ]
+  },
+  {
+    section: 'Waves',
+    cards: [
+      { term: "Wave Speed Equation", definition: "The speed of a wave equals its frequency multiplied by its wavelength.", equation: "v = f\\lambda", boards: "AQA Edexcel OCR" },
+      { term: "Refractive Index", definition: "The ratio of the speed of light in a vacuum to its speed in a material.", equation: "n = \\frac{c}{v}", boards: "AQA Edexcel OCR" },
+      { term: "Snell's Law", definition: "At a boundary between two media, the product of refractive index and sine of angle to the normal is constant.", equation: "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2", boards: "AQA Edexcel OCR" },
+      { term: "Young's Double Slit", definition: "Coherent waves passing through two narrow slits produce an interference pattern of bright and dark fringes.", equation: "\\lambda = \\frac{ax}{D}", boards: "AQA Edexcel OCR" },
+      { term: "Diffraction Grating", definition: "Multiple slits produce sharp maxima at angles where the path difference is a whole number of wavelengths.", equation: "d\\sin\\theta = n\\lambda", boards: "AQA Edexcel OCR" }
+    ]
+  },
+  {
+    section: 'Mechanics',
+    cards: [
+      { term: "Newton's Second Law", definition: "The net force acting on an object equals the rate of change of its momentum.", equation: "F = ma", boards: "AQA Edexcel OCR" },
+      { term: "SUVAT \u2014 Velocity", definition: "Final velocity equals initial velocity plus acceleration multiplied by time.", equation: "v = u + at", boards: "AQA Edexcel OCR" },
+      { term: "SUVAT \u2014 Displacement", definition: "Displacement equals initial velocity times time plus half the acceleration times time squared.", equation: "s = ut + \\tfrac{1}{2}at^2", boards: "AQA Edexcel OCR" },
+      { term: "Momentum", definition: "The product of an object's mass and velocity. Always conserved in collisions (no external forces).", equation: "p = mv", boards: "AQA Edexcel OCR" },
+      { term: "Work Done", definition: "The product of force and displacement in the direction of the force.", equation: "W = Fs\\cos\\theta", boards: "AQA Edexcel OCR" }
+    ]
+  },
+  {
+    section: 'Quantum Physics',
+    cards: [
+      { term: "Photon Energy", definition: "The energy of a photon is proportional to its frequency and inversely proportional to its wavelength.", equation: "E = hf = \\frac{hc}{\\lambda}", boards: "AQA Edexcel OCR" },
+      { term: "Photoelectric Effect", definition: "Photons with energy above the work function can eject electrons from a metal surface. Increasing intensity increases current, not maximum KE.", equation: "hf = \\phi + E_{k(\\text{max})}", boards: "AQA Edexcel OCR" },
+      { term: "de Broglie Wavelength", definition: "All particles have a wavelength inversely proportional to their momentum.", equation: "\\lambda = \\frac{h}{mv}", boards: "AQA Edexcel OCR" }
+    ]
+  },
+  {
+    section: 'Nuclear Physics',
+    cards: [
+      { term: "Radioactive Decay Law", definition: "The number of undecayed nuclei decreases exponentially with time.", equation: "N = N_0 e^{-\\lambda t}", boards: "AQA Edexcel OCR" },
+      { term: "Half-Life", definition: "The time taken for half the radioactive nuclei in a sample to decay.", equation: "t_{1/2} = \\frac{\\ln 2}{\\lambda}", boards: "AQA Edexcel OCR" },
+      { term: "Mass-Energy Equivalence", definition: "Mass and energy are interchangeable. A small mass corresponds to a large amount of energy.", equation: "E = mc^2", boards: "AQA Edexcel OCR" }
+    ]
+  },
+  {
+    section: 'Fields',
+    cards: [
+      { term: "Gravitational Field Strength", definition: "The force per unit mass experienced by a small test mass placed at a point in a gravitational field.", equation: "g = \\frac{GM}{r^2}", boards: "AQA Edexcel OCR" },
+      { term: "Coulomb's Law", definition: "The electrostatic force between two point charges is proportional to the product of the charges and inversely proportional to the square of their separation.", equation: "F = \\frac{1}{4\\pi\\varepsilon_0}\\frac{Q_1 Q_2}{r^2}", boards: "AQA Edexcel OCR" },
+      { term: "Electric Potential", definition: "The work done per unit positive charge to move a small test charge from infinity to that point.", equation: "V = \\frac{1}{4\\pi\\varepsilon_0}\\frac{Q}{r}", boards: "AQA Edexcel OCR" },
+      { term: "Capacitance", definition: "The charge stored per unit potential difference across a capacitor.", equation: "C = \\frac{Q}{V}", boards: "AQA Edexcel OCR" },
+      { term: "Capacitor Discharge", definition: "The charge on a capacitor decreases exponentially during discharge through a resistor.", equation: "Q = Q_0 e^{-t/RC}", boards: "AQA Edexcel OCR" }
+    ]
+  },
+  {
+    section: 'Thermal Physics',
+    cards: [
+      { term: "Ideal Gas Law", definition: "For a fixed mass of ideal gas, pressure times volume equals number of moles times the gas constant times temperature.", equation: "pV = nRT", boards: "AQA Edexcel OCR" },
+      { term: "Kinetic Energy of Gas Molecules", definition: "The mean kinetic energy of gas molecules is proportional to absolute temperature.", equation: "\\frac{1}{2}m\\overline{c^2} = \\frac{3}{2}k_BT", boards: "AQA Edexcel OCR" },
+      { term: "Specific Heat Capacity", definition: "The energy required to raise the temperature of 1 kg of a substance by 1 K.", equation: "Q = mc\\Delta\\theta", boards: "AQA Edexcel OCR" }
+    ]
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════
+   THEME
+   ═══════════════════════════════════════════════════════════ */
+var themeBtn = document.getElementById('themeBtn');
+var THEME_KEY = 'pp-flashcard-theme';
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'light' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+  localStorage.setItem(THEME_KEY, t);
+}
+
+(function() { applyTheme(localStorage.getItem(THEME_KEY) || 'dark'); })();
+
+themeBtn.addEventListener('click', function() {
+  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+  buildLibrary();
 });
-</script></body></html>
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════════ */
+function toast(msg, ms) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, ms || 2400);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+function switchToTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHECKBOX LABELS
+   ═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.check-label').forEach(function(label) {
+  label.addEventListener('click', function(e) {
+    e.preventDefault();
+    var cb = label.querySelector('input');
+    cb.checked = !cb.checked;
+    label.classList.toggle('checked', cb.checked);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   EQUATION PREVIEW (Create tab)
+   ═══════════════════════════════════════════════════════════ */
+var createEqInput = document.getElementById('createEq');
+var createEqPreview = document.getElementById('createEqPreview');
+var eqTimer = null;
+
+function updateCreateEqPreview() {
+  var val = createEqInput.value.trim();
+  if (!val) {
+    createEqPreview.innerHTML = '<span class="eq-preview-placeholder">Equation preview</span>';
+    return;
+  }
+  if (typeof katex === 'undefined') {
+    createEqPreview.innerHTML = '<span class="eq-preview-placeholder">Loading KaTeX...</span>';
+    return;
+  }
+  try {
+    createEqPreview.innerHTML = katex.renderToString(val, { throwOnError: true, displayMode: true });
+  } catch (e) {
+    createEqPreview.innerHTML = '<span class="eq-preview-error">' + e.message.substring(0, 60) + '</span>';
+  }
+}
+
+createEqInput.addEventListener('input', function() {
+  clearTimeout(eqTimer);
+  eqTimer = setTimeout(updateCreateEqPreview, 200);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   LOCAL STORAGE
+   ═══════════════════════════════════════════════════════════ */
+var STORAGE_KEY = 'pp-flashcard-custom';
+
+function getCustomCards() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function saveCustomCards(cards) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+}
+
+function addCustomCards(newCards) {
+  var existing = getCustomCards();
+  existing.push.apply(existing, newCards);
+  saveCustomCards(existing);
+}
+
+function removeCustomCard(index) {
+  var cards = getCustomCards();
+  cards.splice(index, 1);
+  saveCustomCards(cards);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUILD LIBRARY
+   ═══════════════════════════════════════════════════════════ */
+var boardFilter = 'all';
+
+function getAllSections() {
+  var sections = FLASHCARD_LIBRARY.map(function(s) {
+    return { section: s.section, cards: s.cards.slice() };
+  });
+
+  var customCards = getCustomCards();
+  customCards.forEach(function(card, idx) {
+    card._customIndex = idx;
+    var cat = card.category || 'My Cards';
+    var found = sections.find(function(s) { return s.section.toLowerCase() === cat.toLowerCase(); });
+    if (found) {
+      found.cards.push(card);
+    } else {
+      sections.push({ section: cat, cards: [card] });
+    }
+  });
+
+  return sections;
+}
+
+function buildLibrary() {
+  var container = document.getElementById('libSections');
+  container.innerHTML = '';
+  var sections = getAllSections();
+
+  if (sections.length === 0 || sections.every(function(s) { return s.cards.length === 0; })) {
+    container.innerHTML = '<div class="empty-state">No flashcards yet. Create some or import from Quizlet.</div>';
+    return;
+  }
+
+  sections.forEach(function(section, sIdx) {
+    var div = document.createElement('div');
+    div.className = 'lib-section';
+
+    var header = document.createElement('div');
+    header.className = 'section-header' + (sIdx === 0 ? ' open' : '');
+    header.innerHTML = '<h3>' + escHtml(section.section) + ' <span class="section-tag">' + section.cards.length + '</span></h3><span class="section-toggle">\u25B6</span>';
+
+    var grid = document.createElement('div');
+    grid.className = 'card-grid' + (sIdx > 0 ? ' collapsed' : '');
+
+    header.addEventListener('click', function() {
+      header.classList.toggle('open');
+      grid.classList.toggle('collapsed');
+    });
+
+    section.cards.forEach(function(card) {
+      grid.appendChild(buildCard(card, section.section));
+    });
+
+    div.appendChild(header);
+    div.appendChild(grid);
+    container.appendChild(div);
+  });
+}
+
+function buildCard(card, sectionName) {
+  var wrapper = document.createElement('div');
+  wrapper.className = 'card-container';
+  wrapper.dataset.search = (card.term + ' ' + sectionName + ' ' + (card.category || '')).toLowerCase();
+  wrapper.dataset.boards = card.boards || '';
+
+  var inner = document.createElement('div');
+  inner.className = 'card-inner';
+
+  // Front
+  var front = document.createElement('div');
+  front.className = 'card-front';
+  front.innerHTML =
+    '<div class="card-top-bar"></div>' +
+    '<div class="front-content">' +
+      '<div class="front-category">' + escHtml(sectionName) + '</div>' +
+      '<div class="front-term">' + escHtml(card.term) + '</div>' +
+      '<div class="front-hint">click to flip</div>' +
+    '</div>' +
+    '<div class="flip-icon">\u21BB</div>';
+
+  // Back
+  var back = document.createElement('div');
+  back.className = 'card-back';
+  var backHtml =
+    '<div class="card-top-bar"></div>' +
+    '<div class="back-content">' +
+      '<div class="back-term">' + escHtml(card.term) + '</div>' +
+      '<div class="back-divider"></div>' +
+      '<div class="back-definition">' + escHtml(card.definition) + '</div>';
+
+  if (card.equation && card.equation.trim()) {
+    var eqHtml = escHtml(card.equation);
+    if (typeof katex !== 'undefined') {
+      try { eqHtml = katex.renderToString(card.equation, { displayMode: true, throwOnError: false }); }
+      catch (e) { /* keep escaped text */ }
+    }
+    backHtml += '<div class="back-equation">' + eqHtml + '</div>';
+  }
+
+  var boards = (card.boards || '').split(' ').filter(Boolean);
+  if (boards.length > 0) {
+    backHtml += '<div class="back-pills">';
+    boards.forEach(function(b) {
+      var cls = b.toLowerCase() === 'aqa' ? 'aqa' : b.toLowerCase() === 'edexcel' ? 'edexcel' : 'ocr';
+      backHtml += '<span class="board-pill ' + cls + '">' + escHtml(b) + '</span>';
+    });
+    backHtml += '</div>';
+  }
+
+  backHtml += '</div><div class="flip-icon">\u21BB</div>';
+  back.innerHTML = backHtml;
+
+  // Delete button for custom cards
+  if (typeof card._customIndex === 'number') {
+    var delBtn = document.createElement('button');
+    delBtn.className = 'card-delete custom';
+    delBtn.textContent = '\u2715';
+    delBtn.title = 'Delete card';
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      removeCustomCard(card._customIndex);
+      buildLibrary();
+      toast('Card deleted');
+    });
+    front.appendChild(delBtn);
+  }
+
+  inner.appendChild(front);
+  inner.appendChild(back);
+  wrapper.appendChild(inner);
+
+  wrapper.addEventListener('click', function() {
+    inner.classList.toggle('flipped');
+  });
+
+  return wrapper;
+}
+
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILTER LIBRARY
+   ═══════════════════════════════════════════════════════════ */
+function filterLibrary() {
+  var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  var container = document.getElementById('libSections');
+
+  container.querySelectorAll('.lib-section').forEach(function(sec) {
+    var items = sec.querySelectorAll('.card-container');
+    var header = sec.querySelector('.section-header');
+    var grid = sec.querySelector('.card-grid');
+    var anyVisible = false;
+
+    items.forEach(function(item) {
+      var matchSearch = !q || item.dataset.search.includes(q);
+      var matchBoard = boardFilter === 'all' || (item.dataset.boards || '').includes(boardFilter);
+      var visible = matchSearch && matchBoard;
+      item.style.display = visible ? '' : 'none';
+      if (visible) anyVisible = true;
+    });
+
+    sec.style.display = anyVisible ? '' : 'none';
+
+    if ((q || boardFilter !== 'all') && anyVisible && grid) {
+      grid.classList.remove('collapsed');
+      if (header) header.classList.add('open');
+    }
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', filterLibrary);
+
+document.querySelectorAll('#boardFilter .board-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('#boardFilter .board-chip').forEach(function(c) { c.classList.remove('active'); });
+    chip.classList.add('active');
+    boardFilter = chip.dataset.board;
+    filterLibrary();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   CREATE CARD
+   ═══════════════════════════════════════════════════════════ */
+document.getElementById('createBtn').addEventListener('click', function() {
+  var term = document.getElementById('createTerm').value.trim();
+  var def = document.getElementById('createDef').value.trim();
+  var eq = createEqInput.value.trim();
+  var cat = document.getElementById('createCat').value.trim();
+
+  if (!term) { toast('Enter a term'); return; }
+  if (!def) { toast('Enter a definition'); return; }
+
+  var boards = [];
+  document.querySelectorAll('#createBoards .check-label').forEach(function(label) {
+    if (label.querySelector('input').checked) boards.push(label.textContent.trim());
+  });
+
+  addCustomCards([{
+    term: term, definition: def, equation: eq,
+    category: cat || 'My Cards', boards: boards.join(' ')
+  }]);
+
+  document.getElementById('createTerm').value = '';
+  document.getElementById('createDef').value = '';
+  createEqInput.value = '';
+  document.getElementById('createCat').value = '';
+  createEqPreview.innerHTML = '<span class="eq-preview-placeholder">Equation preview</span>';
+
+  buildLibrary();
+  switchToTab('cards');
+  toast('Card added');
+});
+
+/* ═══════════════════════════════════════════════════════════
+   IMPORT (Quizlet paste)
+   ═══════════════════════════════════════════════════════════ */
+var importArea = document.getElementById('importArea');
+var importCount = document.getElementById('importCount');
+var importBtn = document.getElementById('importBtn');
+
+function parseImport() {
+  var text = importArea.value.trim();
+  if (!text) { importCount.textContent = ''; importBtn.disabled = true; return []; }
+
+  var lines = text.split('\n').filter(function(l) { return l.trim(); });
+  var cards = [];
+
+  lines.forEach(function(line) {
+    var parts = line.split('\t');
+    if (parts.length >= 2) {
+      cards.push({ term: parts[0].trim(), definition: parts[1].trim(), equation: parts[2] ? parts[2].trim() : '' });
+    } else {
+      parts = line.split(';');
+      if (parts.length >= 2) {
+        cards.push({ term: parts[0].trim(), definition: parts[1].trim(), equation: parts[2] ? parts[2].trim() : '' });
+      }
+    }
+  });
+
+  importCount.textContent = cards.length > 0
+    ? cards.length + ' card' + (cards.length > 1 ? 's' : '') + ' detected'
+    : 'No valid cards found (use tab or semicolon separator)';
+  importBtn.disabled = cards.length === 0;
+  return cards;
+}
+
+importArea.addEventListener('input', parseImport);
+
+importBtn.addEventListener('click', function() {
+  var cards = parseImport();
+  if (cards.length === 0) return;
+
+  var cat = document.getElementById('importCat').value.trim() || 'Imported';
+  var boards = [];
+  document.querySelectorAll('#importBoards .check-label').forEach(function(label) {
+    if (label.querySelector('input').checked) boards.push(label.textContent.trim());
+  });
+  var boardStr = boards.join(' ');
+
+  cards.forEach(function(c) { c.category = cat; c.boards = boardStr; });
+
+  addCustomCards(cards);
+  importArea.value = '';
+  importCount.textContent = '';
+  importBtn.disabled = true;
+
+  buildLibrary();
+  switchToTab('cards');
+  toast('Imported ' + cards.length + ' card' + (cards.length > 1 ? 's' : ''));
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INIT — wait for KaTeX then build
+   ═══════════════════════════════════════════════════════════ */
+function init() {
+  if (typeof katex !== 'undefined') { buildLibrary(); }
+  else { setTimeout(init, 100); }
+}
+init();
+</script>
+</body>
+</html>
