@@ -683,11 +683,12 @@ placeBtn.addEventListener('click', async function() {
 var flipSection = document.getElementById('flipSection');
 var flipInfo = document.getElementById('flipInfo');
 var flipBtn = document.getElementById('flipBtn');
-var flipTargetItem = null;
-var flipTargetMeta = null;  // Store meta locally — don't rely on getMetadata
+var flipTargetId = null;      // Miro item ID (string)
+var flipTargetMeta = null;    // Card data stored locally
+var isFlipping = false;       // Guard: prevent selection events during flip
 
 function showFlipBar(item, meta) {
-  flipTargetItem = item;
+  flipTargetId = item.id;
   flipTargetMeta = meta;
   var side = meta.isFlipped ? 'Back' : 'Front';
   flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + side + ')</span>';
@@ -695,29 +696,37 @@ function showFlipBar(item, meta) {
 }
 
 function hideFlipBar() {
-  flipTargetItem = null;
+  if (isFlipping) return;  // Don't hide during flip operation
+  flipTargetId = null;
   flipTargetMeta = null;
   flipSection.classList.remove('visible');
 }
 
 flipBtn.addEventListener('click', async function() {
-  if (!flipTargetItem || !flipTargetMeta) return;
+  if (!flipTargetId || !flipTargetMeta) return;
+  isFlipping = true;
   flipBtn.disabled = true;
   flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flipping\u2026';
 
   var meta = flipTargetMeta;
+  var itemId = flipTargetId;
 
   try {
+    // 1. Render the other face
     var newSide = meta.isFlipped ? 'front' : 'back';
     var png = await renderFlashcardFace(newSide, meta);
 
-    var ox = flipTargetItem.x;
-    var oy = flipTargetItem.y;
-    var ow = flipTargetItem.width;
-    var orot = flipTargetItem.rotation || 0;
+    // 2. Get fresh item reference by ID for position + removal
+    var currentItem = await miro.board.getById(itemId);
+    var ox = currentItem.x;
+    var oy = currentItem.y;
+    var ow = currentItem.width;
+    var orot = currentItem.rotation || 0;
 
-    await miro.board.remove(flipTargetItem);
+    // 3. Remove old image
+    await miro.board.remove(currentItem);
 
+    // 4. Create new image at same position
     var newMeta = {
       term: meta.term,
       definition: meta.definition,
@@ -738,8 +747,8 @@ flipBtn.addEventListener('click', async function() {
 
     await newImg.setMetadata('pp-flashcard', newMeta);
 
-    // Update local state
-    flipTargetItem = newImg;
+    // 5. Update local state
+    flipTargetId = newImg.id;
     flipTargetMeta = newMeta;
     var sideLabel = newMeta.isFlipped ? 'Back' : 'Front';
     flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + sideLabel + ')</span>';
@@ -748,6 +757,7 @@ flipBtn.addEventListener('click', async function() {
     console.error('Flip error:', err);
     toast('Flip failed: ' + (err.message || err));
   } finally {
+    isFlipping = false;
     flipBtn.disabled = false;
     flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flip Card';
   }
@@ -755,10 +765,12 @@ flipBtn.addEventListener('click', async function() {
 
 /* ── Selection listener ────────────────────────────── */
 miro.board.ui.on('selection:update', async function(event) {
+  if (isFlipping) return;  // Skip all selection events during flip
+
   var items = Array.isArray(event) ? event : (event.items || []);
 
   // Don't hide if the selected item is our current flip target
-  if (items.length === 1 && flipTargetItem && items[0].id === flipTargetItem.id) return;
+  if (items.length === 1 && flipTargetId && items[0].id === flipTargetId) return;
 
   hideFlipBar();
   if (items.length !== 1) return;
@@ -770,9 +782,7 @@ miro.board.ui.on('selection:update', async function(event) {
     if (meta && meta.term) {
       showFlipBar(fullItem, meta);
     }
-  } catch (e) {
-    console.log('Selection metadata check:', e);
-  }
+  } catch (e) {}
 });
 
 /* ── Check initial selection on panel open ─────────── */
