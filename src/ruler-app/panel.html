@@ -40,7 +40,6 @@
       overflow-x: hidden;
     }
 
-    /* Header */
     .header {
       display: flex;
       align-items: center;
@@ -78,7 +77,6 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
-    /* Content */
     .content {
       padding: 16px 14px;
       display: flex;
@@ -95,7 +93,6 @@
       margin-bottom: 6px;
     }
 
-    /* Canvas preview */
     .canvas-wrap {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -113,7 +110,6 @@
       height: auto;
     }
 
-    /* Length selector */
     .length-group {
       display: flex;
       gap: 6px;
@@ -144,7 +140,6 @@
       border-color: var(--purple);
     }
 
-    /* Place button */
     .place-btn {
       width: 100%;
       padding: 11px 0;
@@ -159,30 +154,110 @@
       transition: opacity 0.15s ease;
     }
 
-    .place-btn:hover {
-      opacity: 0.9;
-    }
+    .place-btn:hover { opacity: 0.9; }
+    .place-btn:active { opacity: 0.8; }
+    .place-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .place-btn:active {
-      opacity: 0.8;
-    }
-
-    .place-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Status */
     .status {
       text-align: center;
       font-size: 11px;
       color: var(--muted);
       min-height: 16px;
     }
+
+    /* ── Selected item controls ── */
+    .selected-section {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .selected-section.visible {
+      display: block;
+    }
+
+    .angle-display {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--purple);
+      margin: 8px 0 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .angle-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .angle-input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      text-align: center;
+    }
+
+    .angle-input:focus {
+      outline: none;
+      border-color: var(--purple);
+    }
+
+    .angle-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--purple);
+      border-radius: 6px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .angle-btn:hover { opacity: 0.9; }
+
+    .angle-btn.secondary {
+      background: var(--surface);
+      color: var(--purple);
+    }
+
+    .angle-btn.secondary:hover {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .angle-presets {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .preset-btn {
+      flex: 1;
+      padding: 6px 0;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <div class="header">
     <div class="header-left">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="20" height="20">
@@ -194,9 +269,7 @@
     <button class="theme-toggle" id="themeToggle" title="Toggle theme"></button>
   </div>
 
-  <!-- Content -->
   <div class="content">
-    <!-- Preview -->
     <div>
       <div class="section-label">Preview</div>
       <div class="canvas-wrap">
@@ -204,7 +277,6 @@
       </div>
     </div>
 
-    <!-- Length -->
     <div>
       <div class="section-label">Length</div>
       <div class="length-group">
@@ -214,14 +286,31 @@
       </div>
     </div>
 
-    <!-- Place -->
     <button class="place-btn" id="placeBtn">Place on Board</button>
     <div class="status" id="status"></div>
+
+    <!-- Selected ruler controls -->
+    <div class="selected-section" id="selectedSection">
+      <div class="section-label">Ruler Selected</div>
+      <div class="angle-display" id="angleDisplay">0.0&deg;</div>
+      <div class="angle-row">
+        <input type="number" class="angle-input" id="angleInput" placeholder="0" min="-360" max="360" step="0.1" />
+        <button class="angle-btn" id="setAngleBtn">Set</button>
+        <button class="angle-btn secondary" id="readAngleBtn" title="Read current angle from board">&#x21BB;</button>
+      </div>
+      <div class="angle-presets">
+        <button class="preset-btn" data-angle="0">0&deg;</button>
+        <button class="preset-btn" data-angle="30">30&deg;</button>
+        <button class="preset-btn" data-angle="45">45&deg;</button>
+        <button class="preset-btn" data-angle="90">90&deg;</button>
+      </div>
+    </div>
   </div>
 
   <script>
     // ── State ──
     let selectedMM = 300;
+    let selectedItem = null;
 
     // ── Theme ──
     const themeBtn = document.getElementById('themeToggle');
@@ -245,11 +334,11 @@
       applyTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // ── Preview Ruler Drawing ──
+    // ── Ruler Drawing ──
     const PREVIEW_PX_PER_MM = 1.7;
     const RULER_H = 52;
 
-    function drawRuler(canvasEl, rulerMM, pxPerMM, hiResScale) {
+    function drawRuler(canvasEl, rulerMM, pxPerMM, hiResScale, angleText) {
       const rW = rulerMM * pxPerMM + 24;
       const rH = RULER_H;
       canvasEl.width = Math.round(rW * hiResScale);
@@ -328,53 +417,63 @@
       ctx.textAlign = 'left';
       ctx.fillText('CM', bodyX + 6, rH - 8);
 
-      // Logo watermark
-      const logoX = bodyX + rulerMM * pxPerMM - 100;
-      ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-      ctx.arc(logoX, rH / 2, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#a855f7';
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.72)';
-      ctx.font = "600 9px -apple-system, sans-serif";
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Physics Pathway', logoX + 9, rH / 2);
-      ctx.globalAlpha = 1;
+      // Centre: angle display OR logo
+      const centreX = bodyX + (rulerMM * pxPerMM) / 2;
+      const centreY = rH / 2;
+
+      if (angleText !== undefined && angleText !== null) {
+        // Angle readout in centre
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#a855f7';
+        ctx.font = '600 14px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(angleText, centreX, centreY);
+        ctx.globalAlpha = 1;
+      } else {
+        // Logo watermark (default when no angle)
+        const logoX = bodyX + rulerMM * pxPerMM - 100;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(logoX, rH / 2, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#a855f7';
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.72)';
+        ctx.font = "600 9px -apple-system, sans-serif";
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Physics Pathway', logoX + 9, rH / 2);
+        ctx.globalAlpha = 1;
+      }
 
       ctx.restore();
     }
 
     function updatePreview() {
-      // For preview, scale down longer rulers to fit the 260px panel width
-      let previewMM = selectedMM;
       let previewPx = PREVIEW_PX_PER_MM;
-      // Ensure the preview fits within ~260px: (mm * px + 24) <= 260
       const maxW = 258;
-      if (previewMM * previewPx + 24 > maxW) {
-        previewPx = (maxW - 24) / previewMM;
+      if (selectedMM * previewPx + 24 > maxW) {
+        previewPx = (maxW - 24) / selectedMM;
       }
       const canvas = document.getElementById('rulerCanvas');
-      drawRuler(canvas, previewMM, previewPx, 2);
-      // CSS display size
-      canvas.style.width = Math.round(previewMM * previewPx + 24) + 'px';
+      drawRuler(canvas, selectedMM, previewPx, 2, null);
+      canvas.style.width = Math.round(selectedMM * previewPx + 24) + 'px';
       canvas.style.height = Math.round(RULER_H) + 'px';
     }
 
-    // ── Full-Resolution Ruler for Board ──
-    function renderFullRuler() {
-      const fullMM = selectedMM;
+    // ── Full-res ruler for board ──
+    function renderFullRuler(angleDeg) {
       const PX = 3.78;
       const offCanvas = document.createElement('canvas');
-      drawRuler(offCanvas, fullMM, PX, 3);
+      const angleStr = angleDeg !== undefined ? angleDeg.toFixed(1) + '\u00B0' : null;
+      drawRuler(offCanvas, selectedMM, PX, 3, angleStr);
       return offCanvas.toDataURL('image/png');
     }
 
     // ── Length Buttons ──
-    const lengthBtns = document.querySelectorAll('.length-btn');
-    lengthBtns.forEach(btn => {
+    document.querySelectorAll('.length-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        lengthBtns.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.length-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedMM = parseInt(btn.getAttribute('data-mm'));
         updatePreview();
@@ -390,19 +489,14 @@
       statusEl.textContent = 'Rendering ruler...';
 
       try {
-        const png = renderFullRuler();
-
+        const png = renderFullRuler(0);
         const vp = await miro.board.viewport.get();
-        const x = vp.x + 0.5 * vp.width;
-        const y = vp.y + 0.5 * vp.height;
-
-        statusEl.textContent = 'Placing on board...';
 
         const img = await miro.board.createImage({
           url: png,
           title: 'PP Ruler',
-          x: x,
-          y: y,
+          x: vp.x + 0.5 * vp.width,
+          y: vp.y + 0.5 * vp.height,
           width: 500
         });
 
@@ -414,15 +508,116 @@
           type: 'info',
           message: selectedMM / 10 + ' cm ruler placed on board'
         });
-
         setTimeout(() => { statusEl.textContent = ''; }, 2500);
       } catch (err) {
         console.error('Place ruler error:', err);
-        statusEl.textContent = 'Error: ' + (err.message || 'Failed to place ruler');
+        statusEl.textContent = 'Error: ' + (err.message || 'Failed');
         setTimeout(() => { statusEl.textContent = ''; }, 4000);
       } finally {
         placeBtn.disabled = false;
       }
+    });
+
+    // ── Selection & Rotation Controls ──
+    const selectedSection = document.getElementById('selectedSection');
+    const angleDisplay = document.getElementById('angleDisplay');
+    const angleInput = document.getElementById('angleInput');
+    const setAngleBtn = document.getElementById('setAngleBtn');
+    const readAngleBtn = document.getElementById('readAngleBtn');
+
+    function showSelected(item) {
+      selectedItem = item;
+      const angle = item.rotation || 0;
+      angleDisplay.textContent = angle.toFixed(1) + '\u00B0';
+      angleInput.value = angle.toFixed(1);
+      selectedSection.classList.add('visible');
+    }
+
+    function hideSelected() {
+      selectedItem = null;
+      selectedSection.classList.remove('visible');
+    }
+
+    // Read current angle from board
+    readAngleBtn.addEventListener('click', async () => {
+      if (!selectedItem) return;
+      try {
+        const items = await miro.board.getSelection();
+        const item = items.find(i => i.id === selectedItem.id);
+        if (item) {
+          showSelected(item);
+        }
+      } catch (e) {
+        console.error('Read angle error:', e);
+      }
+    });
+
+    // Set angle and re-render with angle display
+    setAngleBtn.addEventListener('click', async () => {
+      if (!selectedItem) return;
+      const newAngle = parseFloat(angleInput.value) || 0;
+
+      try {
+        setAngleBtn.textContent = '...';
+
+        // Re-render ruler PNG with angle shown in centre
+        const meta = await selectedItem.getMetadata('pp-ruler');
+        const rulerLen = (meta && meta.length) || selectedMM;
+        const oldMM = selectedMM;
+        selectedMM = rulerLen;
+        const png = renderFullRuler(newAngle);
+        selectedMM = oldMM;
+
+        // Get position of current item
+        const x = selectedItem.x;
+        const y = selectedItem.y;
+        const w = selectedItem.width;
+
+        // Remove old, create new at same position with new angle
+        await miro.board.remove(selectedItem);
+
+        const newImg = await miro.board.createImage({
+          url: png,
+          title: 'PP Ruler',
+          x: x,
+          y: y,
+          width: w,
+          rotation: newAngle
+        });
+
+        await newImg.setMetadata('pp-ruler', { length: rulerLen });
+
+        selectedItem = newImg;
+        angleDisplay.textContent = newAngle.toFixed(1) + '\u00B0';
+
+        setAngleBtn.textContent = 'Set';
+      } catch (err) {
+        console.error('Set angle error:', err);
+        setAngleBtn.textContent = 'Set';
+      }
+    });
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        angleInput.value = btn.getAttribute('data-angle');
+        setAngleBtn.click();
+      });
+    });
+
+    // Listen for selection changes
+    miro.board.ui.on('selection:update', async (event) => {
+      const items = event.items;
+      if (items.length === 1) {
+        try {
+          const meta = await items[0].getMetadata('pp-ruler');
+          if (meta && meta.length) {
+            showSelected(items[0]);
+            return;
+          }
+        } catch (e) {}
+      }
+      hideSelected();
     });
 
     // ── Init ──
