@@ -16,6 +16,18 @@
     --text: #1e1e2e;
     --muted: #64748b;
     --purple: #7C3AED;
+    --purple-dim: rgba(124,58,237,0.1);
+    --card-bg: #F8FAFC;
+    --card-border: rgba(124,58,237,0.15);
+    --card-accent: #7C3AED;
+    --card-text: #1E293B;
+    --card-muted: #64748B;
+    --card-hint: #94A3B8;
+    --card-eq-bg: #F1F5F9;
+    --card-eq-border: #E2E8F0;
+    --card-divider: #E2E8F0;
+    --aqa: #7C3AED; --edx: #2563EB; --ocr: #EA580C;
+    --pill-bg: #F1F5F9;
   }
 
   [data-theme="dark"] {
@@ -25,6 +37,18 @@
     --text: #e2e2f0;
     --muted: #888aaa;
     --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.15);
+    --card-bg: #0F0F0F;
+    --card-border: rgba(168,85,247,0.2);
+    --card-accent: #A78BFA;
+    --card-text: #E8E8F0;
+    --card-muted: #888AAA;
+    --card-hint: #444466;
+    --card-eq-bg: rgba(0,0,0,0.45);
+    --card-eq-border: rgba(168,85,247,0.18);
+    --card-divider: rgba(168,85,247,0.15);
+    --aqa: #A78BFA; --edx: #38BDF8; --ocr: #FB923C;
+    --pill-bg: rgba(255,255,255,0.06);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -35,10 +59,10 @@
     background: var(--bg);
     color: var(--text);
     width: 280px;
-    min-height: 420px;
     overflow-x: hidden;
   }
 
+  /* ── Header ── */
   .header {
     display: flex;
     align-items: center;
@@ -46,244 +70,267 @@
     padding: 10px 14px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 20;
   }
 
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
+  .header-left { display: flex; align-items: center; gap: 8px; }
   .header-left svg { flex-shrink: 0; }
-
-  .header-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
+  .header-title { font-size: 13px; font-weight: 600; color: var(--text); }
 
   .theme-toggle {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    width: 28px;
-    height: 28px;
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    width: 28px; height: 28px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: border-color 0.15s;
+  }
+  .theme-toggle:hover { border-color: var(--purple); }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 48px; z-index: 19;
+  }
+
+  .tab {
+    flex: 1; text-align: center;
+    padding: 7px 4px; font-size: 10px; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    user-select: none; transition: color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+  /* ── Pages ── */
+  .page { display: none; padding: 10px 10px 16px; }
+  .page.active { display: block; }
+
+  /* ── Board filter chips ── */
+  .board-filter { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+
+  .bchip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 3px 8px;
+    cursor: pointer; font-size: 9px; font-weight: 600;
+    color: var(--muted); user-select: none; transition: all 0.15s;
+  }
+  .bchip:hover { border-color: var(--purple); }
+  .bchip.active { border-color: var(--purple); background: var(--purple-dim); color: var(--purple); }
+
+  /* ── Search ── */
+  .search-input {
+    width: 100%; padding: 7px 9px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text);
+    font-size: 12px; font-family: inherit;
+    margin-bottom: 10px; transition: border-color 0.15s;
+  }
+  .search-input:focus { outline: none; border-color: var(--purple); }
+  .search-input::placeholder { color: var(--muted); }
+
+  /* ── Sections ── */
+  .lib-section { margin-bottom: 10px; }
+
+  .sec-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; padding: 6px 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; user-select: none; transition: border-color 0.15s;
+  }
+  .sec-header:hover { border-color: var(--purple); }
+
+  .sec-header h3 {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--purple);
+  }
+
+  .sec-tag {
+    font-size: 9px; font-weight: 600;
+    background: var(--purple-dim); color: var(--purple);
+    padding: 1px 6px; border-radius: 8px; margin-left: 6px;
+  }
+
+  .sec-toggle { color: var(--muted); font-size: 9px; transition: transform 0.2s; }
+  .sec-header.open .sec-toggle { transform: rotate(90deg); }
+
+  /* ── Card in panel (3D flip) ── */
+  .card-list { padding: 8px 0 0; }
+  .card-list.collapsed { display: none; }
+
+  .card-wrap {
+    perspective: 800px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    line-height: 1;
-    transition: background 0.15s, border-color 0.15s;
+    margin-bottom: 8px;
+    position: relative;
   }
 
-  .theme-toggle:hover {
-    background: var(--surface);
-    border-color: var(--purple);
+  .card-inner {
+    position: relative; width: 100%;
+    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+    transform-style: preserve-3d;
+    display: grid;
+  }
+  .card-inner.flipped { transform: rotateY(180deg); }
+
+  .cfront, .cback {
+    grid-area: 1 / 1;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 10px; overflow: hidden;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+  }
+  .cback { transform: rotateY(180deg); }
+
+  .card-topbar { height: 3px; background: var(--card-accent); }
+
+  .cfront-body {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 130px; padding: 12px 16px;
+    text-align: center; gap: 2px;
   }
 
-  .content {
-    padding: 14px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .cfront-cat {
+    font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--card-muted);
+  }
+  .cfront-term {
+    font-size: 16px; font-weight: 800;
+    color: var(--card-text); line-height: 1.2;
+    word-break: break-word;
+  }
+  .cfront-hint { font-size: 9px; color: var(--card-hint); margin-top: 8px; }
+
+  .cflip-icon {
+    position: absolute; bottom: 6px; right: 6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1px solid rgba(167,139,250,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--card-accent);
   }
 
-  .field-label {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    margin-bottom: 4px;
+  .cback-body {
+    display: flex; flex-direction: column;
+    padding: 10px 12px 8px;
   }
 
-  .field-group {
-    display: flex;
-    flex-direction: column;
+  .cback-term { font-size: 11px; font-weight: 500; color: var(--card-accent); margin-bottom: 4px; }
+  .cback-divider { height: 1px; background: var(--card-divider); margin-bottom: 6px; flex-shrink: 0; }
+
+  .cback-def {
+    font-size: 11px; font-weight: 400;
+    color: var(--card-text); line-height: 1.45;
   }
 
-  input[type="text"],
-  textarea {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-    color: var(--text);
-    font-size: 13px;
-    font-family: inherit;
-    resize: vertical;
+  .cback-eq {
+    margin-top: 6px; padding: 6px 10px; border-radius: 6px;
+    background: var(--card-eq-bg); border: 1px solid var(--card-eq-border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .cback-eq .katex { font-size: 13px; }
+
+  .cback-pills { display: flex; gap: 4px; margin-top: auto; padding-top: 6px; flex-shrink: 0; }
+
+  .cpill {
+    font-size: 8px; font-weight: 600;
+    padding: 1px 5px; border-radius: 3px;
+    background: var(--pill-bg); border: 1px solid transparent;
+  }
+  .cpill.aqa { color: var(--aqa); border-color: rgba(167,139,250,0.2); }
+  .cpill.edexcel { color: var(--edx); border-color: rgba(56,189,248,0.2); }
+  .cpill.ocr { color: var(--ocr); border-color: rgba(251,146,60,0.2); }
+
+  /* ── Place button overlay ── */
+  .card-place {
+    position: absolute; bottom: 6px; left: 6px;
+    padding: 3px 8px; border-radius: 5px;
+    background: var(--purple); color: #fff;
+    font-size: 9px; font-weight: 600;
+    border: none; cursor: pointer;
+    opacity: 0; transition: opacity 0.2s;
+    z-index: 2; font-family: inherit;
+  }
+  .card-wrap:hover .card-place { opacity: 1; }
+  .card-place:hover { opacity: 0.9 !important; }
+
+  /* ── Form fields ── */
+  .fg { margin-bottom: 10px; }
+
+  .fl {
+    font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin-bottom: 3px; display: block;
+  }
+  .fl span { font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+  .fi, .fta {
+    width: 100%; padding: 7px 9px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text);
+    font-size: 12px; font-family: inherit;
     transition: border-color 0.15s;
   }
+  .fi:focus, .fta:focus { outline: none; border-color: var(--purple); }
+  .fta { min-height: 55px; resize: vertical; }
+  .fta.import-area { min-height: 120px; font-size: 11px; font-family: monospace; line-height: 1.4; }
 
-  input[type="text"]:focus,
-  textarea:focus {
-    outline: none;
-    border-color: var(--purple);
-  }
-
-  textarea { min-height: 60px; }
-
-  .eq-input {
-    font-family: 'KaTeX_Math', 'Times New Roman', serif;
-    font-style: italic;
-    font-size: 14px;
-  }
+  .eq-input { font-family: 'KaTeX_Math', 'Times New Roman', serif; font-style: italic; font-size: 13px; }
 
   .eq-preview {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px;
-    min-height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    margin-top: 3px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px; min-height: 28px;
+    display: flex; align-items: center; justify-content: center;
   }
+  .eq-preview .katex { font-size: 14px; }
+  .eq-ph { font-size: 10px; color: var(--muted); font-style: italic; }
+  .eq-err { font-size: 9px; color: #e11d48; }
 
-  .eq-preview .katex { font-size: 16px; }
+  .boards-row { display: flex; gap: 4px; }
 
-  .eq-preview .eq-placeholder {
-    font-size: 11px;
-    color: var(--muted);
-    font-style: italic;
+  .bcheck {
+    display: flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 500; cursor: pointer;
+    padding: 3px 7px; border: 1px solid var(--border);
+    border-radius: 5px; background: var(--surface);
+    transition: border-color 0.15s; user-select: none;
   }
+  .bcheck input { display: none; }
+  .bcheck.checked { border-color: var(--purple); background: var(--purple-dim); }
+  .bdot { width: 5px; height: 5px; border-radius: 50%; }
+  .bdot.aqa { background: var(--aqa); }
+  .bdot.edx { background: var(--edx); }
+  .bdot.ocr { background: var(--ocr); }
 
-  .eq-preview .eq-error {
-    font-size: 10px;
-    color: #e11d48;
+  .fbtn {
+    width: 100%; padding: 9px 0;
+    background: var(--purple); color: #fff;
+    border: none; border-radius: 7px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: opacity 0.15s; margin-top: 4px;
   }
+  .fbtn:hover { opacity: 0.92; }
+  .fbtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .boards-row {
-    display: flex;
-    gap: 6px;
-  }
+  .imp-hint { font-size: 10px; color: var(--muted); line-height: 1.4; margin-bottom: 8px; }
+  .imp-count { font-size: 11px; color: var(--purple); font-weight: 600; min-height: 14px; margin-top: 4px; }
 
-  .board-check {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 4px 8px;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    background: var(--surface);
-    transition: border-color 0.15s, background 0.15s;
-    user-select: none;
-  }
-
-  .board-check input { display: none; }
-
-  .board-check.checked {
-    border-color: var(--purple);
-    background: color-mix(in srgb, var(--purple) 12%, var(--surface));
-  }
-
-  .board-check .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
-
-  .dot-aqa { background: #A78BFA; }
-  .dot-edx { background: #38BDF8; }
-  .dot-ocr { background: #FB923C; }
-
-  .place-btn {
-    width: 100%;
-    padding: 10px 0;
-    background: var(--purple);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    letter-spacing: -0.01em;
-    font-family: inherit;
-  }
-
-  .place-btn:hover { opacity: 0.92; }
-  .place-btn:active { transform: scale(0.98); }
-  .place-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .status {
-    text-align: center;
-    font-size: 11px;
-    color: var(--muted);
-    min-height: 16px;
-  }
-
-  /* ── Flip bar ── */
-  .flip-section {
-    display: none;
-    border-top: 1px solid var(--border);
-    padding-top: 12px;
-  }
-
-  .flip-section.visible { display: block; }
-
-  .flip-info {
-    font-size: 12px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: var(--text);
-  }
-
-  .flip-side {
-    font-size: 11px;
-    color: var(--muted);
-    font-weight: 400;
-  }
-
-  .flip-btn {
-    width: 100%;
-    padding: 9px 0;
-    border: 1px solid var(--purple);
-    border-radius: 7px;
-    background: var(--surface);
-    color: var(--purple);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s, color 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .flip-btn:hover {
-    background: var(--purple);
-    color: #fff;
-  }
-
-  .flip-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .empty { text-align: center; padding: 30px 10px; color: var(--muted); font-size: 11px; }
 
   /* ── Toast ── */
   #toast {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    background: var(--purple);
-    color: #fff;
-    padding: 7px 12px;
-    border-radius: 7px;
-    font-size: 11px;
-    font-weight: 500;
-    opacity: 0;
-    transition: opacity 0.2s;
-    pointer-events: none;
-    z-index: 100;
+    position: fixed; top: 10px; right: 10px;
+    background: var(--purple); color: #fff;
+    padding: 6px 11px; border-radius: 6px;
+    font-size: 10px; font-weight: 500;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 100;
   }
-
   #toast.show { opacity: 1; }
 </style>
 </head>
@@ -297,507 +344,615 @@
     </svg>
     <span class="header-title">Physics Pathway</span>
   </div>
-  <button class="theme-toggle" id="themeBtn" title="Toggle theme">&#x2600;&#xFE0F;</button>
+  <button class="theme-toggle" id="themeBtn" title="Toggle theme"></button>
 </div>
 
-<div class="content">
-  <div class="field-group">
-    <div class="field-label">Term</div>
-    <input type="text" id="termInput" placeholder="e.g. Ohm's Law" />
-  </div>
+<div class="tabs">
+  <div class="tab active" data-tab="library">Library</div>
+  <div class="tab" data-tab="create">Create</div>
+  <div class="tab" data-tab="import">Import</div>
+</div>
 
-  <div class="field-group">
-    <div class="field-label">Definition</div>
-    <textarea id="defInput" placeholder="The current through a conductor is directly proportional to..."></textarea>
+<!-- Library -->
+<div class="page active" id="page-library">
+  <div class="board-filter" id="boardFilter">
+    <span class="bchip active" data-board="all">All</span>
+    <span class="bchip" data-board="AQA">AQA</span>
+    <span class="bchip" data-board="Edexcel">Edexcel</span>
+    <span class="bchip" data-board="OCR">OCR</span>
   </div>
+  <input type="text" class="search-input" id="searchInput" placeholder="Search flashcards..." />
+  <div id="libSections"></div>
+</div>
 
-  <div class="field-group">
-    <div class="field-label">Equation <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional LaTeX)</span></div>
-    <input type="text" id="eqInput" class="eq-input" placeholder="V = IR" />
-    <div class="eq-preview" id="eqPreview" style="margin-top:4px">
-      <span class="eq-placeholder">Equation preview</span>
+<!-- Create -->
+<div class="page" id="page-create">
+  <div class="fg">
+    <label class="fl">Term</label>
+    <input type="text" class="fi" id="createTerm" placeholder="e.g. Ohm's Law" />
+  </div>
+  <div class="fg">
+    <label class="fl">Definition</label>
+    <textarea class="fta" id="createDef" placeholder="The current through a conductor is directly proportional to..."></textarea>
+  </div>
+  <div class="fg">
+    <label class="fl">Equation <span>(optional LaTeX)</span></label>
+    <input type="text" class="fi eq-input" id="createEq" placeholder="V = IR" />
+    <div class="eq-preview" id="createEqPrev"><span class="eq-ph">Equation preview</span></div>
+  </div>
+  <div class="fg">
+    <label class="fl">Category</label>
+    <input type="text" class="fi" id="createCat" placeholder="e.g. Electricity" />
+  </div>
+  <div class="fg">
+    <label class="fl">Boards</label>
+    <div class="boards-row" id="createBoards">
+      <label class="bcheck checked"><input type="checkbox" checked /><span class="bdot aqa"></span>AQA</label>
+      <label class="bcheck checked"><input type="checkbox" checked /><span class="bdot edx"></span>Edexcel</label>
+      <label class="bcheck checked"><input type="checkbox" checked /><span class="bdot ocr"></span>OCR</label>
     </div>
   </div>
+  <button class="fbtn" id="createBtn">Add Card</button>
+</div>
 
-  <div class="field-group">
-    <div class="field-label">Category</div>
-    <input type="text" id="catInput" placeholder="e.g. Electricity, Waves, Nuclear" />
+<!-- Import -->
+<div class="page" id="page-import">
+  <div class="imp-hint">
+    Paste Quizlet export: <strong>term [tab] definition</strong> per line.<br>
+    Optional 3rd column for LaTeX: <strong>term [tab] def [tab] equation</strong>.
   </div>
-
-  <div class="field-group">
-    <div class="field-label">Boards</div>
-    <div class="boards-row">
-      <label class="board-check checked" id="chkAqa"><input type="checkbox" checked /><span class="dot dot-aqa"></span>AQA</label>
-      <label class="board-check checked" id="chkEdx"><input type="checkbox" checked /><span class="dot dot-edx"></span>Edexcel</label>
-      <label class="board-check checked" id="chkOcr"><input type="checkbox" checked /><span class="dot dot-ocr"></span>OCR</label>
+  <div class="fg">
+    <label class="fl">Paste data</label>
+    <textarea class="fta import-area" id="importArea" placeholder="Ohm's Law&#9;The current through a conductor..."></textarea>
+  </div>
+  <div class="imp-count" id="importCount"></div>
+  <div class="fg">
+    <label class="fl">Category</label>
+    <input type="text" class="fi" id="importCat" placeholder="e.g. Electricity" />
+  </div>
+  <div class="fg">
+    <label class="fl">Boards</label>
+    <div class="boards-row" id="importBoards">
+      <label class="bcheck checked"><input type="checkbox" checked /><span class="bdot aqa"></span>AQA</label>
+      <label class="bcheck checked"><input type="checkbox" checked /><span class="bdot edx"></span>Edexcel</label>
+      <label class="bcheck checked"><input type="checkbox" checked /><span class="bdot ocr"></span>OCR</label>
     </div>
   </div>
-
-  <button class="place-btn" id="placeBtn">Place Flashcard</button>
-  <div class="status" id="status"></div>
-
-  <div class="flip-section" id="flipSection">
-    <div class="flip-info" id="flipInfo">Ohm's Law <span class="flip-side">(Front)</span></div>
-    <button class="flip-btn" id="flipBtn"><span style="font-size:16px">&#x21BB;</span> Flip Card</button>
-  </div>
+  <button class="fbtn" id="importBtn" disabled>Import Cards</button>
 </div>
 
 <div id="toast"></div>
 
 <script>
-/* ── Theme ─────────────────────────────────────────── */
-const themeBtn = document.getElementById('themeBtn');
-const STORAGE_KEY = 'pp-flashcard-theme';
+/* ═══════════════════════════════════════════════════════════
+   FLASHCARD LIBRARY DATA
+   ═══════════════════════════════════════════════════════════ */
+var FLASHCARD_LIBRARY = [
+  { section: 'Electricity', cards: [
+    { term: "Ohm's Law", definition: "The current through a conductor is directly proportional to the potential difference across it, provided its temperature remains constant.", equation: "V = IR", boards: "AQA Edexcel OCR" },
+    { term: "Kirchhoff's First Law", definition: "The total current entering a junction equals the total current leaving it (conservation of charge).", equation: "\\sum I_{\\text{in}} = \\sum I_{\\text{out}}", boards: "AQA Edexcel OCR" },
+    { term: "Kirchhoff's Second Law", definition: "The sum of EMFs in a closed loop equals the sum of the potential differences.", equation: "\\sum \\varepsilon = \\sum IR", boards: "AQA Edexcel OCR" },
+    { term: "Power", definition: "The rate of energy transfer by an electrical component.", equation: "P = IV = I^2R = \\frac{V^2}{R}", boards: "AQA Edexcel OCR" },
+    { term: "Resistivity", definition: "A material property quantifying how strongly it resists current flow.", equation: "\\rho = \\frac{RA}{L}", boards: "AQA Edexcel OCR" },
+    { term: "EMF", definition: "Energy transferred per unit charge by a source driving current around a complete circuit.", equation: "\\varepsilon = I(R + r)", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Waves', cards: [
+    { term: "Wave Speed", definition: "The speed of a wave equals its frequency multiplied by its wavelength.", equation: "v = f\\lambda", boards: "AQA Edexcel OCR" },
+    { term: "Refractive Index", definition: "The ratio of the speed of light in a vacuum to its speed in a material.", equation: "n = \\frac{c}{v}", boards: "AQA Edexcel OCR" },
+    { term: "Snell's Law", definition: "At a boundary, the product of refractive index and sine of angle to the normal is constant.", equation: "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2", boards: "AQA Edexcel OCR" },
+    { term: "Young's Double Slit", definition: "Coherent waves through two slits produce an interference pattern of bright and dark fringes.", equation: "\\lambda = \\frac{ax}{D}", boards: "AQA Edexcel OCR" },
+    { term: "Diffraction Grating", definition: "Multiple slits produce sharp maxima where path difference is a whole number of wavelengths.", equation: "d\\sin\\theta = n\\lambda", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Mechanics', cards: [
+    { term: "Newton's Second Law", definition: "The net force acting on an object equals the rate of change of its momentum.", equation: "F = ma", boards: "AQA Edexcel OCR" },
+    { term: "SUVAT \u2014 Velocity", definition: "Final velocity equals initial velocity plus acceleration times time.", equation: "v = u + at", boards: "AQA Edexcel OCR" },
+    { term: "SUVAT \u2014 Displacement", definition: "Displacement equals initial velocity times time plus half acceleration times time squared.", equation: "s = ut + \\tfrac{1}{2}at^2", boards: "AQA Edexcel OCR" },
+    { term: "Momentum", definition: "The product of mass and velocity. Conserved in collisions with no external forces.", equation: "p = mv", boards: "AQA Edexcel OCR" },
+    { term: "Work Done", definition: "The product of force and displacement in the direction of the force.", equation: "W = Fs\\cos\\theta", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Quantum Physics', cards: [
+    { term: "Photon Energy", definition: "Energy of a photon is proportional to its frequency.", equation: "E = hf = \\frac{hc}{\\lambda}", boards: "AQA Edexcel OCR" },
+    { term: "Photoelectric Effect", definition: "Photons above the work function eject electrons. Intensity affects current, not max KE.", equation: "hf = \\phi + E_{k(\\text{max})}", boards: "AQA Edexcel OCR" },
+    { term: "de Broglie Wavelength", definition: "All particles have a wavelength inversely proportional to their momentum.", equation: "\\lambda = \\frac{h}{mv}", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Nuclear Physics', cards: [
+    { term: "Radioactive Decay", definition: "The number of undecayed nuclei decreases exponentially with time.", equation: "N = N_0 e^{-\\lambda t}", boards: "AQA Edexcel OCR" },
+    { term: "Half-Life", definition: "The time for half the radioactive nuclei in a sample to decay.", equation: "t_{1/2} = \\frac{\\ln 2}{\\lambda}", boards: "AQA Edexcel OCR" },
+    { term: "Mass-Energy Equivalence", definition: "Mass and energy are interchangeable.", equation: "E = mc^2", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Fields', cards: [
+    { term: "Gravitational Field Strength", definition: "Force per unit mass at a point in a gravitational field.", equation: "g = \\frac{GM}{r^2}", boards: "AQA Edexcel OCR" },
+    { term: "Coulomb's Law", definition: "Electrostatic force between two charges is proportional to their product and inversely proportional to separation squared.", equation: "F = \\frac{1}{4\\pi\\varepsilon_0}\\frac{Q_1 Q_2}{r^2}", boards: "AQA Edexcel OCR" },
+    { term: "Capacitance", definition: "Charge stored per unit potential difference.", equation: "C = \\frac{Q}{V}", boards: "AQA Edexcel OCR" },
+    { term: "Capacitor Discharge", definition: "Charge decreases exponentially during discharge through a resistor.", equation: "Q = Q_0 e^{-t/RC}", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Thermal Physics', cards: [
+    { term: "Ideal Gas Law", definition: "Pressure times volume equals moles times gas constant times temperature.", equation: "pV = nRT", boards: "AQA Edexcel OCR" },
+    { term: "Kinetic Energy of Gas", definition: "Mean KE of gas molecules is proportional to absolute temperature.", equation: "\\frac{1}{2}m\\overline{c^2} = \\frac{3}{2}k_BT", boards: "AQA Edexcel OCR" },
+    { term: "Specific Heat Capacity", definition: "Energy required to raise 1 kg of a substance by 1 K.", equation: "Q = mc\\Delta\\theta", boards: "AQA Edexcel OCR" }
+  ]}
+];
 
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  themeBtn.textContent = theme === 'dark' ? '\u{1F319}' : '\u{2600}\u{FE0F}';
-  localStorage.setItem(STORAGE_KEY, theme);
+/* ═══════════════════════════════════════════════════════════
+   THEME
+   ═══════════════════════════════════════════════════════════ */
+var themeBtn = document.getElementById('themeBtn');
+var TK = 'pp-flashcard-theme';
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '\uD83C\uDF19' : '\u2600\uFE0F';
+  localStorage.setItem(TK, t);
 }
-
-(function initTheme() {
-  const saved = localStorage.getItem(STORAGE_KEY) || 'light';
-  applyTheme(saved);
-})();
-
-themeBtn.addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
+(function() { applyTheme(localStorage.getItem(TK) || 'light'); })();
+themeBtn.addEventListener('click', function() {
+  var c = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(c === 'dark' ? 'light' : 'dark');
+  buildLibrary();
 });
 
-/* ── Toast ─────────────────────────────────────────── */
-function toast(msg, ms) {
-  ms = ms || 2200;
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════════ */
+function toast(msg) {
   var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, ms);
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
 }
 
-/* ── Board checkboxes ──────────────────────────────── */
-document.querySelectorAll('.board-check').forEach(function(label) {
-  var cb = label.querySelector('input');
-  label.addEventListener('click', function(e) {
+/* ═══════════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+  });
+});
+function switchTab(n) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === n); });
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-' + n).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHECKBOXES
+   ═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.bcheck').forEach(function(l) {
+  l.addEventListener('click', function(e) {
     e.preventDefault();
-    cb.checked = !cb.checked;
-    label.classList.toggle('checked', cb.checked);
+    var cb = l.querySelector('input'); cb.checked = !cb.checked;
+    l.classList.toggle('checked', cb.checked);
   });
 });
 
-/* ── Equation preview ──────────────────────────────── */
-var eqInput = document.getElementById('eqInput');
-var eqPreview = document.getElementById('eqPreview');
-var eqTimer = null;
+/* ═══════════════════════════════════════════════════════════
+   EQUATION PREVIEW
+   ═══════════════════════════════════════════════════════════ */
+var ceq = document.getElementById('createEq');
+var cep = document.getElementById('createEqPrev');
+var eqT = null;
+function updEqPrev() {
+  var v = ceq.value.trim();
+  if (!v) { cep.innerHTML = '<span class="eq-ph">Equation preview</span>'; return; }
+  if (typeof katex === 'undefined') return;
+  try { cep.innerHTML = katex.renderToString(v, { throwOnError: true, displayMode: true }); }
+  catch (e) { cep.innerHTML = '<span class="eq-err">' + e.message.substring(0,50) + '</span>'; }
+}
+ceq.addEventListener('input', function() { clearTimeout(eqT); eqT = setTimeout(updEqPrev, 200); });
 
-function updateEqPreview() {
-  var latex = eqInput.value.trim();
-  if (!latex) {
-    eqPreview.innerHTML = '<span class="eq-placeholder">Equation preview</span>';
-    return;
-  }
-  try {
-    var html = katex.renderToString(latex, { throwOnError: true, displayMode: true });
-    eqPreview.innerHTML = html;
-  } catch (e) {
-    eqPreview.innerHTML = '<span class="eq-error">' + e.message.substring(0, 60) + '</span>';
-  }
+/* ═══════════════════════════════════════════════════════════
+   LOCAL STORAGE
+   ═══════════════════════════════════════════════════════════ */
+var SK = 'pp-flashcard-custom';
+function getCustom() { try { return JSON.parse(localStorage.getItem(SK)) || []; } catch(e) { return []; } }
+function saveCustom(c) { localStorage.setItem(SK, JSON.stringify(c)); }
+function addCustom(arr) { var e = getCustom(); e.push.apply(e, arr); saveCustom(e); }
+
+/* ═══════════════════════════════════════════════════════════
+   BUILD LIBRARY
+   ═══════════════════════════════════════════════════════════ */
+var boardFilter = 'all';
+
+function getAllSections() {
+  var secs = FLASHCARD_LIBRARY.map(function(s) { return { section: s.section, cards: s.cards.slice() }; });
+  getCustom().forEach(function(card) {
+    var cat = card.category || 'My Cards';
+    var found = secs.find(function(s) { return s.section.toLowerCase() === cat.toLowerCase(); });
+    if (found) found.cards.push(card);
+    else secs.push({ section: cat, cards: [card] });
+  });
+  return secs;
 }
 
-eqInput.addEventListener('input', function() {
-  clearTimeout(eqTimer);
-  eqTimer = setTimeout(updateEqPreview, 200);
-});
+function buildLibrary() {
+  var con = document.getElementById('libSections');
+  con.innerHTML = '';
+  var secs = getAllSections();
+  if (secs.every(function(s) { return !s.cards.length; })) {
+    con.innerHTML = '<div class="empty">No flashcards yet.</div>';
+    return;
+  }
+  secs.forEach(function(sec, i) {
+    var div = document.createElement('div'); div.className = 'lib-section';
+    var hdr = document.createElement('div');
+    hdr.className = 'sec-header' + (i === 0 ? ' open' : '');
+    hdr.innerHTML = '<h3>' + esc(sec.section) + ' <span class="sec-tag">' + sec.cards.length + '</span></h3><span class="sec-toggle">\u25B6</span>';
+    var list = document.createElement('div');
+    list.className = 'card-list' + (i > 0 ? ' collapsed' : '');
+    hdr.addEventListener('click', function() { hdr.classList.toggle('open'); list.classList.toggle('collapsed'); });
+    sec.cards.forEach(function(card) { list.appendChild(buildCard(card, sec.section)); });
+    div.appendChild(hdr); div.appendChild(list); con.appendChild(div);
+  });
+}
 
-/* ── Flashcard colors ──────────────────────────────── */
-function getCardColors() {
-  var isDark = document.documentElement.getAttribute('data-theme') !== 'light' &&
-               document.documentElement.getAttribute('data-theme') !== null;
-  // Default to dark unless explicitly light
-  var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+function buildCard(card, secName) {
+  var wrap = document.createElement('div'); wrap.className = 'card-wrap';
+  wrap.dataset.search = (card.term + ' ' + secName + ' ' + (card.category || '')).toLowerCase();
+  wrap.dataset.boards = card.boards || '';
 
-  if (isLight) {
-    return {
-      bg: '#F8FAFC',
-      text: '#1E293B',
-      muted: '#64748B',
-      accent: '#7C3AED',
-      border: 'rgba(124,58,237,0.15)',
-      highlightTop: 'rgba(124,58,237,0.08)',
-      eqBg: '#F1F5F9',
-      eqBorder: '#E2E8F0',
-      eqText: '#1E293B',
-      hintText: '#94A3B8',
-      flipCircle: 'rgba(124,58,237,0.3)',
-      flipIcon: '#7C3AED',
-      divider: '#E2E8F0',
-      aqaC: '#7C3AED',
-      edxC: '#2563EB',
-      ocrC: '#EA580C',
-      pillBg: '#F1F5F9',
-      pillText: '#475569'
-    };
+  var inner = document.createElement('div'); inner.className = 'card-inner';
+
+  // Front
+  var front = document.createElement('div'); front.className = 'cfront';
+  front.innerHTML =
+    '<div class="card-topbar"></div>' +
+    '<div class="cfront-body">' +
+      '<div class="cfront-cat">' + esc(secName) + '</div>' +
+      '<div class="cfront-term">' + esc(card.term) + '</div>' +
+      '<div class="cfront-hint">click to flip</div>' +
+    '</div>' +
+    '<div class="cflip-icon">\u21BB</div>';
+
+  // Back
+  var back = document.createElement('div'); back.className = 'cback';
+  var bh = '<div class="card-topbar"></div><div class="cback-body">' +
+    '<div class="cback-term">' + esc(card.term) + '</div>' +
+    '<div class="cback-divider"></div>' +
+    '<div class="cback-def">' + esc(card.definition) + '</div>';
+
+  if (card.equation && card.equation.trim()) {
+    var eq = esc(card.equation);
+    if (typeof katex !== 'undefined') {
+      try { eq = katex.renderToString(card.equation, { displayMode: true, throwOnError: false }); } catch(e) {}
+    }
+    bh += '<div class="cback-eq">' + eq + '</div>';
   }
 
+  var boards = (card.boards || '').split(' ').filter(Boolean);
+  if (boards.length) {
+    bh += '<div class="cback-pills">';
+    boards.forEach(function(b) {
+      var cls = b.toLowerCase() === 'aqa' ? 'aqa' : b.toLowerCase() === 'edexcel' ? 'edexcel' : 'ocr';
+      bh += '<span class="cpill ' + cls + '">' + esc(b) + '</span>';
+    });
+    bh += '</div>';
+  }
+  bh += '</div><div class="cflip-icon">\u21BB</div>';
+  back.innerHTML = bh;
+
+  inner.appendChild(front); inner.appendChild(back); wrap.appendChild(inner);
+
+  // Click to flip
+  wrap.addEventListener('click', function(e) {
+    if (e.target.closest('.card-place')) return;
+    inner.classList.toggle('flipped');
+  });
+
+  // Place on board button
+  var placeBtn = document.createElement('button');
+  placeBtn.className = 'card-place';
+  placeBtn.textContent = 'Place on Board';
+  placeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    placeCardOnBoard(card, secName);
+  });
+  front.appendChild(placeBtn);
+
+  return wrap;
+}
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+/* ═══════════════════════════════════════════════════════════
+   FILTER
+   ═══════════════════════════════════════════════════════════ */
+function filterLibrary() {
+  var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  document.getElementById('libSections').querySelectorAll('.lib-section').forEach(function(sec) {
+    var items = sec.querySelectorAll('.card-wrap');
+    var hdr = sec.querySelector('.sec-header');
+    var list = sec.querySelector('.card-list');
+    var any = false;
+    items.forEach(function(it) {
+      var ms = !q || it.dataset.search.includes(q);
+      var mb = boardFilter === 'all' || (it.dataset.boards || '').includes(boardFilter);
+      var vis = ms && mb;
+      it.style.display = vis ? '' : 'none';
+      if (vis) any = true;
+    });
+    sec.style.display = any ? '' : 'none';
+    if ((q || boardFilter !== 'all') && any && list) {
+      list.classList.remove('collapsed');
+      if (hdr) hdr.classList.add('open');
+    }
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', filterLibrary);
+document.querySelectorAll('#boardFilter .bchip').forEach(function(c) {
+  c.addEventListener('click', function() {
+    document.querySelectorAll('#boardFilter .bchip').forEach(function(x) { x.classList.remove('active'); });
+    c.classList.add('active');
+    boardFilter = c.dataset.board;
+    filterLibrary();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   PLACE ON BOARD (renders PNG via html2canvas)
+   ═══════════════════════════════════════════════════════════ */
+function getCardColors() {
+  var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) return {
+    bg:'#F8FAFC', text:'#1E293B', muted:'#64748B', accent:'#7C3AED',
+    border:'rgba(124,58,237,0.15)', eqBg:'#F1F5F9', eqBorder:'#E2E8F0', eqText:'#1E293B',
+    hintText:'#94A3B8', flipCircle:'rgba(124,58,237,0.3)', flipIcon:'#7C3AED',
+    divider:'#E2E8F0', aqaC:'#7C3AED', edxC:'#2563EB', ocrC:'#EA580C', pillBg:'#F1F5F9'
+  };
   return {
-    bg: '#0F0F0F',
-    text: '#E8E8F0',
-    muted: '#888AAA',
-    accent: '#A78BFA',
-    border: 'rgba(168,85,247,0.2)',
-    highlightTop: 'rgba(168,85,247,0.1)',
-    eqBg: 'rgba(0,0,0,0.45)',
-    eqBorder: 'rgba(168,85,247,0.18)',
-    eqText: '#E8E8F0',
-    hintText: '#444466',
-    flipCircle: 'rgba(168,85,247,0.35)',
-    flipIcon: '#A78BFA',
-    divider: 'rgba(168,85,247,0.15)',
-    aqaC: '#A78BFA',
-    edxC: '#38BDF8',
-    ocrC: '#FB923C',
-    pillBg: 'rgba(255,255,255,0.06)',
-    pillText: '#888AAA'
+    bg:'#0F0F0F', text:'#E8E8F0', muted:'#888AAA', accent:'#A78BFA',
+    border:'rgba(168,85,247,0.2)', eqBg:'rgba(0,0,0,0.45)', eqBorder:'rgba(168,85,247,0.18)', eqText:'#E8E8F0',
+    hintText:'#444466', flipCircle:'rgba(168,85,247,0.35)', flipIcon:'#A78BFA',
+    divider:'rgba(168,85,247,0.15)', aqaC:'#A78BFA', edxC:'#38BDF8', ocrC:'#FB923C', pillBg:'rgba(255,255,255,0.06)'
   };
 }
 
-/* ── Render flashcard face ─────────────────────────── */
-async function renderFlashcardFace(side, data) {
+async function renderPNG(card, secName) {
   var c = getCardColors();
-  var W = 500;
-  var H = 320;
+  var W = 500, H = 320;
+  var ctn = document.createElement('div');
+  ctn.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+  var el = document.createElement('div');
+  el.style.cssText = 'width:'+W+'px;height:'+H+'px;border-radius:16px;overflow:hidden;position:relative;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:'+c.bg+';border:1px solid '+c.border+';display:flex;flex-direction:column;';
 
-  var container = document.createElement('div');
-  container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+  // top bar
+  var tb = document.createElement('div');
+  tb.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:'+c.accent+';';
+  el.appendChild(tb);
 
-  // Outer card
-  var card = document.createElement('div');
-  card.style.cssText =
-    'width:' + W + 'px;height:' + H + 'px;border-radius:16px;overflow:hidden;position:relative;' +
-    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
-    'background:' + c.bg + ';' +
-    'border:1px solid ' + c.border + ';' +
-    'display:flex;flex-direction:column;';
-
-  // Top accent bar (solid purple)
-  var topBar = document.createElement('div');
-  topBar.style.cssText =
-    'position:absolute;top:0;left:0;right:0;height:3px;' +
-    'background:' + c.accent + ';';
-  card.appendChild(topBar);
-
-  if (side === 'front') {
-    buildFrontFace(card, data, c);
-  } else {
-    buildBackFace(card, data, c);
-  }
-
-  // Flip icon (bottom-right)
-  var flipIcon = document.createElement('div');
-  flipIcon.style.cssText =
-    'position:absolute;bottom:14px;right:14px;width:26px;height:26px;' +
-    'border-radius:50%;border:1px solid ' + c.flipCircle + ';' +
-    'display:flex;align-items:center;justify-content:center;' +
-    'font-size:14px;color:' + c.flipIcon + ';';
-  flipIcon.textContent = '\u21BB';
-  card.appendChild(flipIcon);
-
-  container.appendChild(card);
-  document.body.appendChild(container);
-
-  try {
-    var canvas = await html2canvas(container, { backgroundColor: null, scale: 3 });
-    return canvas.toDataURL('image/png');
-  } finally {
-    document.body.removeChild(container);
-  }
-}
-
-function buildFrontFace(card, data, c) {
-  var inner = document.createElement('div');
-  inner.style.cssText =
-    'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-    'padding:40px 32px 50px;text-align:center;gap:6px;';
-
-  // Category
-  if (data.category) {
+  // front face content
+  var body = document.createElement('div');
+  body.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px 50px;text-align:center;gap:6px;';
+  if (secName) {
     var cat = document.createElement('div');
-    cat.style.cssText =
-      'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;' +
-      'color:' + c.muted + ';margin-bottom:4px;';
-    cat.textContent = data.category;
-    inner.appendChild(cat);
+    cat.style.cssText = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:'+c.muted+';margin-bottom:4px;';
+    cat.textContent = secName;
+    body.appendChild(cat);
   }
+  var tm = document.createElement('div');
+  tm.style.cssText = 'font-size:28px;font-weight:900;color:'+c.text+';line-height:1.2;';
+  tm.textContent = card.term;
+  body.appendChild(tm);
+  var ht = document.createElement('div');
+  ht.style.cssText = 'font-size:12px;color:'+c.hintText+';margin-top:16px;';
+  ht.textContent = 'Select card \u2192 flip in panel';
+  body.appendChild(ht);
+  el.appendChild(body);
 
-  // Term
-  var term = document.createElement('div');
-  term.style.cssText =
-    'font-size:28px;font-weight:900;color:' + c.text + ';line-height:1.2;';
-  term.textContent = data.term;
-  inner.appendChild(term);
+  // flip icon
+  var fi = document.createElement('div');
+  fi.style.cssText = 'position:absolute;bottom:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1px solid '+c.flipCircle+';display:flex;align-items:center;justify-content:center;font-size:14px;color:'+c.flipIcon+';';
+  fi.textContent = '\u21BB';
+  el.appendChild(fi);
 
-  // Hint
-  var hint = document.createElement('div');
-  hint.style.cssText =
-    'font-size:12px;color:' + c.hintText + ';margin-top:16px;';
-  hint.textContent = 'Click \u21BB to reveal';
-  inner.appendChild(hint);
-
-  card.appendChild(inner);
-}
-
-function buildBackFace(card, data, c) {
-  var inner = document.createElement('div');
-  inner.style.cssText =
-    'flex:1;display:flex;flex-direction:column;padding:22px 26px 44px;overflow:hidden;';
-
-  // Term (small, top)
-  var term = document.createElement('div');
-  term.style.cssText =
-    'font-size:14px;font-weight:500;color:' + c.accent + ';margin-bottom:8px;';
-  term.textContent = data.term;
-  inner.appendChild(term);
-
-  // Divider
-  var divider = document.createElement('div');
-  divider.style.cssText =
-    'height:1px;background:' + c.divider + ';margin-bottom:12px;';
-  inner.appendChild(divider);
-
-  // Definition
-  var def = document.createElement('div');
-  def.style.cssText =
-    'font-size:14px;font-weight:400;color:' + c.text + ';line-height:1.55;' +
-    'flex-shrink:1;overflow:hidden;';
-  def.textContent = data.definition;
-  inner.appendChild(def);
-
-  // Equation (if present)
-  if (data.equation && data.equation.trim()) {
-    var eqBox = document.createElement('div');
-    eqBox.style.cssText =
-      'margin-top:12px;padding:10px 16px;border-radius:8px;' +
-      'background:' + c.eqBg + ';border:1px solid ' + c.eqBorder + ';' +
-      'display:flex;align-items:center;justify-content:center;' +
-      'color:' + c.eqText + ';';
-    try {
-      var eqHtml = katex.renderToString(data.equation, { displayMode: true, throwOnError: false });
-      eqBox.innerHTML = eqHtml;
-    } catch (e) {
-      eqBox.textContent = data.equation;
-    }
-    inner.appendChild(eqBox);
-  }
-
-  // Board pills
-  if (data.boards && data.boards.length > 0) {
-    var pillRow = document.createElement('div');
-    pillRow.style.cssText =
-      'display:flex;gap:6px;margin-top:auto;padding-top:12px;';
-    var boardColors = { 'AQA': c.aqaC, 'Edexcel': c.edxC, 'OCR': c.ocrC };
-    data.boards.forEach(function(b) {
-      var pill = document.createElement('span');
-      var bc = boardColors[b] || c.accent;
-      pill.style.cssText =
-        'font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;' +
-        'background:' + c.pillBg + ';color:' + bc + ';' +
-        'border:1px solid ' + bc + '33;';
-      pill.textContent = b;
-      pillRow.appendChild(pill);
-    });
-    inner.appendChild(pillRow);
-  }
-
-  card.appendChild(inner);
-}
-
-/* ── Place flashcard ───────────────────────────────── */
-var placeBtn = document.getElementById('placeBtn');
-var statusEl = document.getElementById('status');
-
-placeBtn.addEventListener('click', async function() {
-  var term = document.getElementById('termInput').value.trim();
-  var definition = document.getElementById('defInput').value.trim();
-  var equation = eqInput.value.trim();
-  var category = document.getElementById('catInput').value.trim();
-  var boards = [];
-  if (document.querySelector('#chkAqa input').checked) boards.push('AQA');
-  if (document.querySelector('#chkEdx input').checked) boards.push('Edexcel');
-  if (document.querySelector('#chkOcr input').checked) boards.push('OCR');
-
-  if (!term) { toast('Enter a term'); return; }
-  if (!definition) { toast('Enter a definition'); return; }
-
-  placeBtn.disabled = true;
-  placeBtn.textContent = 'Placing\u2026';
-  statusEl.textContent = '';
-
+  ctn.appendChild(el);
+  document.body.appendChild(ctn);
   try {
-    var data = { term: term, definition: definition, equation: equation, category: category, boards: boards };
-    var png = await renderFlashcardFace('front', data);
+    var canvas = await html2canvas(ctn, { backgroundColor: null, scale: 3 });
+    return canvas.toDataURL('image/png');
+  } finally { document.body.removeChild(ctn); }
+}
 
-    var viewport = await miro.board.viewport.get();
-    var x = viewport.x + 0.5 * viewport.width;
-    var y = viewport.y + 0.5 * viewport.height;
-
+async function placeCardOnBoard(card, secName) {
+  toast('Placing\u2026');
+  try {
+    var png = await renderPNG(card, secName);
+    var vp = await miro.board.viewport.get();
+    var boards = (card.boards || '').split(' ').filter(Boolean);
     var img = await miro.board.createImage({
-      url: png,
-      title: 'Flashcard: ' + term,
-      x: x,
-      y: y,
-      width: 500
+      url: png, title: 'Flashcard: ' + card.term,
+      x: vp.x + vp.width / 2, y: vp.y + vp.height / 2, width: 500
     });
-
     await img.setMetadata('pp-flashcard', {
-      term: term,
-      definition: definition,
-      equation: equation,
-      category: category,
-      boards: boards,
-      isFlipped: false
+      term: card.term, definition: card.definition,
+      equation: card.equation || '', category: secName || card.category || '',
+      boards: boards, isFlipped: false
     });
-
     await miro.board.viewport.zoomTo(img);
+    toast('Placed: ' + card.term);
+  } catch(e) {
+    console.error(e);
+    toast('Failed to place');
+  }
+}
 
-    // Show flip bar immediately
-    showFlipBar(img, {
-      term: term,
-      definition: definition,
-      equation: equation,
-      category: category,
-      boards: boards,
-      isFlipped: false
+/* ═══════════════════════════════════════════════════════════
+   BOARD CARD FLIP (select on board → flip in panel via PNG swap)
+   ═══════════════════════════════════════════════════════════ */
+var flipTargetId = null, flipTargetMeta = null, isFlipping = false;
+
+async function renderBackPNG(meta) {
+  var c = getCardColors();
+  var W = 500, H = 320;
+  var ctn = document.createElement('div');
+  ctn.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+  var el = document.createElement('div');
+  el.style.cssText = 'width:'+W+'px;height:'+H+'px;border-radius:16px;overflow:hidden;position:relative;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:'+c.bg+';border:1px solid '+c.border+';display:flex;flex-direction:column;';
+  var tb = document.createElement('div');
+  tb.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:'+c.accent+';';
+  el.appendChild(tb);
+
+  var body = document.createElement('div');
+  body.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:22px 26px 44px;overflow:hidden;';
+  var tm = document.createElement('div');
+  tm.style.cssText = 'font-size:14px;font-weight:500;color:'+c.accent+';margin-bottom:8px;';
+  tm.textContent = meta.term; body.appendChild(tm);
+  var dv = document.createElement('div');
+  dv.style.cssText = 'height:1px;background:'+c.divider+';margin-bottom:12px;';
+  body.appendChild(dv);
+  var df = document.createElement('div');
+  df.style.cssText = 'font-size:14px;font-weight:400;color:'+c.text+';line-height:1.55;flex:1;overflow:hidden;';
+  df.textContent = meta.definition; body.appendChild(df);
+  if (meta.equation && meta.equation.trim()) {
+    var eb = document.createElement('div');
+    eb.style.cssText = 'margin-top:12px;padding:10px 16px;border-radius:8px;background:'+c.eqBg+';border:1px solid '+c.eqBorder+';display:flex;align-items:center;justify-content:center;color:'+c.eqText+';';
+    try { eb.innerHTML = katex.renderToString(meta.equation, { displayMode: true, throwOnError: false }); }
+    catch(e) { eb.textContent = meta.equation; }
+    body.appendChild(eb);
+  }
+  var boards = Array.isArray(meta.boards) ? meta.boards : (meta.boards||'').split(' ').filter(Boolean);
+  if (boards.length) {
+    var bc = { 'AQA': c.aqaC, 'Edexcel': c.edxC, 'OCR': c.ocrC };
+    var pr = document.createElement('div');
+    pr.style.cssText = 'display:flex;gap:6px;margin-top:auto;padding-top:12px;';
+    boards.forEach(function(b) {
+      var p = document.createElement('span');
+      var col = bc[b] || c.accent;
+      p.style.cssText = 'font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;background:'+c.pillBg+';color:'+col+';border:1px solid '+col+'33;';
+      p.textContent = b; pr.appendChild(p);
     });
+    body.appendChild(pr);
+  }
+  el.appendChild(body);
+  var fi = document.createElement('div');
+  fi.style.cssText = 'position:absolute;bottom:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1px solid '+c.flipCircle+';display:flex;align-items:center;justify-content:center;font-size:14px;color:'+c.flipIcon+';';
+  fi.textContent = '\u21BB'; el.appendChild(fi);
+  ctn.appendChild(el); document.body.appendChild(ctn);
+  try {
+    var canvas = await html2canvas(ctn, { backgroundColor: null, scale: 3 });
+    return canvas.toDataURL('image/png');
+  } finally { document.body.removeChild(ctn); }
+}
 
-    toast('Flashcard placed');
-  } catch (err) {
-    console.error('Place flashcard error:', err);
-    statusEl.textContent = 'Error: ' + (err.message || 'Failed');
-    setTimeout(function() { statusEl.textContent = ''; }, 4000);
-  } finally {
-    placeBtn.disabled = false;
-    placeBtn.textContent = 'Place Flashcard';
+miro.board.ui.on('selection:update', async function(event) {
+  if (isFlipping) return;
+  var items = Array.isArray(event) ? event : (event.items || []);
+  if (items.length === 1 && flipTargetId && items[0].id === flipTargetId) return;
+  flipTargetId = null; flipTargetMeta = null;
+  if (items.length !== 1) return;
+  try {
+    var it = await miro.board.getById(items[0].id);
+    if (!it || it.type !== 'image') return;
+    var m = await it.getMetadata('pp-flashcard');
+    if (m && m.term) { flipTargetId = it.id; flipTargetMeta = m; }
+  } catch(e) {}
+});
+
+// Keyboard shortcut: press F to flip selected board card
+document.addEventListener('keydown', async function(e) {
+  if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+    if (!flipTargetId || !flipTargetMeta || isFlipping) return;
+    e.preventDefault();
+    await flipBoardCard();
   }
 });
 
-/* ── Flip mechanism ────────────────────────────────── */
-var flipSection = document.getElementById('flipSection');
-var flipInfo = document.getElementById('flipInfo');
-var flipBtn = document.getElementById('flipBtn');
-var flipTargetId = null;      // Miro item ID (string)
-var flipTargetMeta = null;    // Card data stored locally
-var isFlipping = false;       // Guard: prevent selection events during flip
-
-function showFlipBar(item, meta) {
-  flipTargetId = item.id;
-  flipTargetMeta = meta;
-  var side = meta.isFlipped ? 'Back' : 'Front';
-  flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + side + ')</span>';
-  flipSection.classList.add('visible');
-}
-
-function hideFlipBar() {
-  if (isFlipping) return;  // Don't hide during flip operation
-  flipTargetId = null;
-  flipTargetMeta = null;
-  flipSection.classList.remove('visible');
-}
-
-flipBtn.addEventListener('click', async function() {
+async function flipBoardCard() {
   if (!flipTargetId || !flipTargetMeta) return;
   isFlipping = true;
-  flipBtn.disabled = true;
-  flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flipping\u2026';
-
-  var meta = flipTargetMeta;
-  var itemId = flipTargetId;
-
+  var meta = flipTargetMeta, itemId = flipTargetId;
   try {
-    // 1. Render the other face
     var newSide = meta.isFlipped ? 'front' : 'back';
-    var png = await renderFlashcardFace(newSide, meta);
-
-    // 2. Get fresh item reference by ID for position + removal
-    var currentItem = await miro.board.getById(itemId);
-    var ox = currentItem.x;
-    var oy = currentItem.y;
-    var ow = currentItem.width;
-    var orot = currentItem.rotation || 0;
-
-    // 3. Remove old image
-    await miro.board.remove(currentItem);
-
-    // 4. Create new image at same position
-    var newMeta = {
-      term: meta.term,
-      definition: meta.definition,
-      equation: meta.equation,
-      category: meta.category,
-      boards: meta.boards,
-      isFlipped: !meta.isFlipped
-    };
-
-    var newImg = await miro.board.createImage({
-      url: png,
-      title: 'Flashcard: ' + meta.term,
-      x: ox,
-      y: oy,
-      width: ow,
-      rotation: orot
+    var png = newSide === 'back' ? await renderBackPNG(meta) : await renderPNG(meta, meta.category);
+    var cur = await miro.board.getById(itemId);
+    var ox = cur.x, oy = cur.y, ow = cur.width, or = cur.rotation || 0;
+    await miro.board.remove(cur);
+    var nm = { term: meta.term, definition: meta.definition, equation: meta.equation,
+      category: meta.category, boards: meta.boards, isFlipped: !meta.isFlipped };
+    var ni = await miro.board.createImage({
+      url: png, title: 'Flashcard: ' + meta.term,
+      x: ox, y: oy, width: ow, rotation: or
     });
+    await ni.setMetadata('pp-flashcard', nm);
+    flipTargetId = ni.id; flipTargetMeta = nm;
+    toast('Flipped to ' + (nm.isFlipped ? 'back' : 'front'));
+  } catch(e) { console.error(e); toast('Flip failed'); }
+  finally { isFlipping = false; }
+}
 
-    await newImg.setMetadata('pp-flashcard', newMeta);
-
-    // 5. Update local state
-    flipTargetId = newImg.id;
-    flipTargetMeta = newMeta;
-    var sideLabel = newMeta.isFlipped ? 'Back' : 'Front';
-    flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + sideLabel + ')</span>';
-    toast('Flipped to ' + sideLabel.toLowerCase());
-  } catch (err) {
-    console.error('Flip error:', err);
-    toast('Flip failed: ' + (err.message || err));
-  } finally {
-    isFlipping = false;
-    flipBtn.disabled = false;
-    flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flip Card';
-  }
+/* ═══════════════════════════════════════════════════════════
+   CREATE CARD
+   ═══════════════════════════════════════════════════════════ */
+document.getElementById('createBtn').addEventListener('click', function() {
+  var term = document.getElementById('createTerm').value.trim();
+  var def = document.getElementById('createDef').value.trim();
+  var eq = ceq.value.trim();
+  var cat = document.getElementById('createCat').value.trim();
+  if (!term) { toast('Enter a term'); return; }
+  if (!def) { toast('Enter a definition'); return; }
+  var boards = [];
+  document.querySelectorAll('#createBoards .bcheck').forEach(function(l) {
+    if (l.querySelector('input').checked) boards.push(l.textContent.trim());
+  });
+  addCustom([{ term: term, definition: def, equation: eq, category: cat || 'My Cards', boards: boards.join(' ') }]);
+  document.getElementById('createTerm').value = '';
+  document.getElementById('createDef').value = '';
+  ceq.value = ''; document.getElementById('createCat').value = '';
+  cep.innerHTML = '<span class="eq-ph">Equation preview</span>';
+  buildLibrary(); switchTab('library'); toast('Card added');
 });
 
-/* ── Selection listener ────────────────────────────── */
-miro.board.ui.on('selection:update', async function(event) {
-  if (isFlipping) return;  // Skip all selection events during flip
+/* ═══════════════════════════════════════════════════════════
+   IMPORT
+   ═══════════════════════════════════════════════════════════ */
+var ia = document.getElementById('importArea');
+var ic = document.getElementById('importCount');
+var ib = document.getElementById('importBtn');
 
-  var items = Array.isArray(event) ? event : (event.items || []);
+function parseImport() {
+  var t = ia.value.trim();
+  if (!t) { ic.textContent = ''; ib.disabled = true; return []; }
+  var lines = t.split('\n').filter(function(l) { return l.trim(); });
+  var cards = [];
+  lines.forEach(function(l) {
+    var p = l.split('\t');
+    if (p.length < 2) p = l.split(';');
+    if (p.length >= 2) cards.push({ term: p[0].trim(), definition: p[1].trim(), equation: p[2] ? p[2].trim() : '' });
+  });
+  ic.textContent = cards.length ? cards.length + ' card' + (cards.length > 1 ? 's' : '') + ' detected' : 'No cards found (tab or ; separator)';
+  ib.disabled = !cards.length;
+  return cards;
+}
+ia.addEventListener('input', parseImport);
 
-  // Don't hide if the selected item is our current flip target
-  if (items.length === 1 && flipTargetId && items[0].id === flipTargetId) return;
-
-  hideFlipBar();
-  if (items.length !== 1) return;
-
-  try {
-    var fullItem = await miro.board.getById(items[0].id);
-    if (!fullItem || fullItem.type !== 'image') return;
-    var meta = await fullItem.getMetadata('pp-flashcard');
-    if (meta && meta.term) {
-      showFlipBar(fullItem, meta);
-    }
-  } catch (e) {}
+ib.addEventListener('click', function() {
+  var cards = parseImport();
+  if (!cards.length) return;
+  var cat = document.getElementById('importCat').value.trim() || 'Imported';
+  var boards = [];
+  document.querySelectorAll('#importBoards .bcheck').forEach(function(l) {
+    if (l.querySelector('input').checked) boards.push(l.textContent.trim());
+  });
+  var bs = boards.join(' ');
+  cards.forEach(function(c) { c.category = cat; c.boards = bs; });
+  addCustom(cards);
+  ia.value = ''; ic.textContent = ''; ib.disabled = true;
+  buildLibrary(); switchTab('library');
+  toast('Imported ' + cards.length + ' card' + (cards.length > 1 ? 's' : ''));
 });
 
-/* ── Check initial selection on panel open ─────────── */
-(async function checkInitialSelection() {
-  try {
-    var items = await miro.board.getSelection();
-    if (items.length === 1 && items[0].type === 'image') {
-      var meta = await items[0].getMetadata('pp-flashcard');
-      if (meta && meta.term) {
-        showFlipBar(items[0], meta);
-      }
-    }
-  } catch (e) {}
-})();
+/* ═══════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════ */
+function init() {
+  if (typeof katex !== 'undefined') buildLibrary();
+  else setTimeout(init, 100);
+}
+init();
 </script>
-
 </body>
 </html>
