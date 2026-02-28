@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PP Ruler</title>
+  <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+  <style>
+    :root {
+      --bg: #f5f5fa;
+      --surface: #ffffff;
+      --border: #d4d4e0;
+      --text: #1e1e2e;
+      --muted: #64748b;
+      --purple: #7C3AED;
+    }
+
+    [data-theme="dark"] {
+      --bg: #1e1e2e;
+      --surface: #26263a;
+      --border: #38385a;
+      --text: #e2e2f0;
+      --muted: #888aaa;
+      --purple: #a78bfa;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      width: 280px;
+      min-height: 420px;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      opacity: 0.85;
+    }
+
+    .theme-toggle:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Content */
+    .content {
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* Canvas preview */
+    .canvas-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #rulerCanvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Length selector */
+    .length-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .length-btn {
+      flex: 1;
+      padding: 8px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .length-btn:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .length-btn.active {
+      background: var(--purple);
+      color: #fff;
+      border-color: var(--purple);
+    }
+
+    /* Place button */
+    .place-btn {
+      width: 100%;
+      padding: 11px 0;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s ease;
+    }
+
+    .place-btn:hover {
+      opacity: 0.9;
+    }
+
+    .place-btn:active {
+      opacity: 0.8;
+    }
+
+    .place-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Status */
+    .status {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="20" height="20">
+        <rect width="64" height="64" rx="12" fill="#1a1a2e"/>
+        <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-size="36" fill="#a78bfa">&#x1D453;</text>
+      </svg>
+      <span class="header-title">Physics Pathway</span>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme"></button>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Preview -->
+    <div>
+      <div class="section-label">Preview</div>
+      <div class="canvas-wrap">
+        <canvas id="rulerCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Length -->
+    <div>
+      <div class="section-label">Length</div>
+      <div class="length-group">
+        <button class="length-btn" data-mm="150">15 cm</button>
+        <button class="length-btn" data-mm="200">20 cm</button>
+        <button class="length-btn active" data-mm="300">30 cm</button>
+      </div>
+    </div>
+
+    <!-- Place -->
+    <button class="place-btn" id="placeBtn">Place on Board</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // ── State ──
+    let selectedMM = 300;
+
+    // ── Theme ──
+    const themeBtn = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('pp-ruler-theme');
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeBtn.textContent = '\u2600\uFE0F';
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeBtn.textContent = '\uD83C\uDF19';
+      }
+      localStorage.setItem('pp-ruler-theme', theme);
+    }
+
+    applyTheme(saved || 'light');
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // ── Preview Ruler Drawing ──
+    const PREVIEW_PX_PER_MM = 1.7;
+    const RULER_H = 52;
+
+    function drawRuler(canvasEl, rulerMM, pxPerMM, hiResScale) {
+      const rW = rulerMM * pxPerMM + 24;
+      const rH = RULER_H;
+      canvasEl.width = Math.round(rW * hiResScale);
+      canvasEl.height = Math.round(rH * hiResScale);
+      const ctx = canvasEl.getContext('2d');
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      ctx.save();
+      ctx.scale(hiResScale, hiResScale);
+
+      const bodyX = 12;
+
+      // Dark glass body
+      ctx.beginPath();
+      ctx.roundRect(bodyX, 2, rulerMM * pxPerMM, rH - 4, 8);
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.6)';
+      ctx.fill();
+
+      // Purple highlight top edge
+      const highlight = ctx.createLinearGradient(0, 2, 0, 16);
+      highlight.addColorStop(0, 'rgba(168, 85, 247, 0.15)');
+      highlight.addColorStop(1, 'rgba(168, 85, 247, 0)');
+      ctx.beginPath();
+      ctx.roundRect(bodyX, 2, rulerMM * pxPerMM, 14, [8, 8, 0, 0]);
+      ctx.fillStyle = highlight;
+      ctx.fill();
+
+      // Border
+      ctx.beginPath();
+      ctx.roundRect(bodyX, 2, rulerMM * pxPerMM, rH - 4, 8);
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Guide line
+      ctx.beginPath();
+      ctx.moveTo(bodyX, 26);
+      ctx.lineTo(bodyX + rulerMM * pxPerMM, 26);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Tick marks
+      for (let mm = 0; mm <= rulerMM; mm++) {
+        const x = bodyX + mm * pxPerMM;
+        const isCm = mm % 10 === 0;
+        const isFive = mm % 5 === 0;
+        const tickH = isCm ? 16 : isFive ? 10 : 6;
+        const tcA = isCm ? 'rgba(255,255,255,0.9)' : isFive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.3)';
+        const lw = isCm ? 1.2 : 0.8;
+
+        ctx.beginPath();
+        ctx.moveTo(x, 2);
+        ctx.lineTo(x, 2 + tickH);
+        ctx.strokeStyle = tcA;
+        ctx.lineWidth = lw;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x, rH - 2);
+        ctx.lineTo(x, rH - 2 - tickH * 0.6);
+        ctx.strokeStyle = tcA;
+        ctx.lineWidth = lw;
+        ctx.stroke();
+
+        if (isCm && mm > 0) {
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = (mm % 50 === 0 ? '600' : '400') + ' 10px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(mm / 10), x, 26 + 14);
+        }
+      }
+
+      // CM label
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.8)';
+      ctx.font = "500 9px -apple-system, sans-serif";
+      ctx.textAlign = 'left';
+      ctx.fillText('CM', bodyX + 6, rH - 8);
+
+      // Logo watermark
+      const logoX = bodyX + rulerMM * pxPerMM - 100;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.arc(logoX, rH / 2, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#a855f7';
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.72)';
+      ctx.font = "600 9px -apple-system, sans-serif";
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Physics Pathway', logoX + 9, rH / 2);
+      ctx.globalAlpha = 1;
+
+      ctx.restore();
+    }
+
+    function updatePreview() {
+      // For preview, scale down longer rulers to fit the 260px panel width
+      let previewMM = selectedMM;
+      let previewPx = PREVIEW_PX_PER_MM;
+      // Ensure the preview fits within ~260px: (mm * px + 24) <= 260
+      const maxW = 258;
+      if (previewMM * previewPx + 24 > maxW) {
+        previewPx = (maxW - 24) / previewMM;
+      }
+      const canvas = document.getElementById('rulerCanvas');
+      drawRuler(canvas, previewMM, previewPx, 2);
+      // CSS display size
+      canvas.style.width = Math.round(previewMM * previewPx + 24) + 'px';
+      canvas.style.height = Math.round(RULER_H) + 'px';
+    }
+
+    // ── Full-Resolution Ruler for Board ──
+    function renderFullRuler() {
+      const fullMM = selectedMM;
+      const PX = 3.78;
+      const offCanvas = document.createElement('canvas');
+      drawRuler(offCanvas, fullMM, PX, 3);
+      return offCanvas.toDataURL('image/png');
+    }
+
+    // ── Length Buttons ──
+    const lengthBtns = document.querySelectorAll('.length-btn');
+    lengthBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        lengthBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedMM = parseInt(btn.getAttribute('data-mm'));
+        updatePreview();
+      });
+    });
+
+    // ── Place on Board ──
+    const placeBtn = document.getElementById('placeBtn');
+    const statusEl = document.getElementById('status');
+
+    placeBtn.addEventListener('click', async () => {
+      placeBtn.disabled = true;
+      statusEl.textContent = 'Rendering ruler...';
+
+      try {
+        const png = renderFullRuler();
+
+        const vp = await miro.board.viewport.get();
+        const x = vp.x + 0.5 * vp.width;
+        const y = vp.y + 0.5 * vp.height;
+
+        statusEl.textContent = 'Placing on board...';
+
+        const img = await miro.board.createImage({
+          url: png,
+          title: 'PP Ruler',
+          x: x,
+          y: y,
+          width: 500
+        });
+
+        await img.setMetadata('pp-ruler', { length: selectedMM });
+        await miro.board.viewport.zoomTo(img);
+
+        statusEl.textContent = 'Ruler placed!';
+        await miro.board.notifications.showNotification({
+          type: 'info',
+          message: selectedMM / 10 + ' cm ruler placed on board'
+        });
+
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+      } catch (err) {
+        console.error('Place ruler error:', err);
+        statusEl.textContent = 'Error: ' + (err.message || 'Failed to place ruler');
+        setTimeout(() => { statusEl.textContent = ''; }, 4000);
+      } finally {
+        placeBtn.disabled = false;
+      }
+    });
+
+    // ── Init ──
+    updatePreview();
+  </script>
+</body>
+</html>

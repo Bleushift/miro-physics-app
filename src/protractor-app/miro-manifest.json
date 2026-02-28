@@ -1,0 +1,9 @@
+{
+  "name": "PP Protractor",
+  "description": "Place a protractor on the Miro board",
+  "icon": "https://physics-pathway-miro.pages.dev/icon.png",
+  "sdkVersion": "SDK_2",
+  "appType": "panel",
+  "panelDimensions": { "width": 280, "height": 420 },
+  "scopes": ["boards:read", "boards:write"]
+}

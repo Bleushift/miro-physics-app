@@ -494,7 +494,7 @@
       transition: all 0.15s;
     }
     .circuit-item:hover { border-color: var(--teal); background: #1e2e32; }
-    .circuit-item svg { width: 58px; height: 29px; display: block; margin: 0 auto 4px; }
+    .circuit-item svg { width: 58px; height: 29px; display: block; margin: 0 auto 4px; color: #F5F5F5; }
     .circuit-item .cname { font-size: 9px; color: var(--muted); line-height: 1.2; }
 
     /* ── Reveal size presets ──────────────────── */
@@ -550,6 +550,50 @@
     [data-theme="light"] .eq-pill.edexcel { background: rgba(59,130,246,0.12); color: #2563eb; }
     [data-theme="light"] .eq-pill.ocr { background: rgba(16,185,129,0.12); color: #059669; }
     [data-theme="light"] .lib-item .eq-katex .katex { color: var(--teal); }
+
+    /* ── Flashcard mode ─────────────────────────── */
+    .fc-toggle {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 10px; padding: 8px 0;
+      border-top: 1px solid var(--border);
+    }
+    .fc-toggle input[type="checkbox"] { accent-color: var(--purple); width: 16px; height: 16px; cursor: pointer; }
+    .fc-toggle label { margin: 0; text-transform: none; font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; }
+    .fc-fields { display: none; margin-top: 6px; }
+    .fc-fields.visible { display: block; }
+    .fc-fields textarea {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      min-height: 52px;
+      resize: vertical;
+    }
+    .fc-boards { display: flex; gap: 8px; margin-top: 6px; }
+    .fc-boards label {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--muted);
+      cursor: pointer; margin: 0;
+    }
+    .fc-boards input[type="checkbox"] { accent-color: var(--purple); width: 14px; height: 14px; cursor: pointer; }
+    .fc-boards .aqa-label { color: #a78bfa; }
+    .fc-boards .ocr-label { color: #fb923c; }
+    .fc-boards .edx-label { color: #38bdf8; }
+
+    /* ── Flip bar (floating) ── */
+    #flip-bar {
+      display: none;
+      position: fixed;
+      bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--purple);
+      border-radius: 20px;
+      padding: 6px 16px;
+      z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      align-items: center; gap: 8px;
+    }
+    #flip-bar.visible { display: flex; }
+    #flip-bar span { font-size: 11px; color: var(--muted); }
+    [data-theme="light"] #flip-bar { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -661,11 +705,39 @@
       <button class="btn btn-ghost" id="btn-place-update" style="display:none">Update</button>
     </div>
 
+    <!-- ── Flashcard Mode ── -->
+    <div class="fc-toggle">
+      <input type="checkbox" id="fc-mode" />
+      <label for="fc-mode">Create as Flashcard</label>
+    </div>
+    <div class="fc-fields" id="fc-fields">
+      <label>Term (from equation above)</label>
+      <input type="text" id="fc-term" placeholder="e.g. Ohm's Law, Capacitance" style="font-family:-apple-system,sans-serif;font-size:13px" />
+      <label>Definition</label>
+      <textarea id="fc-definition" rows="3" placeholder="The current through a conductor is directly proportional to..." style="font-family:-apple-system,sans-serif;font-size:13px"></textarea>
+      <label>Category</label>
+      <input type="text" id="fc-category" placeholder="e.g. Electricity, Waves, Nuclear" style="font-family:-apple-system,sans-serif;font-size:13px" />
+      <label>Exam boards</label>
+      <div class="fc-boards">
+        <label class="aqa-label"><input type="checkbox" id="fc-aqa" checked /> AQA</label>
+        <label class="edx-label"><input type="checkbox" id="fc-edx" checked /> Edexcel</label>
+        <label class="ocr-label"><input type="checkbox" id="fc-ocr" checked /> OCR</label>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-primary btn-full" id="btn-place-flashcard">Place Flashcard on board</button>
+    </div>
+
     <div class="spacer"></div>
     <label>Selection</label>
     <button class="btn btn-ghost btn-full" id="btn-load-selection">↑ Load selected equation for editing</button>
 
   </div>
+</div>
+
+<!-- Floating flip bar (shown when a flashcard is selected on the board) -->
+<div id="flip-bar">
+  <span>Flashcard selected</span>
+  <button class="btn btn-primary btn-sm" id="btn-flip">↻ Flip</button>
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -2324,57 +2396,57 @@ function getBoards(tags) {
 // ══════════════════════════════════════════════════════════════
 
 const CIRCUIT_COMPONENTS = [
-  // ── Sources ──
+  // ── Sources ── (from circuit-diagram.org)
   { name: 'Cell', id: 'cell', category: 'Sources',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="50" y2="30" stroke-width="2.5"/><line x1="50" y1="8" x2="50" y2="52" stroke-width="3"/><line x1="58" y1="17" x2="58" y2="43" stroke-width="2"/><line x1="58" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="52" y2="30"/><line x1="52" y1="10" x2="52" y2="50"/><line x1="60" y1="18" x2="60" y2="42" stroke-width="3"/><line x1="60" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'Battery', id: 'battery', category: 'Sources',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="34" y2="30" stroke-width="2.5"/><line x1="34" y1="8" x2="34" y2="52" stroke-width="3"/><line x1="42" y1="17" x2="42" y2="43" stroke-width="2"/><line x1="50" y1="8" x2="50" y2="52" stroke-width="3"/><line x1="58" y1="17" x2="58" y2="43" stroke-width="2"/><line x1="66" y1="8" x2="66" y2="52" stroke-width="3"/><line x1="74" y1="17" x2="74" y2="43" stroke-width="2"/><line x1="74" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="40" y2="30"/><line x1="40" y1="10" x2="40" y2="50"/><line x1="48" y1="18" x2="48" y2="42"/><line x1="56" y1="10" x2="56" y2="50"/><line x1="64" y1="18" x2="64" y2="42"/><line x1="72" y1="10" x2="72" y2="50"/><line x1="80" y1="18" x2="80" y2="42"/><line x1="80" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'AC Supply', id: 'ac-source', category: 'Sources',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><path d="M49 30 Q54 18, 60 30 Q66 42, 71 30" stroke-width="1.8"/><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="44" y2="30"/><ellipse cx="60" cy="30" rx="16" ry="16"/><path d="M 51,30 A 5,5 180 1 1 60,30 A 5,5 180 1 0 69,30"/><line x1="76" y1="30" x2="120" y2="30"/></g></svg>' },
 
-  // ── Resistive ──
+  // ── Resistive ── (from circuit-diagram.org)
   { name: 'Resistor', id: 'resistor', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="35" y2="30"/><rect x="35" y="20" width="50" height="20"/><line x1="85" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'Variable Resistor', id: 'variable-resistor', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="40" y1="52" x2="80" y2="12" stroke-width="1.8"/><polygon points="82,8 72,15 77,20" fill="currentColor" stroke="none"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="35" y2="30"/><rect x="35" y="20" width="50" height="20"/><line x1="85" y1="30" x2="120" y2="30"/><path d="M 90,47 L 30,10 M 30,16 L 30,10 L 36,10"/></g></svg>' },
   { name: 'Potentiometer', id: 'potentiometer', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="60" y1="3" x2="60" y2="11" stroke-width="2"/><polygon points="60,17 55,10 65,10" fill="currentColor" stroke="none"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="22" x2="35" y2="22"/><rect x="35" y="12" width="50" height="20"/><line x1="85" y1="22" x2="120" y2="22"/><path d="M 54,32 L 60,38 L 66,32 M 60,33 L 60,55"/></g></svg>' },
   { name: 'LDR', id: 'ldr', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="39" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="21" stroke-width="2"/><rect x="47" y="23" width="26" height="14" stroke-width="1.8"/><line x1="81" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="10" y1="10" x2="30" y2="19" stroke-width="1.5"/><polygon points="34,21 27,15 27,22" fill="currentColor" stroke="none"/><line x1="10" y1="22" x2="30" y2="31" stroke-width="1.5"/><polygon points="34,33 27,27 27,34" fill="currentColor" stroke="none"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="40" y2="30"/><rect x="48" y="24" width="24" height="12"/><ellipse cx="60" cy="30" rx="20" ry="20"/><line x1="80" y1="30" x2="120" y2="30"/><path d="M 30,8 L 38,16 M 39,17 L 37,13 L 35,15 L 39,17 L 37,13"/><path d="M 24,14 L 32,22 M 33,23 L 31,19 L 29,21 L 33,23 L 31,19"/></g></svg>' },
   { name: 'Thermistor', id: 'thermistor', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="17" width="50" height="26" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="38" y1="48" x2="82" y2="12" stroke-width="1.8"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="35" y2="30"/><rect x="35" y="20" width="50" height="20"/><line x1="85" y1="30" x2="120" y2="30"/><path d="M 35,46 L 48,46 L 78,8"/></g></svg>' },
   { name: 'Fuse', id: 'fuse', category: 'Resistive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><rect x="35" y="22" width="50" height="16" stroke-width="2"/><line x1="35" y1="30" x2="85" y2="30" stroke-width="1"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="35" y2="30"/><rect x="35" y="22" width="50" height="16"/><line x1="35" y1="30" x2="85" y2="30"/><line x1="85" y1="30" x2="120" y2="30"/></g></svg>' },
 
-  // ── Reactive ──
+  // ── Reactive ── (from circuit-diagram.org)
   { name: 'Capacitor', id: 'capacitor', category: 'Reactive',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="53" y2="30" stroke-width="2.5"/><line x1="53" y1="8" x2="53" y2="52" stroke-width="2.5"/><line x1="67" y1="8" x2="67" y2="52" stroke-width="2.5"/><line x1="67" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="53" y2="30"/><line x1="53" y1="8" x2="53" y2="52"/><line x1="67" y1="8" x2="67" y2="52"/><line x1="67" y1="30" x2="120" y2="30"/></g></svg>' },
 
-  // ── Output ──
+  // ── Output ── (lamp from circuit-diagram.org; LED, motor, speaker hand-coded)
   { name: 'Lamp', id: 'bulb', category: 'Output',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><line x1="47" y1="17" x2="73" y2="43" stroke-width="1.8"/><line x1="73" y1="17" x2="47" y2="43" stroke-width="1.8"/><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="44" y2="30"/><ellipse cx="60" cy="30" rx="16" ry="16"/><line x1="49" y1="19" x2="71" y2="41"/><line x1="49" y1="41" x2="71" y2="19"/><line x1="76" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'LED', id: 'led', category: 'Output',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><polygon points="40,15 40,45 66,30" fill="currentColor" stroke="currentColor" stroke-width="1.5"/><line x1="66" y1="15" x2="66" y2="45" stroke-width="2.5"/><line x1="66" y1="30" x2="120" y2="30" stroke-width="2.5"/><line x1="70" y1="14" x2="80" y2="6" stroke-width="1.5"/><polygon points="83,4 77,5 79,11" fill="currentColor" stroke="none"/><line x1="74" y1="22" x2="84" y2="14" stroke-width="1.5"/><polygon points="87,12 81,13 83,19" fill="currentColor" stroke="none"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="45" y2="30"/><line x1="45" y1="15" x2="45" y2="45"/><path d="M 45,30 L 70,15 L 70,45 L 45,30"/><line x1="70" y1="15" x2="70" y2="45"/><line x1="70" y1="30" x2="120" y2="30"/><path d="M 72,13 L 80,5 M 81,6 L 79,2 L 77,4 L 81,6 L 79,2"/><path d="M 72,21 L 80,13 M 81,14 L 79,10 L 77,12 L 81,14 L 79,10"/></g></svg>' },
   { name: 'Motor', id: 'motor', category: 'Output',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><text x="60" y="37" text-anchor="middle" fill="currentColor" font-family="sans-serif" font-size="22" font-weight="bold" stroke="none">M</text><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="44" y2="30"/><ellipse cx="60" cy="30" rx="16" ry="16"/><text x="60" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-family="Arial" font-size="16" stroke="none">M</text><line x1="76" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'Speaker', id: 'speaker', category: 'Output',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="35" y2="30" stroke-width="2.5"/><line x1="35" y1="30" x2="35" y2="18" stroke-width="2"/><line x1="85" y1="30" x2="85" y2="18" stroke-width="2"/><line x1="85" y1="30" x2="120" y2="30" stroke-width="2.5"/><rect x="35" y="18" width="22" height="24" stroke-width="2"/><polygon points="57,18 85,4 85,56 57,42" fill="none" stroke="currentColor" stroke-width="2"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="35" y2="30"/><rect x="35" y="18" width="22" height="24"/><path d="M 57,18 L 85,4 L 85,56 L 57,42"/><line x1="85" y1="30" x2="120" y2="30"/></g></svg>' },
 
-  // ── Switching ──
+  // ── Switching ── (from circuit-diagram.org)
   { name: 'Switch (open)', id: 'switch-open', category: 'Switching',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="38" x2="38" y2="38" stroke-width="2.5"/><circle cx="41" cy="38" r="3.5" fill="currentColor" stroke="none"/><line x1="43" y1="36" x2="75" y2="16" stroke-width="2.5"/><circle cx="79" cy="38" r="3.5" fill="currentColor" stroke="none"/><line x1="82" y1="38" x2="120" y2="38" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="38" y2="30"/><ellipse cx="42" cy="30" rx="3" ry="3"/><line x1="45" y1="28" x2="76" y2="18"/><ellipse cx="78" cy="30" rx="3" ry="3"/><line x1="81" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'Switch (closed)', id: 'switch-closed', category: 'Switching',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="38" x2="38" y2="38" stroke-width="2.5"/><circle cx="41" cy="38" r="3.5" fill="currentColor" stroke="none"/><line x1="43" y1="38" x2="77" y2="38" stroke-width="2.5"/><circle cx="79" cy="38" r="3.5" fill="currentColor" stroke="none"/><line x1="82" y1="38" x2="120" y2="38" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="38" y2="30"/><ellipse cx="42" cy="30" rx="3" ry="3"/><line x1="45" y1="30" x2="75" y2="30"/><ellipse cx="78" cy="30" rx="3" ry="3"/><line x1="81" y1="30" x2="120" y2="30"/></g></svg>' },
 
-  // ── Measurement ──
+  // ── Measurement ── (from circuit-diagram.org)
   { name: 'Ammeter', id: 'ammeter', category: 'Measurement',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><text x="60" y="37" text-anchor="middle" fill="currentColor" font-family="sans-serif" font-size="22" font-weight="bold" stroke="none">A</text><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="44" y2="30"/><ellipse cx="60" cy="30" rx="16" ry="16"/><text x="60" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-family="Arial" font-size="16" stroke="none">A</text><line x1="76" y1="30" x2="120" y2="30"/></g></svg>' },
   { name: 'Voltmeter', id: 'voltmeter', category: 'Measurement',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><circle cx="60" cy="30" r="18" stroke-width="2"/><text x="60" y="37" text-anchor="middle" fill="currentColor" font-family="sans-serif" font-size="22" font-weight="bold" stroke="none">V</text><line x1="78" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="44" y2="30"/><ellipse cx="60" cy="30" rx="16" ry="16"/><text x="60" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-family="Arial" font-size="16" stroke="none">V</text><line x1="76" y1="30" x2="120" y2="30"/></g></svg>' },
 
-  // ── Semiconductor ──
+  // ── Semiconductor ── (diode from circuit-diagram.org; LED above in Output)
   { name: 'Diode', id: 'diode', category: 'Semiconductor',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="0" y1="30" x2="40" y2="30" stroke-width="2.5"/><polygon points="40,15 40,45 66,30" fill="currentColor" stroke="currentColor" stroke-width="1.5"/><line x1="66" y1="15" x2="66" y2="45" stroke-width="2.5"/><line x1="66" y1="30" x2="120" y2="30" stroke-width="2.5"/></g></svg>' },
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><g stroke="currentColor" fill="none" stroke-linecap="square" stroke-width="2"><line x1="0" y1="30" x2="120" y2="30"/><line x1="70" y1="15" x2="70" y2="45"/><path d="M 70,30 L 50,15 L 50,45 L 70,30"/></g></svg>' },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -2388,6 +2460,60 @@ let bgColour       = 'none'; // 'none' = transparent, or hex like '#ffffff'
 let bgRadius       = 8;
 let revealWidth    = 200;
 let revealHeight   = 80;
+
+// ── Undo / Redo ──
+const undoStack = [];
+const redoStack = [];
+let undoDebounceTimer = null;
+
+function saveUndo() {
+  const input = document.getElementById('latex-input');
+  const state = { value: input.value, cursor: input.selectionStart, colour: selectedColour };
+  // Don't push duplicate consecutive states
+  if (undoStack.length > 0) {
+    const prev = undoStack[undoStack.length - 1];
+    if (prev.value === state.value && prev.colour === state.colour) return;
+  }
+  undoStack.push(state);
+  if (undoStack.length > 100) undoStack.shift();
+  redoStack.length = 0; // Clear redo on new action
+}
+
+function undo() {
+  if (undoStack.length === 0) return;
+  const input = document.getElementById('latex-input');
+  // Push current state to redo
+  redoStack.push({ value: input.value, cursor: input.selectionStart, colour: selectedColour });
+  const state = undoStack.pop();
+  input.value = state.value;
+  input.setSelectionRange(state.cursor, state.cursor);
+  if (state.colour !== selectedColour) {
+    selectedColour = state.colour;
+    document.getElementById('custom-colour').value = selectedColour;
+    document.querySelectorAll('.colour-swatch').forEach(s => {
+      s.classList.toggle('selected', s.dataset.colour === selectedColour);
+    });
+  }
+  updatePreview();
+}
+
+function redo() {
+  if (redoStack.length === 0) return;
+  const input = document.getElementById('latex-input');
+  // Push current state to undo
+  undoStack.push({ value: input.value, cursor: input.selectionStart, colour: selectedColour });
+  const state = redoStack.pop();
+  input.value = state.value;
+  input.setSelectionRange(state.cursor, state.cursor);
+  if (state.colour !== selectedColour) {
+    selectedColour = state.colour;
+    document.getElementById('custom-colour').value = selectedColour;
+    document.querySelectorAll('.colour-swatch').forEach(s => {
+      s.classList.toggle('selected', s.dataset.colour === selectedColour);
+    });
+  }
+  updatePreview();
+}
 
 // ══════════════════════════════════════════════════════════════
 // HELPERS
@@ -2433,6 +2559,9 @@ function updatePreview() {
 document.getElementById('latex-input').addEventListener('input', () => {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(updatePreview, 200);
+  // Debounced undo save for normal typing (coalesce rapid keystrokes)
+  clearTimeout(undoDebounceTimer);
+  undoDebounceTimer = setTimeout(saveUndo, 400);
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -2465,6 +2594,7 @@ document.querySelectorAll('#quick-latex button').forEach(btn => {
       cursorPos = start + insert.length;
     }
 
+    saveUndo();
     input.value = text.substring(0, start) + insert + text.substring(end);
     input.focus();
     input.setSelectionRange(cursorPos, cursorPos);
@@ -2478,6 +2608,7 @@ document.querySelectorAll('#quick-latex button').forEach(btn => {
 
 document.querySelectorAll('.colour-swatch').forEach(swatch => {
   swatch.addEventListener('click', () => {
+    saveUndo();
     document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
     swatch.classList.add('selected');
     selectedColour = swatch.dataset.colour;
@@ -2487,6 +2618,7 @@ document.querySelectorAll('.colour-swatch').forEach(swatch => {
 });
 
 document.getElementById('custom-colour').addEventListener('input', e => {
+  saveUndo();
   selectedColour = e.target.value;
   document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
   updatePreview();
@@ -2513,6 +2645,7 @@ document.querySelectorAll('.text-colour-btn').forEach(btn => {
     const after = input.value.substring(end);
     const colour = btn.dataset.tc;
 
+    saveUndo();
     input.value = before + `\\textcolor{${colour}}{${selected}}` + after;
     // Place cursor after the inserted text
     const newPos = before.length + `\\textcolor{${colour}}{${selected}}`.length;
@@ -2525,6 +2658,7 @@ document.querySelectorAll('.text-colour-btn').forEach(btn => {
 document.getElementById('btn-remove-colour').addEventListener('click', () => {
   const input = document.getElementById('latex-input');
   // Remove \textcolor{colour}{content} — handles nested braces via balanced matching
+  saveUndo();
   input.value = input.value.replace(/\\textcolor\{[^}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
   input.focus();
   updatePreview();
@@ -2684,6 +2818,168 @@ document.getElementById('btn-place').addEventListener('click', () => handlePlace
 document.getElementById('btn-place-update').addEventListener('click', () => handlePlace(true));
 
 // ══════════════════════════════════════════════════════════════
+// FLASHCARD MODE
+// ══════════════════════════════════════════════════════════════
+
+// Toggle flashcard fields visibility
+document.getElementById('fc-mode').addEventListener('change', (e) => {
+  document.getElementById('fc-fields').classList.toggle('visible', e.target.checked);
+  // Hide normal place button when flashcard mode is on (still show Update for editing)
+  document.getElementById('btn-place').style.display = e.target.checked && !editingItemId ? 'none' : '';
+});
+
+function getFlashcardThemeColors() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  return isLight
+    ? { bg: '#F8FAFC', text: '#1E293B', muted: '#64748B', accent: '#7C3AED', accentLight: '#EDE9FE', border: '#E2E8F0',
+        aqaC: '#7C3AED', edxC: '#2563EB', ocrC: '#EA580C', pillBg: '#F1F5F9', eqBg: '#F1F5F9', eqBorder: '#E2E8F0' }
+    : { bg: '#1E1E2E', text: '#E2E2F0', muted: '#888AAA', accent: '#A78BFA', accentLight: '#2A1F4E', border: '#38385A',
+        aqaC: '#A78BFA', edxC: '#38BDF8', ocrC: '#FB923C', pillBg: '#26263A', eqBg: 'rgba(0,0,0,0.4)', eqBorder: '#38385A' };
+}
+
+async function renderFlashcardFace(side, data) {
+  const c = getFlashcardThemeColors();
+  const container = document.createElement('div');
+  container.style.cssText = `position:absolute;left:-9999px;top:-9999px;width:500px;height:320px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:${c.bg};color:${c.text};border:2px solid ${c.border};`;
+
+  // PP Brand dot
+  const brand = `<div style="position:absolute;top:14px;left:16px;display:flex;align-items:center;gap:6px;">
+    <div style="width:7px;height:7px;border-radius:50%;background:${c.accent};box-shadow:0 0 8px ${c.accent};"></div>
+    <span style="font-size:9px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${c.accent};opacity:0.7;">Physics Pathway</span>
+  </div>`;
+
+  if (side === 'front') {
+    container.innerHTML = `${brand}
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${c.muted};margin-top:10px;">${data.category || ''}</span>
+        <span style="font-size:24px;font-weight:600;letter-spacing:-0.02em;text-align:center;line-height:1.3;">${data.term}</span>
+        <span style="font-size:10px;color:${c.muted};opacity:0.5;position:absolute;bottom:20px;">Select &amp; flip in panel</span>
+      </div>`;
+  } else {
+    // Render equation via KaTeX
+    let eqHtml = '';
+    if (data.equation) {
+      try {
+        const rendered = katex.renderToString(data.equation, { throwOnError: false, displayMode: true });
+        eqHtml = `<div style="background:${c.eqBg};border:1px solid ${c.eqBorder};border-radius:8px;padding:8px 14px;text-align:center;color:${c.text};margin-bottom:10px;">${rendered}</div>`;
+      } catch(e) {
+        eqHtml = `<div style="background:${c.eqBg};border:1px solid ${c.eqBorder};border-radius:8px;padding:8px 14px;text-align:center;font-family:monospace;font-size:13px;color:${c.text};margin-bottom:10px;">${data.equation}</div>`;
+      }
+    }
+
+    // Board pills
+    const pills = (data.boards || []).map(b => {
+      const bColor = b === 'AQA' ? c.aqaC : b === 'Edexcel' ? c.edxC : c.ocrC;
+      return `<span style="font-size:9px;font-weight:600;padding:3px 10px;border-radius:12px;background:${c.pillBg};border:1px solid ${bColor}40;color:${bColor};">${b}</span>`;
+    }).join(' ');
+
+    container.innerHTML = `${brand}
+      <div style="flex:1;display:flex;flex-direction:column;padding:24px;padding-top:36px;justify-content:space-between;">
+        <div>
+          <div style="font-size:12px;font-weight:500;color:${c.muted};border-bottom:1px solid ${c.border};padding-bottom:8px;margin-bottom:10px;">${data.term}</div>
+          <p style="font-size:14px;line-height:1.55;color:${c.accent};margin-bottom:12px;">${data.definition}</p>
+          ${eqHtml}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:6px;">${pills}</div>
+          <span style="font-size:10px;font-weight:700;color:${c.accent};">PP.</span>
+        </div>
+      </div>`;
+  }
+
+  document.body.appendChild(container);
+  try {
+    const canvas = await html2canvas(container, { backgroundColor: null, scale: 3 });
+    return canvas.toDataURL('image/png');
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+async function handlePlaceFlashcard() {
+  const term = document.getElementById('fc-term').value.trim();
+  const definition = document.getElementById('fc-definition').value.trim();
+  const equation = getLatex();
+  const category = document.getElementById('fc-category').value.trim();
+  const boards = [];
+  if (document.getElementById('fc-aqa').checked) boards.push('AQA');
+  if (document.getElementById('fc-edx').checked) boards.push('Edexcel');
+  if (document.getElementById('fc-ocr').checked) boards.push('OCR');
+
+  if (!term) { toast('Enter a term name'); return; }
+  if (!definition) { toast('Enter a definition'); return; }
+
+  const btn = document.getElementById('btn-place-flashcard');
+  btn.disabled = true;
+  btn.textContent = 'Placing…';
+
+  try {
+    const data = { term, definition, equation, category, boards, colour: selectedColour };
+    const png = await renderFlashcardFace('front', data);
+
+    const viewport = await miro.board.viewport.get();
+    const x = viewport.x + 0.5 * viewport.width;
+    const y = viewport.y + 0.5 * viewport.height;
+
+    const img = await miro.board.createImage({ url: png, title: `Flashcard: ${term}`, x, y, width: 500 });
+    await img.setMetadata('pp-flashcard', { ...data, isFlipped: false });
+    await miro.board.viewport.zoomTo(img);
+    toast('Flashcard placed ✓');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Place Flashcard on board';
+  }
+}
+
+document.getElementById('btn-place-flashcard').addEventListener('click', handlePlaceFlashcard);
+
+// ── Flip bar ──
+let flipTargetItem = null;
+
+function showFlipBar(item, meta) {
+  flipTargetItem = item;
+  document.getElementById('flip-bar').classList.add('visible');
+}
+function hideFlipBar() {
+  flipTargetItem = null;
+  document.getElementById('flip-bar').classList.remove('visible');
+}
+
+async function flipFlashcard() {
+  if (!flipTargetItem) return;
+
+  const btn = document.getElementById('btn-flip');
+  btn.disabled = true;
+  btn.textContent = 'Flipping…';
+
+  try {
+    const meta = await flipTargetItem.getMetadata('pp-flashcard');
+    if (!meta) { toast('Not a flashcard'); return; }
+
+    const newSide = meta.isFlipped ? 'front' : 'back';
+    const png = await renderFlashcardFace(newSide, meta);
+
+    const { x, y, width, rotation } = flipTargetItem;
+    await miro.board.remove(flipTargetItem);
+
+    const newImg = await miro.board.createImage({ url: png, title: `Flashcard: ${meta.term}`, x, y, width, rotation });
+    await newImg.setMetadata('pp-flashcard', { ...meta, isFlipped: !meta.isFlipped });
+
+    flipTargetItem = newImg;
+    toast(meta.isFlipped ? 'Showing front' : 'Showing back');
+  } catch(e) {
+    toast('Flip error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Flip';
+  }
+}
+
+document.getElementById('btn-flip').addEventListener('click', flipFlashcard);
+
+// ══════════════════════════════════════════════════════════════
 // QUICK LATEX ENGINE (Obsidian-style auto-complete)
 // ══════════════════════════════════════════════════════════════
 
@@ -2697,6 +2993,20 @@ document.getElementById('latex-input').addEventListener('keydown', (e) => {
   const val = input.value;
   const before = val.substring(0, pos);
   const after = val.substring(pos);
+
+  // ── Cmd+Z → undo ──
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z') {
+    e.preventDefault();
+    undo();
+    return;
+  }
+
+  // ── Cmd+Shift+Z → redo ──
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+    e.preventDefault();
+    redo();
+    return;
+  }
 
   // ── Cmd+Enter → place on board ──
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -2730,6 +3040,7 @@ document.getElementById('latex-input').addEventListener('keydown', (e) => {
     const charAfter = val[pos];
     if (BRACKET_PAIRS[charBefore] === charAfter) {
       e.preventDefault();
+      saveUndo();
       input.value = val.substring(0, pos - 1) + val.substring(pos + 1);
       input.setSelectionRange(pos - 1, pos - 1);
       updatePreview();
@@ -2744,6 +3055,7 @@ document.getElementById('latex-input').addEventListener('keydown', (e) => {
     e.preventDefault();
     const open = e.key;
     const close = BRACKET_PAIRS[open];
+    saveUndo();
     input.value = before + open + close + after;
     input.setSelectionRange(pos + 1, pos + 1);
     updatePreview();
@@ -2779,6 +3091,7 @@ document.getElementById('latex-input').addEventListener('beforeinput', (e) => {
     if (den.startsWith('(') && den.endsWith(')')) den = den.slice(1, -1);
     const replacement = `\\frac{${num}}{${den}}`;
     const start = pos - fracMatch[0].length;
+    saveUndo();
     input.value = val.substring(0, start) + replacement + val.substring(pos);
     const newPos = start + replacement.length;
     input.setSelectionRange(newPos, newPos);
@@ -2793,6 +3106,7 @@ document.getElementById('latex-input').addEventListener('beforeinput', (e) => {
     const expr = supMatch[1];
     const start = pos - expr.length;
     const wrapped = `{${expr}} `;
+    saveUndo();
     input.value = val.substring(0, start) + wrapped + val.substring(pos);
     const newPos = start + wrapped.length;
     input.setSelectionRange(newPos, newPos);
@@ -2807,6 +3121,7 @@ document.getElementById('latex-input').addEventListener('beforeinput', (e) => {
     const expr = subMatch[1];
     const start = pos - expr.length;
     const wrapped = `{${expr}} `;
+    saveUndo();
     input.value = val.substring(0, start) + wrapped + val.substring(pos);
     const newPos = start + wrapped.length;
     input.setSelectionRange(newPos, newPos);
@@ -2826,6 +3141,7 @@ function toggleAligned() {
       .replace(/\s*\\end\{aligned\}/g, '')
       .replace(/\s*&=/g, ' =')
       .replace(/\s*\\\\\s*/g, '\n');
+    saveUndo();
     input.value = val;
     updatePreview();
     toast('Alignment removed');
@@ -2846,6 +3162,7 @@ function toggleAligned() {
     return line.replace(/(?<!&)(?<!\\)(?<![<>!])=/, '&=');
   });
 
+  saveUndo();
   input.value = `\\begin{aligned}\n${lines.join(' \\\\\\\\\n')}\n\\end{aligned}`;
   updatePreview();
   toast('Aligned by = ✓');
@@ -2869,6 +3186,7 @@ document.getElementById('btn-load-selection').addEventListener('click', async ()
     }
 
     // Load into editor
+    saveUndo();
     document.getElementById('latex-input').value = allMeta.latex;
     if (allMeta.colour) {
       selectedColour = allMeta.colour;
@@ -3197,10 +3515,19 @@ function buildExternalSimsList() {
 // CIRCUIT DIAGRAM TOOL
 // ══════════════════════════════════════════════════════════════
 
+/** Detect stroke colour for Miro board based on panel theme.
+ *  Light panel → light board → black strokes.
+ *  Dark panel  → dark board  → white strokes. */
+function getBoardStrokeColor() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  return isLight ? '#000000' : '#F5F5F5';
+}
+
 /** Convert inline SVG string to a PNG data URL via native canvas */
 function renderSvgToPng(svgString, width, height) {
   return new Promise((resolve, reject) => {
-    const coloredSvg = svgString.replace(/currentColor/g, '#000000');
+    const color = getBoardStrokeColor();
+    const coloredSvg = svgString.replace(/currentColor/g, color);
     const blob = new Blob([coloredSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const img = new Image();
@@ -3297,7 +3624,7 @@ document.getElementById('btn-connect-wire').addEventListener('click', async () =
       start: { item: startItem.id },
       end: { item: endItem.id },
       style: {
-        strokeColor: '#ffffff',
+        strokeColor: getBoardStrokeColor(),
         strokeWidth: 2,
         startStrokeCap: 'none',
         endStrokeCap: 'none',
@@ -3479,11 +3806,15 @@ async function init() {
   buildCircuitGrid();
   updateRevealCount();
 
-  // Auto-load equation into editor when selected on board
+  // Auto-load equation / detect flashcard when selected on board
   try {
     miro.board.ui.on('selection:update', async (event) => {
       // event may be { items: [...] } or the array directly
       const items = Array.isArray(event) ? event : (event.items || []);
+
+      // Hide flip bar by default on any selection change
+      hideFlipBar();
+
       if (items.length !== 1) return;
 
       // Fetch the full item object (event items may be lightweight stubs)
@@ -3493,6 +3824,16 @@ async function init() {
       } catch(e) { return; }
       if (!fullItem || fullItem.type !== 'image') return;
 
+      // Check for flashcard first
+      try {
+        const fcMeta = await fullItem.getMetadata('pp-flashcard');
+        if (fcMeta && fcMeta.term) {
+          showFlipBar(fullItem, fcMeta);
+          return; // Don't also load as equation
+        }
+      } catch(e) {}
+
+      // Check for LaTeX equation
       let meta;
       try {
         meta = await fullItem.getMetadata('pp-latex');

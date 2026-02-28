@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PP Protractor</title>
+<script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+<style>
+  :root {
+    --bg: #f5f5fa;
+    --surface: #ffffff;
+    --border: #d4d4e0;
+    --text: #1e1e2e;
+    --muted: #64748b;
+    --purple: #7C3AED;
+  }
+
+  [data-theme="dark"] {
+    --bg: #1e1e2e;
+    --surface: #26263a;
+    --border: #38385a;
+    --text: #e2e2f0;
+    --muted: #888aaa;
+    --purple: #a78bfa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--text);
+    width: 280px;
+    min-height: 420px;
+    overflow-x: hidden;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-left svg {
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .theme-toggle:hover {
+    background: var(--surface);
+    border-color: var(--purple);
+  }
+
+  .content {
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .canvas-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #protoCanvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    align-self: flex-start;
+    margin-left: 4px;
+  }
+
+  .place-btn {
+    width: 100%;
+    padding: 10px 0;
+    background: var(--purple);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: -0.01em;
+  }
+
+  .place-btn:hover {
+    opacity: 0.92;
+  }
+
+  .place-btn:active {
+    transform: scale(0.98);
+  }
+
+  .place-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="20" height="20">
+      <rect width="64" height="64" rx="12" fill="#1a1a2e"/>
+      <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-size="36" fill="#a78bfa">&#x1D453;</text>
+    </svg>
+    <span class="header-title">Physics Pathway</span>
+  </div>
+  <button class="theme-toggle" id="themeBtn" title="Toggle theme">&#x2600;&#xFE0F;</button>
+</div>
+
+<div class="content">
+  <span class="label">Preview</span>
+  <div class="canvas-wrap">
+    <canvas id="protoCanvas"></canvas>
+  </div>
+  <button class="place-btn" id="placeBtn">Place on Board</button>
+  <p class="footer-note">Drops a high-res protractor image<br>at the centre of your viewport.</p>
+</div>
+
+<script>
+/* ── Theme ─────────────────────────────────────────── */
+const themeBtn = document.getElementById('themeBtn');
+const STORAGE_KEY = 'pp-protractor-theme';
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeBtn.textContent = theme === 'dark' ? '\u{1F319}' : '\u{2600}\u{FE0F}';
+  localStorage.setItem(STORAGE_KEY, theme);
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY) || 'light';
+  applyTheme(saved);
+})();
+
+themeBtn.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+/* ── Protractor Drawing ────────────────────────────── */
+const PREVIEW_R = 120;
+
+function drawProtractorOnCtx(ctx, R, pad, scale) {
+  const fullW = (R + pad) * 2;
+  const fullH = R + pad + (R <= 120 ? 28 : 36);
+  const cx = fullW / 2;
+  const cy = R + pad;
+
+  ctx.clearRect(0, 0, fullW * scale, fullH * scale);
+  ctx.save();
+  ctx.scale(scale, scale);
+
+  // Dark glass body
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 0);
+  ctx.lineTo(cx + R, cy + 24);
+  ctx.lineTo(cx - R, cy + 24);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(20, 20, 20, 0.6)';
+  ctx.fill();
+
+  // Purple highlight
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 0);
+  ctx.arc(cx, cy, R - 10, 0, Math.PI, true);
+  ctx.closePath();
+  var hlGrd = ctx.createLinearGradient(cx, cy - R, cx, cy - R + 16);
+  hlGrd.addColorStop(0, 'rgba(168, 85, 247, 0.15)');
+  hlGrd.addColorStop(1, 'rgba(168, 85, 247, 0)');
+  ctx.fillStyle = hlGrd;
+  ctx.fill();
+
+  // Inner guide arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, R - 35, Math.PI, 0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Border
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 0);
+  ctx.lineTo(cx + R, cy + 24);
+  ctx.lineTo(cx - R, cy + 24);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Tick marks and labels
+  for (var deg = 0; deg <= 180; deg++) {
+    var rad = (180 - deg) * Math.PI / 180;
+    var isTen = deg % 10 === 0;
+    var isFive = deg % 5 === 0;
+    var tickLen = isTen ? 14 : isFive ? 9 : 5;
+    var ox = cx + R * Math.cos(rad);
+    var oy = cy - R * Math.sin(rad);
+    var ix = cx + (R - tickLen) * Math.cos(rad);
+    var iy = cy - (R - tickLen) * Math.sin(rad);
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ix, iy);
+    ctx.strokeStyle = isTen ? 'rgba(255,255,255,0.9)' : isFive ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = isTen ? 1.5 : 0.8;
+    ctx.stroke();
+    if (isTen) {
+      var lr = R - 24;
+      var lx = cx + lr * Math.cos(rad);
+      var ly = cy - lr * Math.sin(rad);
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.rotate(-rad + Math.PI / 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = (deg % 30 === 0 ? '600' : '400') + ' 9px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(deg), 0, 0);
+      ctx.restore();
+    }
+  }
+
+  // Base line
+  ctx.beginPath();
+  ctx.moveTo(cx - R, cy);
+  ctx.lineTo(cx + R, cy);
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 90 degree dashed line
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx, cy - R);
+  ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Center point
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(20,20,20,1)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#a855f7';
+  ctx.fill();
+
+  // Gamma watermark
+  ctx.globalAlpha = 0.7;
+  ctx.font = '300 36px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(168,85,247,0.65)';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = 'rgba(168,85,247,0.4)';
+  ctx.fillText('\u03B3', cx, cy - R * 0.50);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.fillText('\u03B3', cx, cy - R * 0.50);
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+}
+
+function drawPreview() {
+  var canvas = document.getElementById('protoCanvas');
+  var scale = 2;
+  var pad = 16;
+  var fullW = (PREVIEW_R + pad) * 2;
+  var fullH = PREVIEW_R + pad + 28;
+  canvas.width = Math.round(fullW * scale);
+  canvas.height = Math.round(fullH * scale);
+  canvas.style.width = fullW + 'px';
+  canvas.style.height = fullH + 'px';
+  var ctx = canvas.getContext('2d');
+  drawProtractorOnCtx(ctx, PREVIEW_R, pad, scale);
+}
+
+function renderFullProtractor() {
+  var R = 160;
+  var pad = 24;
+  var scale = 3;
+  var fullW = (R + pad) * 2;
+  var fullH = R + pad + 36;
+  var offCanvas = document.createElement('canvas');
+  offCanvas.width = Math.round(fullW * scale);
+  offCanvas.height = Math.round(fullH * scale);
+  var ctx = offCanvas.getContext('2d');
+  drawProtractorOnCtx(ctx, R, pad, scale);
+  return offCanvas.toDataURL('image/png');
+}
+
+drawPreview();
+
+/* ── Place on Board ────────────────────────────────── */
+var placeBtn = document.getElementById('placeBtn');
+
+placeBtn.addEventListener('click', async function () {
+  placeBtn.disabled = true;
+  placeBtn.textContent = 'Placing\u2026';
+
+  try {
+    var png = renderFullProtractor();
+    var viewport = await miro.board.viewport.get();
+    var centerX = viewport.x + viewport.width / 2;
+    var centerY = viewport.y + viewport.height / 2;
+
+    var img = await miro.board.createImage({
+      url: png,
+      title: 'PP Protractor',
+      x: centerX,
+      y: centerY,
+      width: 400
+    });
+
+    await img.setMetadata('pp-protractor', { type: 'protractor' });
+    await miro.board.viewport.zoomTo(img);
+    await miro.board.notifications.showNotification('Protractor placed on board');
+  } catch (err) {
+    console.error('Failed to place protractor:', err);
+    await miro.board.notifications.showNotification('Failed to place protractor');
+  }
+
+  placeBtn.disabled = false;
+  placeBtn.textContent = 'Place on Board';
+});
+</script>
+
+</body>
+</html>
