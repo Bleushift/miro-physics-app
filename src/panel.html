@@ -578,22 +578,7 @@
     .fc-boards .ocr-label { color: #fb923c; }
     .fc-boards .edx-label { color: #38bdf8; }
 
-    /* ── Flip bar (floating) ── */
-    #flip-bar {
-      display: none;
-      position: fixed;
-      bottom: 12px; left: 50%; transform: translateX(-50%);
-      background: var(--surface);
-      border: 1px solid var(--purple);
-      border-radius: 20px;
-      padding: 6px 16px;
-      z-index: 100;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      align-items: center; gap: 8px;
-    }
-    #flip-bar.visible { display: flex; }
-    #flip-bar span { font-size: 11px; color: var(--muted); }
-    [data-theme="light"] #flip-bar { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    /* flip bar removed — using stacked reveal instead */
 
     /* ── Flashcard Cards tab ── */
     .fc-subtabs { display: flex; gap: 2px; margin-bottom: 8px; }
@@ -855,11 +840,8 @@
   </div>
 </div>
 
-<!-- Floating flip bar (shown when a flashcard is selected on the board) -->
-<div id="flip-bar">
-  <span>Flashcard selected</span>
-  <button class="btn btn-primary btn-sm" id="btn-flip">↻ Flip</button>
-</div>
+<!-- flip bar removed — stacked reveal used instead -->
+<div id="flip-bar" style="display:none;"></div>
 
 <!-- ══════════════════════════════════════════════
      PAGE 2: Physics Library
@@ -3138,57 +3120,10 @@ async function handlePlaceFlashcard() {
 
 document.getElementById('btn-place-flashcard').addEventListener('click', handlePlaceFlashcard);
 
-// ── Flip bar ──
+// Flip bar stubs (kept so selection handler doesn't crash)
 let flipTargetItem = null;
-
-function showFlipBar(item, meta) {
-  flipTargetItem = item;
-  document.getElementById('flip-bar').classList.add('visible');
-}
-function hideFlipBar() {
-  flipTargetItem = null;
-  document.getElementById('flip-bar').classList.remove('visible');
-}
-
-async function flipFlashcard() {
-  if (!flipTargetItem) return;
-
-  const btn = document.getElementById('btn-flip');
-  btn.disabled = true;
-  btn.textContent = 'Flipping…';
-
-  try {
-    const meta = await flipTargetItem.getMetadata('pp-flashcard');
-    console.log('[FC-flip] metadata:', meta);
-    if (!meta) { toast('Not a flashcard'); return; }
-
-    const showBack = !meta.isFlipped;
-    let png;
-    if (showBack) {
-      png = await fcRenderBackPNG(meta, meta.category);
-    } else {
-      png = await fcRenderFrontPNG(meta, meta.category);
-    }
-
-    const { x, y, width, rotation } = flipTargetItem;
-    await miro.board.remove(flipTargetItem);
-
-    const newImg = await miro.board.createImage({ url: png, title: `Flashcard: ${meta.term}`, x, y, width, rotation });
-    await newImg.setMetadata('pp-flashcard', { ...meta, isFlipped: showBack });
-
-    flipTargetItem = newImg;
-    showFlipBar(newImg, { ...meta, isFlipped: showBack });
-    toast(showBack ? 'Showing back' : 'Showing front');
-  } catch(e) {
-    console.error('[FC-flip] error:', e);
-    toast('Flip error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '↻ Flip';
-  }
-}
-
-document.getElementById('btn-flip').addEventListener('click', flipFlashcard);
+function showFlipBar() {}
+function hideFlipBar() { flipTargetItem = null; }
 
 // ══════════════════════════════════════════════════════════════
 // QUICK LATEX ENGINE (Obsidian-style auto-complete)
