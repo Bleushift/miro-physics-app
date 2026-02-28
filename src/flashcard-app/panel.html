@@ -478,11 +478,11 @@ async function renderFlashcardFace(side, data) {
     'border:1px solid ' + c.border + ';' +
     'display:flex;flex-direction:column;';
 
-  // Top highlight bar
+  // Top accent bar (solid purple)
   var topBar = document.createElement('div');
   topBar.style.cssText =
-    'position:absolute;top:0;left:0;right:0;height:2px;' +
-    'background:linear-gradient(90deg,' + c.highlightTop + ',' + c.accent + ',' + c.highlightTop + ');';
+    'position:absolute;top:0;left:0;right:0;height:3px;' +
+    'background:' + c.accent + ';';
   card.appendChild(topBar);
 
   if (side === 'front') {
@@ -657,6 +657,17 @@ placeBtn.addEventListener('click', async function() {
     });
 
     await miro.board.viewport.zoomTo(img);
+
+    // Show flip bar immediately
+    showFlipBar(img, {
+      term: term,
+      definition: definition,
+      equation: equation,
+      category: category,
+      boards: boards,
+      isFlipped: false
+    });
+
     toast('Flashcard placed');
   } catch (err) {
     console.error('Place flashcard error:', err);
@@ -673,9 +684,11 @@ var flipSection = document.getElementById('flipSection');
 var flipInfo = document.getElementById('flipInfo');
 var flipBtn = document.getElementById('flipBtn');
 var flipTargetItem = null;
+var flipTargetMeta = null;  // Store meta locally — don't rely on getMetadata
 
 function showFlipBar(item, meta) {
   flipTargetItem = item;
+  flipTargetMeta = meta;
   var side = meta.isFlipped ? 'Back' : 'Front';
   flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + side + ')</span>';
   flipSection.classList.add('visible');
@@ -683,18 +696,18 @@ function showFlipBar(item, meta) {
 
 function hideFlipBar() {
   flipTargetItem = null;
+  flipTargetMeta = null;
   flipSection.classList.remove('visible');
 }
 
 flipBtn.addEventListener('click', async function() {
-  if (!flipTargetItem) return;
+  if (!flipTargetItem || !flipTargetMeta) return;
   flipBtn.disabled = true;
   flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flipping\u2026';
 
-  try {
-    var meta = await flipTargetItem.getMetadata('pp-flashcard');
-    if (!meta || !meta.term) { toast('Not a flashcard'); return; }
+  var meta = flipTargetMeta;
 
+  try {
     var newSide = meta.isFlipped ? 'front' : 'back';
     var png = await renderFlashcardFace(newSide, meta);
 
@@ -705,6 +718,15 @@ flipBtn.addEventListener('click', async function() {
 
     await miro.board.remove(flipTargetItem);
 
+    var newMeta = {
+      term: meta.term,
+      definition: meta.definition,
+      equation: meta.equation,
+      category: meta.category,
+      boards: meta.boards,
+      isFlipped: !meta.isFlipped
+    };
+
     var newImg = await miro.board.createImage({
       url: png,
       title: 'Flashcard: ' + meta.term,
@@ -714,22 +736,17 @@ flipBtn.addEventListener('click', async function() {
       rotation: orot
     });
 
-    await newImg.setMetadata('pp-flashcard', {
-      term: meta.term,
-      definition: meta.definition,
-      equation: meta.equation,
-      category: meta.category,
-      boards: meta.boards,
-      isFlipped: !meta.isFlipped
-    });
+    await newImg.setMetadata('pp-flashcard', newMeta);
 
+    // Update local state
     flipTargetItem = newImg;
-    var sideLabel = meta.isFlipped ? 'Front' : 'Back';
+    flipTargetMeta = newMeta;
+    var sideLabel = newMeta.isFlipped ? 'Back' : 'Front';
     flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + sideLabel + ')</span>';
     toast('Flipped to ' + sideLabel.toLowerCase());
   } catch (err) {
     console.error('Flip error:', err);
-    toast('Flip failed');
+    toast('Flip failed: ' + (err.message || err));
   } finally {
     flipBtn.disabled = false;
     flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flip Card';
@@ -739,6 +756,10 @@ flipBtn.addEventListener('click', async function() {
 /* ── Selection listener ────────────────────────────── */
 miro.board.ui.on('selection:update', async function(event) {
   var items = Array.isArray(event) ? event : (event.items || []);
+
+  // Don't hide if the selected item is our current flip target
+  if (items.length === 1 && flipTargetItem && items[0].id === flipTargetItem.id) return;
+
   hideFlipBar();
   if (items.length !== 1) return;
 
@@ -749,7 +770,9 @@ miro.board.ui.on('selection:update', async function(event) {
     if (meta && meta.term) {
       showFlipBar(fullItem, meta);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.log('Selection metadata check:', e);
+  }
 });
 
 /* ── Check initial selection on panel open ─────────── */
