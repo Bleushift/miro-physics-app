@@ -4261,27 +4261,72 @@ function fcStartEdit(idx, card) {
   fcUpdateCreateEqPreview();
 }
 
-// Place flashcard on board as PNG (reuse existing renderFlashcardFront from panel)
+// Place flashcard on board: front card + answer card + cover shape (stacked)
 async function fcPlaceOnBoard(card, secName) {
-  toast('Placing…');
+  toast('Rendering…');
   try {
-    const png = await fcRenderFrontPNG(card, secName);
+    // Render both faces
+    const [frontPng, backPng] = await Promise.all([
+      fcRenderFrontPNG(card, secName),
+      fcRenderBackPNG(card, secName)
+    ]);
+
     const vp = await miro.board.viewport.get();
-    const boards = (card.boards || '').split(' ').filter(Boolean);
-    const img = await miro.board.createImage({
-      url: png, title: 'Flashcard: ' + card.term,
-      x: vp.x + vp.width / 2, y: vp.y + vp.height / 2, width: 500
+    const cx = vp.x + vp.width / 2;
+    const cy = vp.y + vp.height / 2;
+    const cardW = 500;
+    const cardH = 320; // matches render height
+
+    // 1. Place front card (question) on top
+    const frontImg = await miro.board.createImage({
+      url: frontPng, title: card.term + ' (Q)',
+      x: cx, y: cy, width: cardW
     });
-    await img.setMetadata('pp-flashcard', {
-      term: card.term, definition: card.definition,
-      equation: card.equation || '', category: secName || card.category || '',
-      boards: boards, isFlipped: false
+
+    // 2. Place back card (answer) directly below
+    const gap = 10;
+    const backY = cy + cardH + gap;
+    const backImg = await miro.board.createImage({
+      url: backPng, title: card.term + ' (A)',
+      x: cx, y: backY, width: cardW
     });
-    await miro.board.viewport.zoomTo(img);
+
+    // 3. Place cover shape on top of answer
+    const cover = await miro.board.createShape({
+      content: '<p><strong>? Reveal Answer</strong></p>',
+      shape: 'round_rectangle',
+      style: {
+        fillColor: '#7C3AED',
+        fontFamily: 'open_sans',
+        fontSize: 24,
+        textAlign: 'center',
+        textAlignVertical: 'middle',
+        color: '#ffffff',
+        fillOpacity: 1.0,
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        borderOpacity: 0.3,
+      },
+      x: cx, y: backY,
+      width: cardW, height: cardH,
+    });
+
+    // Tag cover with pp-reveal so existing reveal buttons work
+    await cover.setMetadata('pp-reveal', {
+      type: 'pp-reveal',
+      label: '? Reveal Answer',
+      colour: '#7C3AED',
+      flashcardTerm: card.term,
+      answerId: backImg.id,
+      createdAt: Date.now(),
+    });
+
+    await miro.board.viewport.zoomTo(frontImg);
+    updateRevealCount();
     toast('Placed: ' + card.term);
   } catch(e) {
-    console.error(e);
-    toast('Failed to place');
+    console.error('[FC-place]', e);
+    toast('Failed to place: ' + e.message);
   }
 }
 
