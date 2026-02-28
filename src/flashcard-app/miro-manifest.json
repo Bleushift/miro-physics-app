@@ -1,0 +1,9 @@
+{
+  "name": "PP Flashcards",
+  "description": "Create and flip physics flashcards on the board",
+  "icon": "https://bleushift.github.io/miro-physics-app/src/icon.svg",
+  "sdkVersion": "SDK_2",
+  "appType": "panel",
+  "panelDimensions": { "width": 280, "height": 520 },
+  "scopes": ["boards:read", "boards:write"]
+}

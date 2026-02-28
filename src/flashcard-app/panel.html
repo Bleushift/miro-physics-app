@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PP Flashcards</title>
+<script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f5fa;
+    --surface: #ffffff;
+    --border: #d4d4e0;
+    --text: #1e1e2e;
+    --muted: #64748b;
+    --purple: #7C3AED;
+  }
+
+  [data-theme="dark"] {
+    --bg: #1e1e2e;
+    --surface: #26263a;
+    --border: #38385a;
+    --text: #e2e2f0;
+    --muted: #888aaa;
+    --purple: #a78bfa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--text);
+    width: 280px;
+    min-height: 420px;
+    overflow-x: hidden;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-left svg { flex-shrink: 0; }
+
+  .header-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .theme-toggle:hover {
+    background: var(--surface);
+    border-color: var(--purple);
+  }
+
+  .content {
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--purple);
+  }
+
+  textarea { min-height: 60px; }
+
+  .eq-input {
+    font-family: 'KaTeX_Math', 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  .eq-preview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .eq-preview .katex { font-size: 16px; }
+
+  .eq-preview .eq-placeholder {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .eq-preview .eq-error {
+    font-size: 10px;
+    color: #e11d48;
+  }
+
+  .boards-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .board-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .board-check input { display: none; }
+
+  .board-check.checked {
+    border-color: var(--purple);
+    background: color-mix(in srgb, var(--purple) 12%, var(--surface));
+  }
+
+  .board-check .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .dot-aqa { background: #A78BFA; }
+  .dot-edx { background: #38BDF8; }
+  .dot-ocr { background: #FB923C; }
+
+  .place-btn {
+    width: 100%;
+    padding: 10px 0;
+    background: var(--purple);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: -0.01em;
+    font-family: inherit;
+  }
+
+  .place-btn:hover { opacity: 0.92; }
+  .place-btn:active { transform: scale(0.98); }
+  .place-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .status {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    min-height: 16px;
+  }
+
+  /* ── Flip bar ── */
+  .flip-section {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  .flip-section.visible { display: block; }
+
+  .flip-info {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .flip-side {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .flip-btn {
+    width: 100%;
+    padding: 9px 0;
+    border: 1px solid var(--purple);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--purple);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .flip-btn:hover {
+    background: var(--purple);
+    color: #fff;
+  }
+
+  .flip-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: var(--purple);
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="20" height="20">
+      <rect width="64" height="64" rx="12" fill="#1a1a2e"/>
+      <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-size="36" fill="#a78bfa">&#x1D453;</text>
+    </svg>
+    <span class="header-title">Physics Pathway</span>
+  </div>
+  <button class="theme-toggle" id="themeBtn" title="Toggle theme">&#x2600;&#xFE0F;</button>
+</div>
+
+<div class="content">
+  <div class="field-group">
+    <div class="field-label">Term</div>
+    <input type="text" id="termInput" placeholder="e.g. Ohm's Law" />
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Definition</div>
+    <textarea id="defInput" placeholder="The current through a conductor is directly proportional to..."></textarea>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Equation <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional LaTeX)</span></div>
+    <input type="text" id="eqInput" class="eq-input" placeholder="V = IR" />
+    <div class="eq-preview" id="eqPreview" style="margin-top:4px">
+      <span class="eq-placeholder">Equation preview</span>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Category</div>
+    <input type="text" id="catInput" placeholder="e.g. Electricity, Waves, Nuclear" />
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Boards</div>
+    <div class="boards-row">
+      <label class="board-check checked" id="chkAqa"><input type="checkbox" checked /><span class="dot dot-aqa"></span>AQA</label>
+      <label class="board-check checked" id="chkEdx"><input type="checkbox" checked /><span class="dot dot-edx"></span>Edexcel</label>
+      <label class="board-check checked" id="chkOcr"><input type="checkbox" checked /><span class="dot dot-ocr"></span>OCR</label>
+    </div>
+  </div>
+
+  <button class="place-btn" id="placeBtn">Place Flashcard</button>
+  <div class="status" id="status"></div>
+
+  <div class="flip-section" id="flipSection">
+    <div class="flip-info" id="flipInfo">Ohm's Law <span class="flip-side">(Front)</span></div>
+    <button class="flip-btn" id="flipBtn"><span style="font-size:16px">&#x21BB;</span> Flip Card</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── Theme ─────────────────────────────────────────── */
+const themeBtn = document.getElementById('themeBtn');
+const STORAGE_KEY = 'pp-flashcard-theme';
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeBtn.textContent = theme === 'dark' ? '\u{1F319}' : '\u{2600}\u{FE0F}';
+  localStorage.setItem(STORAGE_KEY, theme);
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY) || 'light';
+  applyTheme(saved);
+})();
+
+themeBtn.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+/* ── Toast ─────────────────────────────────────────── */
+function toast(msg, ms) {
+  ms = ms || 2200;
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, ms);
+}
+
+/* ── Board checkboxes ──────────────────────────────── */
+document.querySelectorAll('.board-check').forEach(function(label) {
+  var cb = label.querySelector('input');
+  label.addEventListener('click', function(e) {
+    e.preventDefault();
+    cb.checked = !cb.checked;
+    label.classList.toggle('checked', cb.checked);
+  });
+});
+
+/* ── Equation preview ──────────────────────────────── */
+var eqInput = document.getElementById('eqInput');
+var eqPreview = document.getElementById('eqPreview');
+var eqTimer = null;
+
+function updateEqPreview() {
+  var latex = eqInput.value.trim();
+  if (!latex) {
+    eqPreview.innerHTML = '<span class="eq-placeholder">Equation preview</span>';
+    return;
+  }
+  try {
+    var html = katex.renderToString(latex, { throwOnError: true, displayMode: true });
+    eqPreview.innerHTML = html;
+  } catch (e) {
+    eqPreview.innerHTML = '<span class="eq-error">' + e.message.substring(0, 60) + '</span>';
+  }
+}
+
+eqInput.addEventListener('input', function() {
+  clearTimeout(eqTimer);
+  eqTimer = setTimeout(updateEqPreview, 200);
+});
+
+/* ── Flashcard colors ──────────────────────────────── */
+function getCardColors() {
+  var isDark = document.documentElement.getAttribute('data-theme') !== 'light' &&
+               document.documentElement.getAttribute('data-theme') !== null;
+  // Default to dark unless explicitly light
+  var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+  if (isLight) {
+    return {
+      bg: '#F8FAFC',
+      text: '#1E293B',
+      muted: '#64748B',
+      accent: '#7C3AED',
+      border: 'rgba(124,58,237,0.15)',
+      highlightTop: 'rgba(124,58,237,0.08)',
+      eqBg: '#F1F5F9',
+      eqBorder: '#E2E8F0',
+      eqText: '#1E293B',
+      hintText: '#94A3B8',
+      flipCircle: 'rgba(124,58,237,0.3)',
+      flipIcon: '#7C3AED',
+      divider: '#E2E8F0',
+      aqaC: '#7C3AED',
+      edxC: '#2563EB',
+      ocrC: '#EA580C',
+      pillBg: '#F1F5F9',
+      pillText: '#475569'
+    };
+  }
+
+  return {
+    bg: '#0F0F0F',
+    text: '#E8E8F0',
+    muted: '#888AAA',
+    accent: '#A78BFA',
+    border: 'rgba(168,85,247,0.2)',
+    highlightTop: 'rgba(168,85,247,0.1)',
+    eqBg: 'rgba(0,0,0,0.45)',
+    eqBorder: 'rgba(168,85,247,0.18)',
+    eqText: '#E8E8F0',
+    hintText: '#444466',
+    flipCircle: 'rgba(168,85,247,0.35)',
+    flipIcon: '#A78BFA',
+    divider: 'rgba(168,85,247,0.15)',
+    aqaC: '#A78BFA',
+    edxC: '#38BDF8',
+    ocrC: '#FB923C',
+    pillBg: 'rgba(255,255,255,0.06)',
+    pillText: '#888AAA'
+  };
+}
+
+/* ── Render flashcard face ─────────────────────────── */
+async function renderFlashcardFace(side, data) {
+  var c = getCardColors();
+  var W = 500;
+  var H = 320;
+
+  var container = document.createElement('div');
+  container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+
+  // Outer card
+  var card = document.createElement('div');
+  card.style.cssText =
+    'width:' + W + 'px;height:' + H + 'px;border-radius:16px;overflow:hidden;position:relative;' +
+    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
+    'background:' + c.bg + ';' +
+    'border:1px solid ' + c.border + ';' +
+    'display:flex;flex-direction:column;';
+
+  // Top highlight bar
+  var topBar = document.createElement('div');
+  topBar.style.cssText =
+    'position:absolute;top:0;left:0;right:0;height:2px;' +
+    'background:linear-gradient(90deg,' + c.highlightTop + ',' + c.accent + ',' + c.highlightTop + ');';
+  card.appendChild(topBar);
+
+  if (side === 'front') {
+    buildFrontFace(card, data, c);
+  } else {
+    buildBackFace(card, data, c);
+  }
+
+  // Flip icon (bottom-right)
+  var flipIcon = document.createElement('div');
+  flipIcon.style.cssText =
+    'position:absolute;bottom:14px;right:14px;width:26px;height:26px;' +
+    'border-radius:50%;border:1px solid ' + c.flipCircle + ';' +
+    'display:flex;align-items:center;justify-content:center;' +
+    'font-size:14px;color:' + c.flipIcon + ';';
+  flipIcon.textContent = '\u21BB';
+  card.appendChild(flipIcon);
+
+  container.appendChild(card);
+  document.body.appendChild(container);
+
+  try {
+    var canvas = await html2canvas(container, { backgroundColor: null, scale: 3 });
+    return canvas.toDataURL('image/png');
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+function buildFrontFace(card, data, c) {
+  var inner = document.createElement('div');
+  inner.style.cssText =
+    'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+    'padding:40px 32px 50px;text-align:center;gap:6px;';
+
+  // Category
+  if (data.category) {
+    var cat = document.createElement('div');
+    cat.style.cssText =
+      'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;' +
+      'color:' + c.muted + ';margin-bottom:4px;';
+    cat.textContent = data.category;
+    inner.appendChild(cat);
+  }
+
+  // Term
+  var term = document.createElement('div');
+  term.style.cssText =
+    'font-size:28px;font-weight:900;color:' + c.text + ';line-height:1.2;';
+  term.textContent = data.term;
+  inner.appendChild(term);
+
+  // Hint
+  var hint = document.createElement('div');
+  hint.style.cssText =
+    'font-size:12px;color:' + c.hintText + ';margin-top:16px;';
+  hint.textContent = 'Click \u21BB to reveal';
+  inner.appendChild(hint);
+
+  card.appendChild(inner);
+}
+
+function buildBackFace(card, data, c) {
+  var inner = document.createElement('div');
+  inner.style.cssText =
+    'flex:1;display:flex;flex-direction:column;padding:22px 26px 44px;overflow:hidden;';
+
+  // Term (small, top)
+  var term = document.createElement('div');
+  term.style.cssText =
+    'font-size:14px;font-weight:500;color:' + c.accent + ';margin-bottom:8px;';
+  term.textContent = data.term;
+  inner.appendChild(term);
+
+  // Divider
+  var divider = document.createElement('div');
+  divider.style.cssText =
+    'height:1px;background:' + c.divider + ';margin-bottom:12px;';
+  inner.appendChild(divider);
+
+  // Definition
+  var def = document.createElement('div');
+  def.style.cssText =
+    'font-size:14px;font-weight:400;color:' + c.text + ';line-height:1.55;' +
+    'flex-shrink:1;overflow:hidden;';
+  def.textContent = data.definition;
+  inner.appendChild(def);
+
+  // Equation (if present)
+  if (data.equation && data.equation.trim()) {
+    var eqBox = document.createElement('div');
+    eqBox.style.cssText =
+      'margin-top:12px;padding:10px 16px;border-radius:8px;' +
+      'background:' + c.eqBg + ';border:1px solid ' + c.eqBorder + ';' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'color:' + c.eqText + ';';
+    try {
+      var eqHtml = katex.renderToString(data.equation, { displayMode: true, throwOnError: false });
+      eqBox.innerHTML = eqHtml;
+    } catch (e) {
+      eqBox.textContent = data.equation;
+    }
+    inner.appendChild(eqBox);
+  }
+
+  // Board pills
+  if (data.boards && data.boards.length > 0) {
+    var pillRow = document.createElement('div');
+    pillRow.style.cssText =
+      'display:flex;gap:6px;margin-top:auto;padding-top:12px;';
+    var boardColors = { 'AQA': c.aqaC, 'Edexcel': c.edxC, 'OCR': c.ocrC };
+    data.boards.forEach(function(b) {
+      var pill = document.createElement('span');
+      var bc = boardColors[b] || c.accent;
+      pill.style.cssText =
+        'font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;' +
+        'background:' + c.pillBg + ';color:' + bc + ';' +
+        'border:1px solid ' + bc + '33;';
+      pill.textContent = b;
+      pillRow.appendChild(pill);
+    });
+    inner.appendChild(pillRow);
+  }
+
+  card.appendChild(inner);
+}
+
+/* ── Place flashcard ───────────────────────────────── */
+var placeBtn = document.getElementById('placeBtn');
+var statusEl = document.getElementById('status');
+
+placeBtn.addEventListener('click', async function() {
+  var term = document.getElementById('termInput').value.trim();
+  var definition = document.getElementById('defInput').value.trim();
+  var equation = eqInput.value.trim();
+  var category = document.getElementById('catInput').value.trim();
+  var boards = [];
+  if (document.querySelector('#chkAqa input').checked) boards.push('AQA');
+  if (document.querySelector('#chkEdx input').checked) boards.push('Edexcel');
+  if (document.querySelector('#chkOcr input').checked) boards.push('OCR');
+
+  if (!term) { toast('Enter a term'); return; }
+  if (!definition) { toast('Enter a definition'); return; }
+
+  placeBtn.disabled = true;
+  placeBtn.textContent = 'Placing\u2026';
+  statusEl.textContent = '';
+
+  try {
+    var data = { term: term, definition: definition, equation: equation, category: category, boards: boards };
+    var png = await renderFlashcardFace('front', data);
+
+    var viewport = await miro.board.viewport.get();
+    var x = viewport.x + 0.5 * viewport.width;
+    var y = viewport.y + 0.5 * viewport.height;
+
+    var img = await miro.board.createImage({
+      url: png,
+      title: 'Flashcard: ' + term,
+      x: x,
+      y: y,
+      width: 500
+    });
+
+    await img.setMetadata('pp-flashcard', {
+      term: term,
+      definition: definition,
+      equation: equation,
+      category: category,
+      boards: boards,
+      isFlipped: false
+    });
+
+    await miro.board.viewport.zoomTo(img);
+    toast('Flashcard placed');
+  } catch (err) {
+    console.error('Place flashcard error:', err);
+    statusEl.textContent = 'Error: ' + (err.message || 'Failed');
+    setTimeout(function() { statusEl.textContent = ''; }, 4000);
+  } finally {
+    placeBtn.disabled = false;
+    placeBtn.textContent = 'Place Flashcard';
+  }
+});
+
+/* ── Flip mechanism ────────────────────────────────── */
+var flipSection = document.getElementById('flipSection');
+var flipInfo = document.getElementById('flipInfo');
+var flipBtn = document.getElementById('flipBtn');
+var flipTargetItem = null;
+
+function showFlipBar(item, meta) {
+  flipTargetItem = item;
+  var side = meta.isFlipped ? 'Back' : 'Front';
+  flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + side + ')</span>';
+  flipSection.classList.add('visible');
+}
+
+function hideFlipBar() {
+  flipTargetItem = null;
+  flipSection.classList.remove('visible');
+}
+
+flipBtn.addEventListener('click', async function() {
+  if (!flipTargetItem) return;
+  flipBtn.disabled = true;
+  flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flipping\u2026';
+
+  try {
+    var meta = await flipTargetItem.getMetadata('pp-flashcard');
+    if (!meta || !meta.term) { toast('Not a flashcard'); return; }
+
+    var newSide = meta.isFlipped ? 'front' : 'back';
+    var png = await renderFlashcardFace(newSide, meta);
+
+    var ox = flipTargetItem.x;
+    var oy = flipTargetItem.y;
+    var ow = flipTargetItem.width;
+    var orot = flipTargetItem.rotation || 0;
+
+    await miro.board.remove(flipTargetItem);
+
+    var newImg = await miro.board.createImage({
+      url: png,
+      title: 'Flashcard: ' + meta.term,
+      x: ox,
+      y: oy,
+      width: ow,
+      rotation: orot
+    });
+
+    await newImg.setMetadata('pp-flashcard', {
+      term: meta.term,
+      definition: meta.definition,
+      equation: meta.equation,
+      category: meta.category,
+      boards: meta.boards,
+      isFlipped: !meta.isFlipped
+    });
+
+    flipTargetItem = newImg;
+    var sideLabel = meta.isFlipped ? 'Front' : 'Back';
+    flipInfo.innerHTML = meta.term + ' <span class="flip-side">(' + sideLabel + ')</span>';
+    toast('Flipped to ' + sideLabel.toLowerCase());
+  } catch (err) {
+    console.error('Flip error:', err);
+    toast('Flip failed');
+  } finally {
+    flipBtn.disabled = false;
+    flipBtn.innerHTML = '<span style="font-size:16px">&#x21BB;</span> Flip Card';
+  }
+});
+
+/* ── Selection listener ────────────────────────────── */
+miro.board.ui.on('selection:update', async function(event) {
+  var items = Array.isArray(event) ? event : (event.items || []);
+  hideFlipBar();
+  if (items.length !== 1) return;
+
+  try {
+    var fullItem = await miro.board.getById(items[0].id);
+    if (!fullItem || fullItem.type !== 'image') return;
+    var meta = await fullItem.getMetadata('pp-flashcard');
+    if (meta && meta.term) {
+      showFlipBar(fullItem, meta);
+    }
+  } catch (e) {}
+});
+
+/* ── Check initial selection on panel open ─────────── */
+(async function checkInitialSelection() {
+  try {
+    var items = await miro.board.getSelection();
+    if (items.length === 1 && items[0].type === 'image') {
+      var meta = await items[0].getMetadata('pp-flashcard');
+      if (meta && meta.term) {
+        showFlipBar(items[0], meta);
+      }
+    }
+  } catch (e) {}
+})();
+</script>
+
+</body>
+</html>
