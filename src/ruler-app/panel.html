@@ -525,55 +525,76 @@
     const setAngleBtn = document.getElementById('setAngleBtn');
     const readAngleBtn = document.getElementById('readAngleBtn');
 
-    function showSelected(item) {
-      selectedItem = item;
-      const angle = item.rotation || 0;
+    let pollInterval = null;
+    let lastKnownAngle = null;
+    let renderDebounce = null;
+    let isReRendering = false;
+    let selectedItemId = null;
+
+    function updateAngleUI(angle) {
       angleDisplay.textContent = angle.toFixed(1) + '\u00B0';
       angleInput.value = angle.toFixed(1);
+    }
+
+    function startPolling(item) {
+      stopPolling();
+      selectedItem = item;
+      selectedItemId = item.id;
+      lastKnownAngle = item.rotation || 0;
+      updateAngleUI(lastKnownAngle);
       selectedSection.classList.add('visible');
+
+      pollInterval = setInterval(async () => {
+        if (isReRendering) return;
+        try {
+          const items = await miro.board.getSelection();
+          const current = items.find(i => i.id === selectedItemId);
+          if (!current) { stopPolling(); hideSelected(); return; }
+
+          const angle = current.rotation || 0;
+          if (Math.abs(angle - lastKnownAngle) > 0.05) {
+            lastKnownAngle = angle;
+            selectedItem = current;
+            updateAngleUI(angle);
+
+            // Debounce: re-render image 1s after rotation stops
+            clearTimeout(renderDebounce);
+            renderDebounce = setTimeout(() => {
+              reRenderImage(angle);
+            }, 1000);
+          }
+        } catch (e) {}
+      }, 300);
+    }
+
+    function stopPolling() {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      if (renderDebounce) { clearTimeout(renderDebounce); renderDebounce = null; }
     }
 
     function hideSelected() {
+      stopPolling();
       selectedItem = null;
+      selectedItemId = null;
       selectedSection.classList.remove('visible');
     }
 
-    // Read current angle from board
-    readAngleBtn.addEventListener('click', async () => {
-      if (!selectedItem) return;
-      try {
-        const items = await miro.board.getSelection();
-        const item = items.find(i => i.id === selectedItem.id);
-        if (item) {
-          showSelected(item);
-        }
-      } catch (e) {
-        console.error('Read angle error:', e);
-      }
-    });
-
-    // Set angle and re-render with angle display
-    setAngleBtn.addEventListener('click', async () => {
-      if (!selectedItem) return;
-      const newAngle = parseFloat(angleInput.value) || 0;
+    async function reRenderImage(angle) {
+      if (!selectedItem || isReRendering) return;
+      isReRendering = true;
 
       try {
-        setAngleBtn.textContent = '...';
-
-        // Re-render ruler PNG with angle shown in centre
         const meta = await selectedItem.getMetadata('pp-ruler');
         const rulerLen = (meta && meta.length) || selectedMM;
         const oldMM = selectedMM;
         selectedMM = rulerLen;
-        const png = renderFullRuler(newAngle);
+        const png = renderFullRuler(angle);
         selectedMM = oldMM;
 
-        // Get position of current item
         const x = selectedItem.x;
         const y = selectedItem.y;
         const w = selectedItem.width;
 
-        // Remove old, create new at same position with new angle
         await miro.board.remove(selectedItem);
 
         const newImg = await miro.board.createImage({
@@ -582,19 +603,47 @@
           x: x,
           y: y,
           width: w,
-          rotation: newAngle
+          rotation: angle
         });
 
         await newImg.setMetadata('pp-ruler', { length: rulerLen });
 
         selectedItem = newImg;
-        angleDisplay.textContent = newAngle.toFixed(1) + '\u00B0';
-
-        setAngleBtn.textContent = 'Set';
+        selectedItemId = newImg.id;
+        updateAngleUI(angle);
       } catch (err) {
-        console.error('Set angle error:', err);
-        setAngleBtn.textContent = 'Set';
+        console.error('Re-render error:', err);
+      } finally {
+        isReRendering = false;
       }
+    }
+
+    // Read current angle from board
+    readAngleBtn.addEventListener('click', async () => {
+      if (!selectedItem) return;
+      try {
+        const items = await miro.board.getSelection();
+        const item = items.find(i => i.id === selectedItemId);
+        if (item) {
+          lastKnownAngle = item.rotation || 0;
+          selectedItem = item;
+          updateAngleUI(lastKnownAngle);
+        }
+      } catch (e) {
+        console.error('Read angle error:', e);
+      }
+    });
+
+    // Set angle manually
+    setAngleBtn.addEventListener('click', async () => {
+      if (!selectedItem) return;
+      const newAngle = parseFloat(angleInput.value) || 0;
+      stopPolling();
+      setAngleBtn.textContent = '...';
+      await reRenderImage(newAngle);
+      setAngleBtn.textContent = 'Set';
+      // Restart polling after manual set
+      if (selectedItem) startPolling(selectedItem);
     });
 
     // Preset buttons
@@ -607,12 +656,13 @@
 
     // Listen for selection changes
     miro.board.ui.on('selection:update', async (event) => {
+      if (isReRendering) return;
       const items = event.items;
       if (items.length === 1) {
         try {
           const meta = await items[0].getMetadata('pp-ruler');
           if (meta && meta.length) {
-            showSelected(items[0]);
+            startPolling(items[0]);
             return;
           }
         } catch (e) {}
