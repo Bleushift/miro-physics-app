@@ -594,6 +594,126 @@
     #flip-bar.visible { display: flex; }
     #flip-bar span { font-size: 11px; color: var(--muted); }
     [data-theme="light"] #flip-bar { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+    /* ── Flashcard Cards tab ── */
+    .fc-subtabs { display: flex; gap: 2px; margin-bottom: 8px; }
+    .fc-subtab {
+      flex: 1; text-align: center; padding: 5px 4px;
+      font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--muted); cursor: pointer;
+      border: 1px solid var(--border); border-radius: 5px;
+      background: var(--surface); transition: all 0.15s; user-select: none;
+    }
+    .fc-subtab:hover { border-color: var(--purple); color: var(--text); }
+    .fc-subtab.active { border-color: var(--purple); background: rgba(167,139,250,0.12); color: var(--purple); }
+    .fc-subpage { display: none; }
+    .fc-subpage.active { display: block; }
+
+    /* Card 3D flip */
+    .fc-card-wrap { perspective: 800px; cursor: pointer; margin-bottom: 8px; position: relative; }
+    .fc-card-inner {
+      position: relative; width: 100%;
+      transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+      transform-style: preserve-3d; display: grid;
+    }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-cfront, .fc-cback {
+      grid-area: 1 / 1;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      border-radius: 10px; overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .fc-cback { transform: rotateY(180deg); }
+    .fc-topbar { height: 3px; background: var(--purple); }
+    .fc-front-body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 120px; padding: 12px 14px; text-align: center; gap: 2px;
+    }
+    .fc-front-cat { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+    .fc-front-term { font-size: 15px; font-weight: 800; color: var(--text); line-height: 1.2; word-break: break-word; }
+    .fc-front-hint { font-size: 9px; color: var(--muted); margin-top: 6px; opacity: 0.6; }
+    .fc-flip-icon {
+      position: absolute; bottom: 6px; right: 6px;
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 1px solid rgba(167,139,250,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--purple);
+    }
+    .fc-back-body { display: flex; flex-direction: column; padding: 10px 12px 8px; }
+    .fc-back-term { font-size: 11px; font-weight: 500; color: var(--purple); margin-bottom: 4px; }
+    .fc-back-divider { height: 1px; background: var(--border); margin-bottom: 6px; flex-shrink: 0; }
+    .fc-back-def { font-size: 11px; font-weight: 400; color: var(--text); line-height: 1.45; }
+    .fc-back-eq {
+      margin-top: 6px; padding: 6px 10px; border-radius: 6px;
+      background: var(--black); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .fc-back-eq .katex { font-size: 13px; }
+    .fc-back-pills { display: flex; gap: 4px; margin-top: 6px; padding-top: 6px; flex-shrink: 0; }
+    .fc-pill {
+      font-size: 8px; font-weight: 600; padding: 1px 5px; border-radius: 3px;
+      background: rgba(255,255,255,0.05); border: 1px solid transparent;
+    }
+    .fc-pill.aqa { color: #a78bfa; border-color: rgba(167,139,250,0.2); }
+    .fc-pill.edexcel { color: #38bdf8; border-color: rgba(56,189,248,0.2); }
+    .fc-pill.ocr { color: #fb923c; border-color: rgba(251,146,60,0.2); }
+    [data-theme="light"] .fc-cfront, [data-theme="light"] .fc-cback { background: #F8FAFC; border-color: rgba(124,58,237,0.15); }
+    [data-theme="light"] .fc-back-eq { background: #F1F5F9; border-color: #E2E8F0; }
+    [data-theme="light"] .fc-pill { background: #F1F5F9; }
+    [data-theme="light"] .fc-pill.aqa { color: #7C3AED; }
+    [data-theme="light"] .fc-pill.edexcel { color: #2563EB; }
+    [data-theme="light"] .fc-pill.ocr { color: #EA580C; }
+
+    /* Place button overlay on flashcard */
+    .fc-place-btn {
+      position: absolute; bottom: 6px; left: 6px;
+      padding: 3px 8px; border-radius: 5px;
+      background: var(--purple); color: #fff;
+      font-size: 9px; font-weight: 600; border: none; cursor: pointer;
+      opacity: 0; transition: opacity 0.2s; z-index: 2; font-family: inherit;
+    }
+    .fc-card-wrap:hover .fc-place-btn { opacity: 1; }
+
+    /* Create/Import form within cards tab */
+    .fc-form-group { margin-bottom: 10px; }
+    .fc-form-label {
+      display: block; font-size: 9px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted); margin-bottom: 3px;
+    }
+    .fc-form-label span { font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .fc-form-input, .fc-form-textarea {
+      width: 100%; padding: 7px 9px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      font-size: 12px; font-family: -apple-system, sans-serif;
+      transition: border-color 0.15s;
+    }
+    .fc-form-input:focus, .fc-form-textarea:focus { outline: none; border-color: var(--purple); }
+    .fc-form-textarea { min-height: 55px; resize: vertical; }
+    .fc-form-textarea.fc-import-area { min-height: 100px; font-family: monospace; font-size: 11px; line-height: 1.4; }
+    .fc-eq-input { font-family: 'KaTeX_Math', serif; font-style: italic; font-size: 13px; }
+    .fc-eq-preview {
+      margin-top: 3px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px; min-height: 28px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fc-eq-preview .katex { font-size: 14px; }
+    .fc-boards-row { display: flex; gap: 4px; }
+    .fc-bcheck {
+      display: flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 500; cursor: pointer;
+      padding: 3px 7px; border: 1px solid var(--border); border-radius: 5px;
+      background: var(--surface); transition: border-color 0.15s; user-select: none;
+    }
+    .fc-bcheck input { display: none; }
+    .fc-bcheck.checked { border-color: var(--purple); background: rgba(167,139,250,0.12); }
+    .fc-bdot { width: 5px; height: 5px; border-radius: 50%; }
+    .fc-bdot.aqa { background: #a78bfa; }
+    .fc-bdot.edx { background: #38bdf8; }
+    .fc-bdot.ocr { background: #fb923c; }
+    .fc-imp-hint { font-size: 10px; color: var(--muted); line-height: 1.4; margin-bottom: 8px; }
+    .fc-imp-count { font-size: 11px; color: var(--purple); font-weight: 600; min-height: 14px; margin-top: 4px; }
+    .fc-empty { text-align: center; padding: 24px 10px; color: var(--muted); font-size: 11px; }
   </style>
 </head>
 <body>
@@ -602,6 +722,7 @@
 <div class="tabs">
   <div class="tab active" data-tab="latex">𝑓(𝑥)</div>
   <div class="tab" data-tab="library">Library</div>
+  <div class="tab" data-tab="cards">Cards</div>
   <div class="tab" data-tab="embeds">Embeds</div>
   <div class="tab" data-tab="circuits">Circuits</div>
   <div class="tab" data-tab="tools">Tools</div>
@@ -754,6 +875,88 @@
     </div>
     <input type="text" id="lib-search" placeholder="Search equations... (e.g. SUVAT, capacitor, Snell)" />
     <div id="lib-sections"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: Flashcards
+══════════════════════════════════════════════ -->
+<div class="page" id="page-cards">
+  <div class="scroll" id="fc-scroll">
+    <div class="fc-subtabs">
+      <div class="fc-subtab active" data-fctab="fc-library">Library</div>
+      <div class="fc-subtab" data-fctab="fc-create">Create</div>
+      <div class="fc-subtab" data-fctab="fc-import">Import</div>
+    </div>
+
+    <!-- Sub: Library -->
+    <div class="fc-subpage active" id="fc-library">
+      <div class="board-filter" id="fc-board-filter">
+        <span class="board-chip active" data-board="all">All</span>
+        <span class="board-chip" data-board="AQA">AQA</span>
+        <span class="board-chip" data-board="Edexcel">Edexcel</span>
+        <span class="board-chip" data-board="OCR">OCR</span>
+      </div>
+      <input type="text" id="fc-search" placeholder="Search flashcards..." style="margin-bottom:8px" />
+      <div id="fc-sections"></div>
+    </div>
+
+    <!-- Sub: Create -->
+    <div class="fc-subpage" id="fc-create">
+      <div class="fc-form-group">
+        <label class="fc-form-label">Term</label>
+        <input type="text" class="fc-form-input" id="fc-create-term" placeholder="e.g. Ohm's Law" />
+      </div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Definition</label>
+        <textarea class="fc-form-textarea" id="fc-create-def" placeholder="The current through a conductor is directly proportional to..."></textarea>
+      </div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Equation <span>(optional LaTeX)</span></label>
+        <input type="text" class="fc-form-input fc-eq-input" id="fc-create-eq" placeholder="V = IR" />
+        <div class="fc-eq-preview" id="fc-create-eq-prev"><span style="color:var(--muted);font-size:10px;font-style:italic">Equation preview</span></div>
+      </div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Category / Group</label>
+        <input type="text" class="fc-form-input" id="fc-create-cat" list="fc-cat-list" placeholder="e.g. Electricity, or type new" />
+        <datalist id="fc-cat-list"></datalist>
+      </div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Boards</label>
+        <div class="fc-boards-row" id="fc-create-boards">
+          <label class="fc-bcheck checked"><input type="checkbox" checked /><span class="fc-bdot aqa"></span>AQA</label>
+          <label class="fc-bcheck checked"><input type="checkbox" checked /><span class="fc-bdot edx"></span>Edexcel</label>
+          <label class="fc-bcheck checked"><input type="checkbox" checked /><span class="fc-bdot ocr"></span>OCR</label>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" id="fc-create-btn">Add Card</button>
+    </div>
+
+    <!-- Sub: Import -->
+    <div class="fc-subpage" id="fc-import">
+      <div class="fc-imp-hint">
+        Paste Quizlet export: <strong>term [tab] definition</strong> per line.<br>
+        Optional 3rd column: <strong>term [tab] def [tab] equation</strong>.
+      </div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Paste data</label>
+        <textarea class="fc-form-textarea fc-import-area" id="fc-import-area" placeholder="Ohm's Law&#9;Current proportional to PD..."></textarea>
+      </div>
+      <div class="fc-imp-count" id="fc-import-count"></div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Category for all</label>
+        <input type="text" class="fc-form-input" id="fc-import-cat" list="fc-cat-list" placeholder="e.g. Electricity" />
+      </div>
+      <div class="fc-form-group">
+        <label class="fc-form-label">Boards</label>
+        <div class="fc-boards-row" id="fc-import-boards">
+          <label class="fc-bcheck checked"><input type="checkbox" checked /><span class="fc-bdot aqa"></span>AQA</label>
+          <label class="fc-bcheck checked"><input type="checkbox" checked /><span class="fc-bdot edx"></span>Edexcel</label>
+          <label class="fc-bcheck checked"><input type="checkbox" checked /><span class="fc-bdot ocr"></span>OCR</label>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" id="fc-import-btn" disabled>Import Cards</button>
+    </div>
   </div>
 </div>
 
@@ -3789,6 +3992,469 @@ async function updateRevealCount() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// FLASHCARD TAB — Library, Create, Import
+// ══════════════════════════════════════════════════════════════
+
+const FLASHCARD_LIBRARY = [
+  { section: 'Electricity', cards: [
+    { term: "Ohm's Law", definition: "The current through a conductor is directly proportional to the potential difference across it, provided its temperature remains constant.", equation: "V = IR", boards: "AQA Edexcel OCR" },
+    { term: "Kirchhoff's First Law", definition: "The total current entering a junction equals the total current leaving it (conservation of charge).", equation: "\\sum I_{\\text{in}} = \\sum I_{\\text{out}}", boards: "AQA Edexcel OCR" },
+    { term: "Kirchhoff's Second Law", definition: "The sum of EMFs in a closed loop equals the sum of the potential differences across components.", equation: "\\sum \\varepsilon = \\sum IR", boards: "AQA Edexcel OCR" },
+    { term: "Power", definition: "The rate of energy transfer by an electrical component.", equation: "P = IV = I^2R = \\frac{V^2}{R}", boards: "AQA Edexcel OCR" },
+    { term: "Resistivity", definition: "A material property quantifying how strongly it resists current flow.", equation: "\\rho = \\frac{RA}{L}", boards: "AQA Edexcel OCR" },
+    { term: "EMF", definition: "Energy transferred per unit charge by a source driving current around a complete circuit.", equation: "\\varepsilon = I(R + r)", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Waves', cards: [
+    { term: "Wave Speed", definition: "The speed of a wave equals its frequency multiplied by its wavelength.", equation: "v = f\\lambda", boards: "AQA Edexcel OCR" },
+    { term: "Refractive Index", definition: "The ratio of the speed of light in a vacuum to its speed in a material.", equation: "n = \\frac{c}{v}", boards: "AQA Edexcel OCR" },
+    { term: "Snell's Law", definition: "At a boundary, the product of refractive index and sine of angle to the normal is constant.", equation: "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2", boards: "AQA Edexcel OCR" },
+    { term: "Young's Double Slit", definition: "Coherent waves through two slits produce an interference pattern of bright and dark fringes.", equation: "\\lambda = \\frac{ax}{D}", boards: "AQA Edexcel OCR" },
+    { term: "Diffraction Grating", definition: "Multiple slits produce sharp maxima where path difference is a whole number of wavelengths.", equation: "d\\sin\\theta = n\\lambda", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Mechanics', cards: [
+    { term: "Newton's Second Law", definition: "The net force acting on an object equals the rate of change of its momentum.", equation: "F = ma", boards: "AQA Edexcel OCR" },
+    { term: "SUVAT — Velocity", definition: "Final velocity equals initial velocity plus acceleration times time.", equation: "v = u + at", boards: "AQA Edexcel OCR" },
+    { term: "SUVAT — Displacement", definition: "Displacement equals initial velocity times time plus half acceleration times time squared.", equation: "s = ut + \\tfrac{1}{2}at^2", boards: "AQA Edexcel OCR" },
+    { term: "Momentum", definition: "The product of mass and velocity. Conserved in collisions with no external forces.", equation: "p = mv", boards: "AQA Edexcel OCR" },
+    { term: "Work Done", definition: "The product of force and displacement in the direction of the force.", equation: "W = Fs\\cos\\theta", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Quantum Physics', cards: [
+    { term: "Photon Energy", definition: "Energy of a photon is proportional to its frequency.", equation: "E = hf = \\frac{hc}{\\lambda}", boards: "AQA Edexcel OCR" },
+    { term: "Photoelectric Effect", definition: "Photons above the work function eject electrons. Intensity affects current, not max KE.", equation: "hf = \\phi + E_{k(\\text{max})}", boards: "AQA Edexcel OCR" },
+    { term: "de Broglie Wavelength", definition: "All particles have a wavelength inversely proportional to their momentum.", equation: "\\lambda = \\frac{h}{mv}", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Nuclear Physics', cards: [
+    { term: "Radioactive Decay", definition: "The number of undecayed nuclei decreases exponentially with time.", equation: "N = N_0 e^{-\\lambda t}", boards: "AQA Edexcel OCR" },
+    { term: "Half-Life", definition: "The time for half the radioactive nuclei in a sample to decay.", equation: "t_{1/2} = \\frac{\\ln 2}{\\lambda}", boards: "AQA Edexcel OCR" },
+    { term: "Mass-Energy Equivalence", definition: "Mass and energy are interchangeable.", equation: "E = mc^2", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Fields', cards: [
+    { term: "Gravitational Field Strength", definition: "Force per unit mass at a point in a gravitational field.", equation: "g = \\frac{GM}{r^2}", boards: "AQA Edexcel OCR" },
+    { term: "Coulomb's Law", definition: "Electrostatic force between two charges is proportional to their product and inversely proportional to separation squared.", equation: "F = \\frac{1}{4\\pi\\varepsilon_0}\\frac{Q_1 Q_2}{r^2}", boards: "AQA Edexcel OCR" },
+    { term: "Capacitance", definition: "Charge stored per unit potential difference.", equation: "C = \\frac{Q}{V}", boards: "AQA Edexcel OCR" },
+    { term: "Capacitor Discharge", definition: "Charge decreases exponentially during discharge through a resistor.", equation: "Q = Q_0 e^{-t/RC}", boards: "AQA Edexcel OCR" }
+  ]},
+  { section: 'Thermal Physics', cards: [
+    { term: "Ideal Gas Law", definition: "Pressure times volume equals moles times gas constant times temperature.", equation: "pV = nRT", boards: "AQA Edexcel OCR" },
+    { term: "Kinetic Energy of Gas", definition: "Mean KE of gas molecules is proportional to absolute temperature.", equation: "\\frac{1}{2}m\\overline{c^2} = \\frac{3}{2}k_BT", boards: "AQA Edexcel OCR" },
+    { term: "Specific Heat Capacity", definition: "Energy required to raise 1 kg of a substance by 1 K.", equation: "Q = mc\\Delta\\theta", boards: "AQA Edexcel OCR" }
+  ]}
+];
+
+// localStorage for custom flashcards
+const FC_STORAGE = 'pp-flashcard-custom';
+function fcGetCustom() { try { return JSON.parse(localStorage.getItem(FC_STORAGE)) || []; } catch(e) { return []; } }
+function fcSaveCustom(c) { localStorage.setItem(FC_STORAGE, JSON.stringify(c)); }
+function fcAddCustom(arr) { const e = fcGetCustom(); e.push(...arr); fcSaveCustom(e); }
+function fcRemoveCustom(idx) { const c = fcGetCustom(); c.splice(idx, 1); fcSaveCustom(c); }
+function fcUpdateCustom(idx, updates) { const c = fcGetCustom(); Object.assign(c[idx], updates); fcSaveCustom(c); }
+
+let fcBoardFilter = 'all';
+
+function fcGetAllSections() {
+  const secs = FLASHCARD_LIBRARY.map(s => ({ section: s.section, cards: s.cards.map(c => ({...c})) }));
+  fcGetCustom().forEach((card, idx) => {
+    card._customIndex = idx;
+    const cat = card.category || 'My Cards';
+    const found = secs.find(s => s.section.toLowerCase() === cat.toLowerCase());
+    if (found) found.cards.push(card);
+    else secs.push({ section: cat, cards: [card] });
+  });
+  return secs;
+}
+
+function fcUpdateCategoryDatalist() {
+  const dl = document.getElementById('fc-cat-list');
+  if (!dl) return;
+  const cats = new Set();
+  FLASHCARD_LIBRARY.forEach(s => cats.add(s.section));
+  fcGetCustom().forEach(c => { if (c.category) cats.add(c.category); });
+  dl.innerHTML = '';
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c; dl.appendChild(o); });
+}
+
+function fcEsc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function buildFlashcardLibrary() {
+  const con = document.getElementById('fc-sections');
+  con.innerHTML = '';
+  const secs = fcGetAllSections();
+
+  if (secs.every(s => !s.cards.length)) {
+    con.innerHTML = '<div class="fc-empty">No flashcards yet. Create some or import from Quizlet.</div>';
+    return;
+  }
+
+  secs.forEach((sec, i) => {
+    const div = document.createElement('div');
+    div.className = 'lib-section';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'lib-section-header' + (i === 0 ? ' open' : '');
+    hdr.innerHTML = `<h3>${fcEsc(sec.section)} <span class="lib-tag">${sec.cards.length}</span></h3><span class="toggle">▶</span>`;
+
+    const list = document.createElement('div');
+    list.className = 'lib-grid' + (i > 0 ? ' collapsed' : '');
+    if (i === 0) hdr.classList.add('open');
+
+    hdr.addEventListener('click', () => { hdr.classList.toggle('open'); list.classList.toggle('collapsed'); });
+
+    sec.cards.forEach(card => { list.appendChild(fcBuildCard(card, sec.section)); });
+
+    div.appendChild(hdr);
+    div.appendChild(list);
+    con.appendChild(div);
+  });
+
+  fcUpdateCategoryDatalist();
+}
+
+function fcBuildCard(card, secName) {
+  const wrap = document.createElement('div');
+  wrap.className = 'fc-card-wrap';
+  wrap.dataset.search = (card.term + ' ' + secName + ' ' + (card.category || '')).toLowerCase();
+  wrap.dataset.boards = card.boards || '';
+
+  const inner = document.createElement('div');
+  inner.className = 'fc-card-inner';
+
+  // Front
+  const front = document.createElement('div');
+  front.className = 'fc-cfront';
+  front.innerHTML =
+    '<div class="fc-topbar"></div>' +
+    '<div class="fc-front-body">' +
+      '<div class="fc-front-cat">' + fcEsc(secName) + '</div>' +
+      '<div class="fc-front-term">' + fcEsc(card.term) + '</div>' +
+      '<div class="fc-front-hint">click to flip</div>' +
+    '</div>' +
+    '<div class="fc-flip-icon">↻</div>';
+
+  // Back
+  const back = document.createElement('div');
+  back.className = 'fc-cback';
+  let bh = '<div class="fc-topbar"></div><div class="fc-back-body">' +
+    '<div class="fc-back-term">' + fcEsc(card.term) + '</div>' +
+    '<div class="fc-back-divider"></div>' +
+    '<div class="fc-back-def">' + fcEsc(card.definition) + '</div>';
+
+  if (card.equation && card.equation.trim()) {
+    let eq = fcEsc(card.equation);
+    if (typeof katex !== 'undefined') {
+      try { eq = katex.renderToString(card.equation, { displayMode: true, throwOnError: false }); } catch(e) {}
+    }
+    bh += '<div class="fc-back-eq">' + eq + '</div>';
+  }
+
+  const boards = (card.boards || '').split(' ').filter(Boolean);
+  if (boards.length) {
+    bh += '<div class="fc-back-pills">';
+    boards.forEach(b => {
+      const cls = b.toLowerCase() === 'aqa' ? 'aqa' : b.toLowerCase() === 'edexcel' ? 'edexcel' : 'ocr';
+      bh += '<span class="fc-pill ' + cls + '">' + fcEsc(b) + '</span>';
+    });
+    bh += '</div>';
+  }
+  bh += '</div><div class="fc-flip-icon">↻</div>';
+  back.innerHTML = bh;
+
+  inner.appendChild(front);
+  inner.appendChild(back);
+  wrap.appendChild(inner);
+
+  // Click to flip
+  wrap.addEventListener('click', e => {
+    if (e.target.closest('.fc-place-btn') || e.target.closest('.fc-edit-btn') || e.target.closest('.fc-del-btn')) return;
+    inner.classList.toggle('flipped');
+  });
+
+  // Place on board button
+  const placeBtn = document.createElement('button');
+  placeBtn.className = 'fc-place-btn';
+  placeBtn.textContent = 'Place on Board';
+  placeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    fcPlaceOnBoard(card, secName);
+  });
+  front.appendChild(placeBtn);
+
+  // Edit + Delete for custom cards
+  if (typeof card._customIndex === 'number') {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'fc-place-btn';
+    delBtn.style.cssText = 'left:auto;right:6px;bottom:auto;top:10px;background:#e11d48;font-size:10px;padding:2px 6px;';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Delete card';
+    delBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      fcRemoveCustom(card._customIndex);
+      buildFlashcardLibrary();
+      toast('Card deleted');
+    });
+    front.appendChild(delBtn);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'fc-place-btn';
+    editBtn.style.cssText = 'left:auto;right:32px;bottom:auto;top:10px;font-size:10px;padding:2px 6px;';
+    editBtn.textContent = '✏️';
+    editBtn.title = 'Edit card';
+    editBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      fcStartEdit(card._customIndex, card);
+    });
+    front.appendChild(editBtn);
+  }
+
+  return wrap;
+}
+
+function filterFlashcardLibrary() {
+  const q = (document.getElementById('fc-search').value || '').toLowerCase().trim();
+  document.getElementById('fc-sections').querySelectorAll('.lib-section').forEach(sec => {
+    const items = sec.querySelectorAll('.fc-card-wrap');
+    const header = sec.querySelector('.lib-section-header');
+    const grid = sec.querySelector('.lib-grid');
+    let any = false;
+    items.forEach(it => {
+      const ms = !q || it.dataset.search.includes(q);
+      const mb = fcBoardFilter === 'all' || (it.dataset.boards || '').includes(fcBoardFilter);
+      const vis = ms && mb;
+      it.style.display = vis ? '' : 'none';
+      if (vis) any = true;
+    });
+    sec.style.display = any ? '' : 'none';
+    if ((q || fcBoardFilter !== 'all') && any && grid) {
+      grid.classList.remove('collapsed');
+      if (header) header.classList.add('open');
+    }
+  });
+}
+
+// Edit a custom card — populate create form
+function fcStartEdit(idx, card) {
+  document.getElementById('fc-create-term').value = card.term || '';
+  document.getElementById('fc-create-def').value = card.definition || '';
+  document.getElementById('fc-create-eq').value = card.equation || '';
+  document.getElementById('fc-create-cat').value = card.category || '';
+  // Set board checkboxes
+  const boards = (card.boards || '').toLowerCase();
+  document.querySelectorAll('#fc-create-boards .fc-bcheck').forEach(l => {
+    const name = l.textContent.trim().toLowerCase();
+    const checked = boards.includes(name);
+    l.querySelector('input').checked = checked;
+    l.classList.toggle('checked', checked);
+  });
+  // Switch to create sub-tab
+  fcSwitchSubtab('fc-create');
+  // Mark as editing
+  const btn = document.getElementById('fc-create-btn');
+  btn.textContent = 'Update Card';
+  btn.dataset.editIndex = idx;
+  fcUpdateCreateEqPreview();
+}
+
+// Place flashcard on board as PNG (reuse existing renderFlashcardFront from panel)
+async function fcPlaceOnBoard(card, secName) {
+  toast('Placing…');
+  try {
+    const png = await fcRenderFrontPNG(card, secName);
+    const vp = await miro.board.viewport.get();
+    const boards = (card.boards || '').split(' ').filter(Boolean);
+    const img = await miro.board.createImage({
+      url: png, title: 'Flashcard: ' + card.term,
+      x: vp.x + vp.width / 2, y: vp.y + vp.height / 2, width: 500
+    });
+    await img.setMetadata('pp-flashcard', {
+      term: card.term, definition: card.definition,
+      equation: card.equation || '', category: secName || card.category || '',
+      boards: boards, isFlipped: false
+    });
+    await miro.board.viewport.zoomTo(img);
+    toast('Placed: ' + card.term);
+  } catch(e) {
+    console.error(e);
+    toast('Failed to place');
+  }
+}
+
+function fcGetCardColors() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) return {
+    bg:'#F8FAFC', text:'#1E293B', muted:'#64748B', accent:'#7C3AED',
+    border:'rgba(124,58,237,0.15)', eqBg:'#F1F5F9', eqBorder:'#E2E8F0',
+    hintText:'#94A3B8', flipCircle:'rgba(124,58,237,0.3)', flipIcon:'#7C3AED',
+    divider:'#E2E8F0', aqaC:'#7C3AED', edxC:'#2563EB', ocrC:'#EA580C', pillBg:'#F1F5F9'
+  };
+  return {
+    bg:'#0F0F0F', text:'#E8E8F0', muted:'#888AAA', accent:'#A78BFA',
+    border:'rgba(168,85,247,0.2)', eqBg:'rgba(0,0,0,0.45)', eqBorder:'rgba(168,85,247,0.18)',
+    hintText:'#444466', flipCircle:'rgba(168,85,247,0.35)', flipIcon:'#A78BFA',
+    divider:'rgba(168,85,247,0.15)', aqaC:'#A78BFA', edxC:'#38BDF8', ocrC:'#FB923C', pillBg:'rgba(255,255,255,0.06)'
+  };
+}
+
+async function fcRenderFrontPNG(card, secName) {
+  const c = fcGetCardColors();
+  const W = 500, H = 320;
+  const ctn = document.createElement('div');
+  ctn.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+  const el = document.createElement('div');
+  el.style.cssText = `width:${W}px;height:${H}px;border-radius:16px;overflow:hidden;position:relative;font-family:-apple-system,sans-serif;background:${c.bg};border:1px solid ${c.border};display:flex;flex-direction:column;`;
+  el.appendChild(Object.assign(document.createElement('div'), { style: `position:absolute;top:0;left:0;right:0;height:3px;background:${c.accent}` }));
+
+  const body = document.createElement('div');
+  body.style.cssText = `flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px 50px;text-align:center;gap:6px;`;
+  if (secName) {
+    const cat = document.createElement('div');
+    cat.style.cssText = `font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:${c.muted};margin-bottom:4px;`;
+    cat.textContent = secName;
+    body.appendChild(cat);
+  }
+  const tm = document.createElement('div');
+  tm.style.cssText = `font-size:28px;font-weight:900;color:${c.text};line-height:1.2;`;
+  tm.textContent = card.term;
+  body.appendChild(tm);
+  const ht = document.createElement('div');
+  ht.style.cssText = `font-size:12px;color:${c.hintText};margin-top:16px;`;
+  ht.textContent = 'Select card → flip in panel';
+  body.appendChild(ht);
+  el.appendChild(body);
+
+  const fi = document.createElement('div');
+  fi.style.cssText = `position:absolute;bottom:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1px solid ${c.flipCircle};display:flex;align-items:center;justify-content:center;font-size:14px;color:${c.flipIcon};`;
+  fi.textContent = '↻';
+  el.appendChild(fi);
+
+  ctn.appendChild(el);
+  document.body.appendChild(ctn);
+  try {
+    const canvas = await html2canvas(ctn, { backgroundColor: null, scale: 3 });
+    return canvas.toDataURL('image/png');
+  } finally { document.body.removeChild(ctn); }
+}
+
+// Sub-tab switching
+function fcSwitchSubtab(id) {
+  document.querySelectorAll('.fc-subtab').forEach(t => t.classList.toggle('active', t.dataset.fctab === id));
+  document.querySelectorAll('.fc-subpage').forEach(p => p.classList.toggle('active', p.id === id));
+}
+
+document.querySelectorAll('.fc-subtab').forEach(t => {
+  t.addEventListener('click', () => fcSwitchSubtab(t.dataset.fctab));
+});
+
+// Board filter chips
+document.getElementById('fc-search').addEventListener('input', filterFlashcardLibrary);
+document.querySelectorAll('#fc-board-filter .board-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#fc-board-filter .board-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    fcBoardFilter = chip.dataset.board;
+    filterFlashcardLibrary();
+  });
+});
+
+// Checkbox toggles
+document.querySelectorAll('.fc-bcheck').forEach(l => {
+  l.addEventListener('click', e => {
+    e.preventDefault();
+    const cb = l.querySelector('input'); cb.checked = !cb.checked;
+    l.classList.toggle('checked', cb.checked);
+  });
+});
+
+// Equation preview
+const fcCreateEqEl = document.getElementById('fc-create-eq');
+const fcCreateEqPrev = document.getElementById('fc-create-eq-prev');
+let fcEqTimer = null;
+function fcUpdateCreateEqPreview() {
+  const v = fcCreateEqEl.value.trim();
+  if (!v) { fcCreateEqPrev.innerHTML = '<span style="color:var(--muted);font-size:10px;font-style:italic">Equation preview</span>'; return; }
+  if (typeof katex === 'undefined') return;
+  try { fcCreateEqPrev.innerHTML = katex.renderToString(v, { throwOnError: true, displayMode: true }); }
+  catch(e) { fcCreateEqPrev.innerHTML = '<span style="color:#e11d48;font-size:9px">' + e.message.substring(0,50) + '</span>'; }
+}
+fcCreateEqEl.addEventListener('input', () => { clearTimeout(fcEqTimer); fcEqTimer = setTimeout(fcUpdateCreateEqPreview, 200); });
+
+// Create card
+document.getElementById('fc-create-btn').addEventListener('click', () => {
+  const term = document.getElementById('fc-create-term').value.trim();
+  const def = document.getElementById('fc-create-def').value.trim();
+  const eq = fcCreateEqEl.value.trim();
+  const cat = document.getElementById('fc-create-cat').value.trim();
+  if (!term) { toast('Enter a term'); return; }
+  if (!def) { toast('Enter a definition'); return; }
+  const boards = [];
+  document.querySelectorAll('#fc-create-boards .fc-bcheck').forEach(l => {
+    if (l.querySelector('input').checked) boards.push(l.textContent.trim());
+  });
+  const cardObj = { term, definition: def, equation: eq, category: cat || 'My Cards', boards: boards.join(' ') };
+  const btn = document.getElementById('fc-create-btn');
+
+  if (btn.dataset.editIndex !== undefined && btn.dataset.editIndex !== '') {
+    // Update existing
+    fcUpdateCustom(parseInt(btn.dataset.editIndex), cardObj);
+    toast('Card updated');
+  } else {
+    // New card
+    fcAddCustom([cardObj]);
+    toast('Card added');
+  }
+
+  // Reset form
+  document.getElementById('fc-create-term').value = '';
+  document.getElementById('fc-create-def').value = '';
+  fcCreateEqEl.value = '';
+  document.getElementById('fc-create-cat').value = '';
+  fcCreateEqPrev.innerHTML = '<span style="color:var(--muted);font-size:10px;font-style:italic">Equation preview</span>';
+  btn.textContent = 'Add Card';
+  btn.dataset.editIndex = '';
+
+  buildFlashcardLibrary();
+  fcSwitchSubtab('fc-library');
+});
+
+// Import
+const fcImportArea = document.getElementById('fc-import-area');
+const fcImportCount = document.getElementById('fc-import-count');
+const fcImportBtn = document.getElementById('fc-import-btn');
+
+function fcParseImport() {
+  const t = fcImportArea.value.trim();
+  if (!t) { fcImportCount.textContent = ''; fcImportBtn.disabled = true; return []; }
+  const lines = t.split('\n').filter(l => l.trim());
+  const cards = [];
+  lines.forEach(l => {
+    let p = l.split('\t');
+    if (p.length < 2) p = l.split(';');
+    if (p.length >= 2) cards.push({ term: p[0].trim(), definition: p[1].trim(), equation: p[2] ? p[2].trim() : '' });
+  });
+  fcImportCount.textContent = cards.length ? cards.length + ' card' + (cards.length > 1 ? 's' : '') + ' detected' : 'No cards found (tab or ; separator)';
+  fcImportBtn.disabled = !cards.length;
+  return cards;
+}
+fcImportArea.addEventListener('input', fcParseImport);
+
+fcImportBtn.addEventListener('click', () => {
+  const cards = fcParseImport();
+  if (!cards.length) return;
+  const cat = document.getElementById('fc-import-cat').value.trim() || 'Imported';
+  const boards = [];
+  document.querySelectorAll('#fc-import-boards .fc-bcheck').forEach(l => {
+    if (l.querySelector('input').checked) boards.push(l.textContent.trim());
+  });
+  const bs = boards.join(' ');
+  cards.forEach(c => { c.category = cat; c.boards = bs; });
+  fcAddCustom(cards);
+  fcImportArea.value = '';
+  fcImportCount.textContent = '';
+  fcImportBtn.disabled = true;
+  buildFlashcardLibrary();
+  fcSwitchSubtab('fc-library');
+  toast('Imported ' + cards.length + ' card' + (cards.length > 1 ? 's' : ''));
+});
+
+// ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
 
@@ -3800,6 +4466,7 @@ async function init() {
   }
 
   buildLibrary();
+  buildFlashcardLibrary();
   buildGeogebraList();
   buildPhetList();
   buildExternalSimsList();
