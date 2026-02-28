@@ -502,6 +502,7 @@
 
         await img.setMetadata('pp-ruler', { length: selectedMM });
         await miro.board.viewport.zoomTo(img);
+        startPolling(img);
 
         statusEl.textContent = 'Ruler placed!';
         await miro.board.notifications.showNotification({
@@ -672,6 +673,19 @@
 
     // ── Init ──
     updatePreview();
+
+    // Check if a ruler is already selected when panel opens
+    (async function checkInitialSelection() {
+      try {
+        const items = await miro.board.getSelection();
+        if (items.length === 1) {
+          const meta = await items[0].getMetadata('pp-ruler');
+          if (meta && meta.length) {
+            startPolling(items[0]);
+          }
+        }
+      } catch (e) {}
+    })();
   </script>
 </body>
 </html>

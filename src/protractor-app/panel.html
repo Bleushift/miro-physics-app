@@ -493,6 +493,7 @@ placeBtn.addEventListener('click', async function () {
 
     await img.setMetadata('pp-protractor', { type: 'protractor' });
     await miro.board.viewport.zoomTo(img);
+    startPolling(img);
     await miro.board.notifications.showNotification('Protractor placed on board');
   } catch (err) {
     console.error('Failed to place protractor:', err);
@@ -647,6 +648,19 @@ miro.board.ui.on('selection:update', async (event) => {
   }
   hideSelected();
 });
+
+// Check if a protractor is already selected when panel opens
+(async function checkInitialSelection() {
+  try {
+    const items = await miro.board.getSelection();
+    if (items.length === 1) {
+      const meta = await items[0].getMetadata('pp-protractor');
+      if (meta && meta.type) {
+        startPolling(items[0]);
+      }
+    }
+  } catch (e) {}
+})();
 </script>
 
 </body>
