@@ -507,6 +507,18 @@
       color: var(--purple);
     }
 
+    /* ── Laser pointer colour buttons ────────── */
+    .laser-col {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .laser-col:hover { transform: scale(1.1); }
+    .laser-col.active { border-color: #fff; }
+
     /* ── Theme toggle ─────────────────────────── */
     .theme-toggle {
       width: 28px; height: 28px;
@@ -1135,6 +1147,31 @@
 
     <div class="spacer"></div>
     <div id="reveal-count" style="color:var(--muted);font-size:11px;text-align:center"></div>
+
+    <div class="spacer"></div>
+    <hr style="border-color:var(--border)">
+    <div class="spacer"></div>
+
+    <label>Laser Pointer</label>
+    <p style="color:var(--muted);font-size:11px;margin-bottom:8px">
+      Fullscreen overlay with a fading trail. Only visible on your screen. Press Esc to exit.
+    </p>
+
+    <label>Colour</label>
+    <div style="display:flex;gap:8px;margin-bottom:4px">
+      <button class="laser-col active" data-r="229" data-g="57" data-b="53" style="background:#E53935" title="Red"></button>
+      <button class="laser-col" data-r="30" data-g="136" data-b="229" style="background:#1E88E5" title="Blue"></button>
+      <button class="laser-col" data-r="161" data-g="139" data-b="250" style="background:#a18bfa" title="Purple"></button>
+      <button class="laser-col" data-r="94" data-g="234" data-b="212" style="background:#5eead4" title="Teal"></button>
+      <button class="laser-col" data-r="251" data-g="191" data-b="36" style="background:#fbbf24" title="Yellow"></button>
+    </div>
+
+    <label>Trail — <span id="trail-label">0.9s</span></label>
+    <input type="range" id="trail-slider" min="300" max="1800" value="900" step="100" style="width:100%;margin-bottom:4px">
+
+    <button class="btn btn-primary btn-full" id="btn-laser" style="margin-top:4px">
+      Start laser pointer
+    </button>
   </div>
 </div>
 
@@ -3933,6 +3970,37 @@ async function updateRevealCount() {
       : '';
   } catch(e) {}
 }
+
+// ══════════════════════════════════════════════════════════════
+// LASER POINTER
+// ══════════════════════════════════════════════════════════════
+
+let laserR = 229, laserG = 57, laserB = 53;
+let laserTrailMs = 900;
+
+document.querySelectorAll('.laser-col').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.laser-col').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    laserR = parseInt(btn.dataset.r);
+    laserG = parseInt(btn.dataset.g);
+    laserB = parseInt(btn.dataset.b);
+  });
+});
+
+document.getElementById('trail-slider').addEventListener('input', e => {
+  laserTrailMs = parseInt(e.target.value);
+  document.getElementById('trail-label').textContent = (laserTrailMs / 1000).toFixed(1) + 's';
+});
+
+document.getElementById('btn-laser').addEventListener('click', async () => {
+  try {
+    const url = `laser-overlay.html?r=${laserR}&g=${laserG}&b=${laserB}&trail=${laserTrailMs}`;
+    await miro.board.ui.openModal({ url, fullscreen: true });
+  } catch (e) {
+    toast('Error: ' + e.message);
+  }
+});
 
 // ══════════════════════════════════════════════════════════════
 // FLASHCARD TAB — Library, Create, Import

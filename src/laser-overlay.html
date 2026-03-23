@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laser Pointer</title>
+  <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+  <style>
+    * { margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: rgba(0,0,0,0.03);
+    }
+    canvas {
+      display: block; width: 100%; height: 100%;
+      cursor: none;
+    }
+    .hint {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.5);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      pointer-events: none;
+      transition: opacity 1.5s;
+      background: rgba(0,0,0,0.3);
+      padding: 8px 16px;
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body>
+<canvas id="laser-canvas"></canvas>
+<div class="hint" id="hint">Move mouse to draw &mdash; press <kbd>Esc</kbd> or click &times; to exit</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// LaserTrail — point management with interpolation & pruning
+// ══════════════════════════════════════════════════════════════
+class LaserTrail {
+  constructor(trailMs) {
+    this.trailMs = trailMs;
+    this.points = [];
+    this.INTERPOLATE_GAP = 4;
+  }
+
+  addPoint(x, y, time) {
+    if (this.points.length > 0) {
+      const last = this.points[this.points.length - 1];
+      const dx = x - last.x;
+      const dy = y - last.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > this.INTERPOLATE_GAP) {
+        const steps = Math.floor(dist / this.INTERPOLATE_GAP);
+        for (let i = 1; i <= steps; i++) {
+          const t = i / (steps + 1);
+          this.points.push({
+            x: last.x + dx * t,
+            y: last.y + dy * t,
+            time: last.time + (time - last.time) * t
+          });
+        }
+      }
+    }
+    this.points.push({ x, y, time });
+  }
+
+  prune(now) {
+    const cutoff = now - this.trailMs;
+    let i = 0;
+    while (i < this.points.length && this.points[i].time < cutoff) i++;
+    if (i > 0) this.points.splice(0, i);
+  }
+
+  getPoints() { return this.points; }
+  clear() { this.points = []; }
+  get length() { return this.points.length; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Init & Render
+// ══════════════════════════════════════════════════════════════
+(async function main() {
+  // Read settings from URL params
+  const params = new URLSearchParams(window.location.search);
+  const r = parseInt(params.get('r')) || 229;
+  const g = parseInt(params.get('g')) || 57;
+  const b = parseInt(params.get('b')) || 53;
+  const trailMs = parseInt(params.get('trail')) || 900;
+
+  const canvas = document.getElementById('laser-canvas');
+  const ctx = canvas.getContext('2d');
+  const trail = new LaserTrail(trailMs);
+  let mouseX = -100, mouseY = -100;
+  let mouseActive = false;
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  canvas.addEventListener('mousemove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    mouseActive = true;
+    trail.addPoint(mouseX, mouseY, performance.now());
+  });
+
+  canvas.addEventListener('mouseleave', () => { mouseActive = false; });
+  canvas.addEventListener('mouseenter', () => { mouseActive = true; });
+
+  // Fade hint after 3s
+  setTimeout(() => {
+    document.getElementById('hint').style.opacity = '0';
+  }, 3000);
+
+  function drawDot(x, y) {
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
+    ctx.fill();
+    // Inner bright
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',1)';
+    ctx.fill();
+    // White center
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+
+  function draw() {
+    const now = performance.now();
+    const dpr = window.devicePixelRatio || 1;
+    trail.prune(now);
+
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+    const pts = trail.getPoints();
+
+    if (pts.length >= 2) {
+      // Glow layer (thick, blurred)
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 14;
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = 'rgba(' + r + ',' + g + ',' + b + ',0.4)';
+      for (let i = 1; i < pts.length; i++) {
+        const age = (now - pts[i].time) / trailMs;
+        const alpha = Math.max(0, (1 - age) * 0.25);
+        ctx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        ctx.beginPath();
+        ctx.moveTo(pts[i - 1].x, pts[i - 1].y);
+        ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Core trail (thin, solid)
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 3;
+      for (let i = 1; i < pts.length; i++) {
+        const age = (now - pts[i].time) / trailMs;
+        const alpha = Math.max(0, 1 - age);
+        ctx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        ctx.beginPath();
+        ctx.moveTo(pts[i - 1].x, pts[i - 1].y);
+        ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Cursor dot
+    if (mouseActive) drawDot(mouseX, mouseY);
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

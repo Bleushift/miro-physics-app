@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LaserTrail Unit Tests</title>
+  <style>
+    body { font-family: monospace; font-size: 14px; padding: 20px; background: #1e1e2e; color: #e2e2f0; }
+    .pass { color: #5eead4; }
+    .fail { color: #f87171; font-weight: bold; }
+    .summary { margin-top: 20px; padding: 10px; border-top: 1px solid #38385a; font-size: 16px; }
+    h2 { color: #a78bfa; margin-top: 16px; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+<h1>LaserTrail Unit Tests</h1>
+<div id="results"></div>
+<div id="summary" class="summary"></div>
+
+<script>
+// ── Test harness ──────────────────────────────────────────────
+let passed = 0, failed = 0;
+function assert(cond, msg) {
+  const el = document.createElement('div');
+  if (cond) { passed++; el.className = 'pass'; el.textContent = 'PASS: ' + msg; }
+  else      { failed++; el.className = 'fail'; el.textContent = 'FAIL: ' + msg; }
+  document.getElementById('results').appendChild(el);
+}
+function heading(text) {
+  const el = document.createElement('h2');
+  el.textContent = text;
+  document.getElementById('results').appendChild(el);
+}
+
+// ── LaserTrail class ──────────────────────────────────────────
+class LaserTrail {
+  constructor(trailMs) {
+    this.trailMs = trailMs;
+    this.points = [];
+    this.INTERPOLATE_GAP = 4; // px
+  }
+
+  addPoint(x, y, time) {
+    if (this.points.length > 0) {
+      const last = this.points[this.points.length - 1];
+      const dx = x - last.x;
+      const dy = y - last.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > this.INTERPOLATE_GAP) {
+        const steps = Math.floor(dist / this.INTERPOLATE_GAP);
+        for (let i = 1; i <= steps; i++) {
+          const t = i / (steps + 1);
+          this.points.push({
+            x: last.x + dx * t,
+            y: last.y + dy * t,
+            time: last.time + (time - last.time) * t
+          });
+        }
+      }
+    }
+    this.points.push({ x, y, time });
+  }
+
+  prune(now) {
+    const cutoff = now - this.trailMs;
+    let i = 0;
+    while (i < this.points.length && this.points[i].time < cutoff) i++;
+    if (i > 0) this.points.splice(0, i);
+  }
+
+  getPoints() { return this.points; }
+  clear() { this.points = []; }
+  get length() { return this.points.length; }
+}
+
+// ── Tests ─────────────────────────────────────────────────────
+
+heading('Construction');
+
+(function testNewTrailIsEmpty() {
+  const t = new LaserTrail(1000);
+  assert(t.length === 0, 'New trail has 0 points');
+})();
+
+(function testTrailStoresDuration() {
+  const t = new LaserTrail(750);
+  assert(t.trailMs === 750, 'Trail duration stored correctly');
+})();
+
+heading('Adding points');
+
+(function testSinglePointAdd() {
+  const t = new LaserTrail(1000);
+  t.addPoint(100, 200, 5000);
+  assert(t.length === 1, 'Single point added');
+  const p = t.getPoints()[0];
+  assert(p.x === 100 && p.y === 200 && p.time === 5000, 'Point coordinates and time correct');
+})();
+
+(function testNearbyPointsNoInterpolation() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(2, 0, 1010);  // 2px apart < INTERPOLATE_GAP (4px)
+  assert(t.length === 2, 'No interpolation for nearby points (' + t.length + ')');
+})();
+
+heading('Interpolation');
+
+(function testDistantPointsInterpolated() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(20, 0, 1100);  // 20px apart > 4px gap
+  assert(t.length > 2, 'Interpolated points inserted (' + t.length + ' total)');
+})();
+
+(function testInterpolatedPointsOnCorrectLine() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(20, 0, 1100);  // Horizontal line
+  const allOnXAxis = t.getPoints().every(p => p.y === 0);
+  assert(allOnXAxis, 'All interpolated points lie on the x-axis');
+})();
+
+(function testInterpolatedXMonotonic() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(20, 0, 1100);
+  const pts = t.getPoints();
+  let mono = true;
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i].x <= pts[i - 1].x) { mono = false; break; }
+  }
+  assert(mono, 'Interpolated x values are monotonically increasing');
+})();
+
+(function testInterpolatedTimestampsBounded() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(100, 0, 2000);
+  const pts = t.getPoints();
+  const allBounded = pts.every(p => p.time >= 1000 && p.time <= 2000);
+  assert(allBounded, 'Interpolated timestamps fall between endpoints');
+})();
+
+(function testDiagonalInterpolation() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(30, 40, 1100);  // distance = 50px
+  const pts = t.getPoints();
+  const last = pts[pts.length - 1];
+  assert(last.x === 30 && last.y === 40, 'Final point is exact endpoint');
+  assert(pts.length >= 10, 'Enough points for 50px diagonal (' + pts.length + ')');
+})();
+
+heading('Pruning');
+
+(function testPruneRemovesExpiredPoints() {
+  const t = new LaserTrail(500);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(1, 0, 1200);
+  t.addPoint(2, 0, 1600);
+  t.prune(1600);  // cutoff = 1600 - 500 = 1100
+  assert(t.getPoints()[0].time >= 1100, 'Expired point pruned');
+})();
+
+(function testPruneKeepsRecentPoints() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 5000);
+  t.addPoint(1, 0, 5500);
+  t.addPoint(2, 0, 5900);
+  t.prune(5900);  // cutoff = 4900, all points newer
+  assert(t.length === 3, 'All recent points kept (' + t.length + ')');
+})();
+
+(function testPruneStressTest() {
+  const t = new LaserTrail(100);
+  for (let i = 0; i < 1000; i++) {
+    t.addPoint(i * 0.1, 0, i);
+  }
+  t.prune(999);  // Keep only last 100ms
+  assert(t.length < 200, 'Prune limits buffer under stress (' + t.length + ')');
+})();
+
+heading('Clear');
+
+(function testClearRemovesAll() {
+  const t = new LaserTrail(1000);
+  t.addPoint(0, 0, 1000);
+  t.addPoint(10, 10, 1100);
+  t.clear();
+  assert(t.length === 0, 'Clear removes all points');
+})();
+
+// ── Summary ───────────────────────────────────────────────────
+const el = document.getElementById('summary');
+if (failed === 0) {
+  el.className = 'summary pass';
+  el.textContent = 'ALL ' + passed + ' TESTS PASSED';
+} else {
+  el.className = 'summary fail';
+  el.textContent = failed + ' FAILED, ' + passed + ' passed';
+}
+</script>
+</body>
+</html>
